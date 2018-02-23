@@ -2,4 +2,28 @@
 
 \chapter{Background and Tools} \label{chap:backgroundAndToolsChapter}
 
-Background and tools chapter
+In this chapter we are going to describe the general concepts this thesis deals with, together with the main tools we used to address the project. Since this thesis is in the frame of \ac{GRAPE} project (see Chapter \ref{chap:grapeProject}),  most of them are typical of the robotic field and, more specifically, of the agricultural robotics. This last is a part of the so-called \textit{E-agriculture}: 
+
+%TODO http://www.fao.org/fileadmin/templates/rap/files/uploads/E-agriculture_Solutions_Forum.pdf
+
+\section{Robot Operating System}\label{sec:robotOperatingSystem}
+\ac{ROS} is the \textit{robotic middleware} used for the development of code 
+\ac{ROS} is a \textit{middleware} used in software development for robotics, and these are its main purposes: 
+\blockquote{
+It provides the services you would expect from an operating system, including hardware abstraction, low-level device control, implementation of commonly-used functionality, message-passing between processes, and package management. It also provides tools and libraries for obtaining, building, writing, and running code across multiple computers % (TODO http://wiki.ros.org/ROS/Introduction).
+} 
+
+\ac{ROS} is actually a \textit{meta-operating system}, that is, it's not an operating system in the traditional sense, but it provides a peer-to-peer network that processes can use to create and process data together. This network is implemented through TCP, and it's called \textit{Computation Graph}. In this section, we're going to describe \ac{ROS} with more detail, with particular emphasis on the different tecniques that nodes can use to communicate among them.
+\begin{description}
+\item{ROS MASTER} \\
+Even if the Computation Graph is a peer-to-peer network, a central process, called  \textbf{\ac{ROS} Master}, is required to exist, to provide naming and registration services to all the user processes In this. Once the processes have located each other through the services offered by the Master, they can communicate peer-to-peer without involving a central entity;
+
+\item{NODES} \\
+The processes that are in the Computation Graph are called \textbf{nodes}, and they are the atomic units of the computational graph. The \ac{ROS} API are available in C++, Python and Lisp, but C++ is the most widely used. One of the aims of \ac{ROS} is to be modular at a fine-grained scale, so a complex task should be achieved through cooperation of several different nodes, each with quite narrow tasks, rather than one large node that include all the functionalities. Nodes can use different techniques for communication, depending whether the message is a part of data stream or it is a request message (\textit{i.e.} a response message is expected) and, in this last case, on the (expected) duration of the computation of the response.
+
+\end{description}
+\section{Odometry}\label{sec:odometry}
+
+\section{Sensor Fusion}\label{sec:sensorFusion}
+
+\section{Navigation Stack}\label{sec:navigationStack}
