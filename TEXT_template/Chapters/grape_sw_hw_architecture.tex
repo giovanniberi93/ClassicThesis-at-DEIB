@@ -1,0 +1,28 @@
+% !TEX root = ../ClassicThesis_DEIB.tex
+
+\chapter{Grape hardware and software Architecure} \label{chap:grapeSoftwareArchitecture}
+
+Grape architecture SKETCH:
+
+\begin{itemize}
+\item Hardware del robot:
+		\begin{itemize}
+			\item scelta dell'husky (adatto per rugged terrain, supporto di pacchetti ROS), foto
+			\item scelta del braccio, con pro (compatto, 6 dof, power consumption non elevata) e contro (movimenti non precisi, fragile, scarso controllo di collisione)
+			\item lidar sul braccio per scan
+			\item lidar davanti per navigazione e eventualmente localizzazione
+			\item camera montata sul braccio
+			\item velodyne davanti (a cosa serve?)
+			\item camera fissa per eventualmente scattare foto alla vigna
+			\item imu
+		\end{itemize}
+	\item foto del robot 
+	%(http://www.grape-project.eu/wp-content/uploads/2017/11/20171030-MacchineTrattori.pdf e eventuali altre che faremo)
+
+\item Software del robot
+	\begin{itemize}
+		\item descrizione più precisa di quale è nel complesso la procedura: viene dato a mano (interfaccia grafica di Eurecat) una posizione finale, e serie di waypoints intermedi. Procedura di scan che usando PCL trova punti adatti al deployment. Procedura di deploymnet. Waypoint successivo.
+		\item struttura col coordinatore, che chiama le 3 action (move\_base, scan, deploy)
+		\item di ogni azione, il file che descrive i tipi di goal/result/feedback, con spiegazioni del significato dei parametri
+	\end{itemize}
+\end{itemize}

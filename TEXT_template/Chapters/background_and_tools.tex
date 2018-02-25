@@ -7,13 +7,13 @@ In this chapter we are going to describe the general concepts this thesis deals 
 %TODO http://www.fao.org/fileadmin/templates/rap/files/uploads/E-agriculture_Solutions_Forum.pdf
 
 \section{Robot Operating System}\label{sec:robotOperatingSystem}
-\ac{ROS} is the \textit{robotic middleware} used for the development of the whole system described in this thesis. We decide to use it because of its great modularity, the availability of a very large number of packages, well documented APIs and an active community. Moreover, \ac{ROS} is a very widespread system, so its power and versatility are well known in the field of software development for robotics. Citing words from its offical website\footnote{http://wiki.ros.org/ROS/Introduction},
+\ac{ROS} is the \textit{robotic middleware} we used to develop the sofware components of the system described in this thesis. We decide to use it because of its great modularity, the availability of a very large number of packages, well documented APIs and an active community. Moreover, \ac{ROS} is a very widespread system, so its power and versatility are well known in the field of software development for robotics. Citing words from its offical website\footnote{http://wiki.ros.org/ROS/Introduction},
 these are \ac{ROS} main features: 
 \blockquote{
 \textit{It provides the services you would expect from an operating system, including hardware abstraction, low-level device control, implementation of commonly-used functionality, message-passing between processes, and package management. It also provides tools and libraries for obtaining, building, writing, and running code across multiple computers} % (TODO http://wiki.ros.org/ROS/Introduction).
 } 
 
-\ac{ROS} is actually a \textit{meta-operating system}, that is, it's not an operating system in the traditional sense (it requires to be run on top of an another operating system; the only officially supported OS is Linux Ubuntu), but it provides a peer-to-peer network that processes can use to create and process data together. This network is implemented through TCP, and it's called \textit{Computation Graph}. In this section, we're going to describe \ac{ROS} with more detail, with particular emphasis on the different tecniques that nodes can use to communicate among them.
+\ac{ROS} is actually a \textit{meta-operating system}, that is, it's not an operating system in the traditional sense (it requires to be run on top of an another operating system; currently, the only officially supported OS is Linux Ubuntu), but it provides a peer-to-peer network that processes can use to create and process data together. This network is implemented through TCP, and it's called \textit{Computation Graph}. In this section, we're going to describe \ac{ROS} with more detail, with particular emphasis on the different tecniques that nodes can use to communicate among them.
 \begin{description}
 \item[ROS Master] Even if the Computation Graph is a peer-to-peer network, a central process, called  \textbf{\ac{ROS} Master}, is required to exist, to provide naming and registration services to all the user processes In this. Once the processes have located each other through the services offered by the Master, they can communicate peer-to-peer without involving a central entity;
 
@@ -38,7 +38,17 @@ These properties make Services suitable for punctual (in opposition to data stre
 
 \end{description}
 \section{Odometry}\label{sec:odometry}
-
-\section{Sensor Fusion}\label{sec:sensorFusion}
+SKETCH:
+\begin{itemize}
+	\item cosa si intende per odometria
+	\item motion models: differential drive e skid steering
+	\item sensor fusion cos'è, e esempio di Robot localization
+	\item localizzazione con amcl
+\end{itemize}
 
 \section{Navigation Stack}\label{sec:navigationStack}
+SKETCH:
+\begin{itemize}
+	\item cos'è navigation stack (immagine http://wiki.ros.org/move\_base?action=AttachFile\&do=get\&target=overview\_tf.png)
+	\item local/global costmap
+\end{itemize}
