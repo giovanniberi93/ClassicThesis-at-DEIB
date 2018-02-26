@@ -35,10 +35,43 @@ We can easily conclude that this method is very suitable for passing streams of 
 These properties make Services suitable for punctual (in opposition to data stream) inter-node communication, such as: request of parameters values to another node, ask a node that handles a camera to take a picture, ask a node that perform navigation task to clear the current map.
 
 \item[actions] While Services, with their resemblance to traditional function calls, can address pretty well the problem of \textit{one-to-one} inter-node communication, they can be quite unsatisfying if the computation required to produce the response is demanding in term of execution time (\textit{e.g.}, navigation of a robot from one point to another in an environment), because the caller is stuck at the line with the Service invocation until the end of the procedure. Services show their weaknesses also in situations where it could be useful to observe the intermediate results of the computation triggered by the request (\textit{e.g.}, a very complex manipulation procedure). \textbf{Actions} are very suitable in this context because, at the cost of a more complex implementation, provide an asynchronous and fully preemptable remote procedure call, with the possibility of monitoring intermediate results if needed. Differently from Topics and Services, Actions are not native in \ac{ROS}, and their functionalities are built on top of the other \ac{ROS} messagging systems. Asynchronicity is provided by the use of callbacks.
-
 \end{description}
+
+\section{TF: The Transform Library}\label{sec:tf}
+\textit{tf} is a \ac{ROS} library, which task is very important to understand in order not to get lost in the next sections and chapters.  The goal of \textit{tf} is:
+
+\blockquote{
+\textit{" [...] provide a standard way to keep track of coordinate frames and transform data within an entire system such that individual component users can be confident that the data is in the coordinate frame that they want without requiring knowledge of all the coordinate
+frames in the system" \parencite{tfPaper}}
+}
+The utility of such a component is straightforward, even in quite simple robotic systems. We'll describe here a situation we stumpled upon exactly in the development of the \ac{GRAPE} project, where of the utility of \textit{tf} is very easy to understand; you'll be able to better contextualize this example after you've read Chapter \ref{chap:kinovaArmChapter}. In this example a \ac{LIDAR}, mounted on top of the final joint of a robotic arm, acquires data while the arm is moving in order to create a point cloud that will be processed later. To get a meaningful point cloud, it's mandatory to keep track of the movement of the \ac{LIDAR} with respect to a point with speed equal to zero (\textit{e.g.} the base link of the arm, or the base link of the whole robot), and this gets even more difficult because of the multiple (6 in our specific case) joints of the arm; but this problem can be easily addressed by means of \textit{tf}, that we are now going to describe with more detail. 
+\textit{tf} implementation relies on \ac{ROS} topics (see Section \ref{sec:robotOperatingSystem}) and achieve the goale mentioned before by building an oriented graph where vertices are reference frames, and edges are transformations (rototranslations) between frames. \textit{tf} does not assume a constant structure and, if a path exists between two reference frames in the graph, the direct transformation between them can be computed by composition of transformation. Since, in general, multiple paths between 2 vertices can exists in a directed graph and this could lead to ambiguity in computing the transformation between two reference frames, the graph is forced to be acyclic. Disconnected subgraphs are allowed, but of course transformation between vertices that belong to different subgraphs cannot be computed. 
+The main components of the library are:
+\begin{itemize}
+	\item \textbf{\textit{tf} broadcasters}: they are simple software components, that publish a transformation between two reference frames every time an update is available. Different broacasters does not sync together the publishing phase
+	\item \textbf{\textit{tf} listeners}: they are more complex components, because they take into account that broadcasters are not synced. Since both transformations and queries to \textit{tf} graph are stamped, listeners make use of queues to store the most recent transformations, and they  interpulate old values using SLERP (Spherical Linear intERPolation) to return a transformation for which there is no measured value at the requested timestamp.
+\end{itemize}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/tf_tree.png}
+	\caption{\textit{A robot in 2 different positions, with} tf \textit{frames in evidence: x-axis is red, y-axis is green, z-axis is blue. The frames are the same in both configuration, but the transformations (i.e. rototranslations) between them are different}}
+	\label{fig:tfTreeRviz}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/background_and_tools/tfGraph.JPG}
+	\caption{\textit{An example of} tf \textit{tree}}
+	\label{fig:tfGraph}
+\end{figure}
+
+In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the reference frames tracked in a Nao Robot, while figure \ref{fig:tfGraph} shows an example of \textit{tf} graph visualizad with a the visualization framework \textit{rqt}. 
+
+
 \section{Odometry}\label{sec:odometry}
-SKETCH:
+Odometry is a very important 
 \begin{itemize}
 	\item cosa si intende per odometria
 	\item motion models: differential drive e skid steering
