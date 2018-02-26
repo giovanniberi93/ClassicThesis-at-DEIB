@@ -11,6 +11,7 @@ in promoting sustainable agriculture while protecting the
 environment.}}
 The \ac{GRAPE} project, that will be described with further details in chapter \ref{chap:grapeProject}, is about the design and realization of an \ac{UGV} with control and operative task in a vineyard environment, so in this chapter we'll deal with topics concerning software development in robotics, estimation of the state of a robot, autonomous navigation
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Robot Operating System}\label{sec:robotOperatingSystem}
 \ac{ROS} is the \textit{robotic middleware} we used to develop the sofware components of the system described in this thesis. We decide to use it because of its great modularity, the availability of a very large number of packages, well documented APIs and an active community. Moreover, \ac{ROS} is a very widespread system, so its power and versatility are well known in the field of software development for robotics. Citing words from its offical website\footnote{http://wiki.ros.org/ROS/Introduction},
@@ -57,6 +58,8 @@ These properties make Services suitable for punctual (in opposition to data stre
 	\label{fig:tfTreeRviz}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{TF: The Transform Library}\label{sec:tf}
 \textit{tf} is a \ac{ROS} library, which task is very important to understand in order not to get lost in the next sections and chapters.  The goal of \textit{tf} is:
 
@@ -81,14 +84,89 @@ The main components of the library are:
 
 In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the reference frames tracked in a Nao Robot, while figure \ref{fig:tfGraph} shows an example of \textit{tf} graph visualized with visualization framework \textit{rqt}. 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Odometry}\label{sec:odometry}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/husky.png}
+	\caption{\textit{Husky platform from Clearpath Robotics is the platform used for the development of \ac{GRAPE} project.}}
+	\label{fig:husky}
+\end{figure}
+
+The problem of odometry, \textit{i.e.} estimation of the position of a robot in an environment is harder than it could seem. Formally, odometry estimation is the problem of estimating over time the tuple: 
+\begin{equation}
+	<x, y, z, \theta,\dot{x}, \dot{y}, \dot{z}, \dot{\theta}>
+\end{equation} 
+given the measurement of some motion sensors. 
+To better understand the complexity of the problem, let's analyze an extremely simple model: a robot with a single, freely rotating wheel. In this frame, assuming rotary encoders on the wheel, we can think about measuring directly the wheel speed and integrate these measurement to get the travelled distance, and measure the variation in the orientation of the wheel to get the position. But actually there are a lot of imperfection that can lead to error, for example:
+	\begin{itemize}
+		\item wheel can be non perfectly perendicular to the ground
+		\item the friction between the floor and the wheel might not be enough to avoid slippage (expecially )
+		\item there is no such thing as a perfect sensor, so the use of encoders introduce an error
+	\end{itemize}
+Even if all these concurrent causes seem negligible, you have to take into account that the errors sum up over time, so an error of a few millimeters per meter might become significant over time. \\ 
+Moreover, the probability of slippage gets higher in systems with more than one wheel, because, because for a system with multiple wheels to move without slippage, a point must exists around which all the wheels can move along a circular path. This point is called \ac{ICC} (see Figure \ref{fig:icc}), and can be easily identified by looking for the intersection of the axis of all wheels. If the intersaction exists in a single point, it's called the \ac{ICC}.
+But even if the odometry estimated from the wheels is not a good solution if used alone, it can be used as a starting point for other, more complex, method. For this reason we are now going to descript how to estimate the odometry starting from the wheels encoders in our specific robot. This computation is different according to the \textbf{motion model} of the considered robot. As we'll see in Section \ref{sec:grapeHwArch}, the robot we used is the Husky platform (see Figure \ref{fig:husky}) from Clearpath Robotics, that moves with a  \textit{skid steering} kinematics, that is a derivative of \textit{differential drive} kinematics. Thus, we're going to describe these two motion model with more detail.
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/icc.png}
+	\caption{\textit{If the axis of all the wheels intersect in a single point, it's called ICC and the robot can move without slipping}}
+	\label{fig:icc}
+\end{figure}
+
+\subsection{Differential drive robot}
+In a differential drive system, the movement of the robot is only based on two separately driven wheels, placed on either side of the robot, on the same axis (see Figure \ref{fig:diffDrive}). By recalling the definition of \ac{ICC}, we observe that, if the weels are correctly aligned, a differential drive robot always have a well-defined \ac{ICC} and the slippage of the wheels is not very accentuated. \\
+At each instant in time, since the \ac{ICC} is well-defined, the left and right wheels follow a path that moves around \ac{ICC} at the same angular speed $\omega$, and thus:
+\begin{equation}
+	\begin{cases}
+	\omega (R + \frac{L}{2}) = v_r \\
+	\omega (R - \frac{L}{2}) = v_l 
+	\end{cases}
+\end{equation}
+
+where $L$ is the distance between the center of the two wheels.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\cleardoublepage
 \begin{itemize}
+
 	\item cosa si intende per odometria
 	\item motion models: differential drive e skid steering
 	\item sensor fusion cos'è, e esempio di Robot localization
 	\item localizzazione con amcl
 \end{itemize}
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.55\textwidth]{Images/background_and_tools/diffDrive.png}
+		\label{fig:diffDriveA}}
+	\qquad
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/diffDriveExample.jpg}
+		\label{fig:diffDriveB}}
+	\caption{\textit{On figure \ref{fig:diffDriveA}, the scheme of a differential drive motion model; in figure \ref{fig:diffDriveB}, an example of a differential drive robot (Pioneer 3DX).}}
+	\label{fig:diffDrive}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Navigation Stack}\label{sec:navigationStack}
 SKETCH:
