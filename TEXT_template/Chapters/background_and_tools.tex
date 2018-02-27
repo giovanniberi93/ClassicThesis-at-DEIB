@@ -90,7 +90,7 @@ In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the ref
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/husky.png}
+	\includegraphics[width=0.6\textwidth]{Images/background_and_tools/husky.png}
 	\caption{\textit{Husky platform from Clearpath Robotics is the platform used for the development of \ac{GRAPE} project.}}
 	\label{fig:husky}
 \end{figure}
@@ -98,6 +98,7 @@ In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the ref
 The problem of odometry, \textit{i.e.} estimation of the position of a robot in an environment is harder than it could seem. Formally, odometry estimation is the problem of estimating over time the tuple: 
 \begin{equation}
 	<x, y, z, \theta,\dot{x}, \dot{y}, \dot{z}, \dot{\theta}>
+	\label{eq:odometryTuple}
 \end{equation} 
 given the measurement of some motion sensors. 
 To better understand the complexity of the problem, let's analyze an extremely simple model: a robot with a single, freely rotating wheel. In this frame, assuming rotary encoders on the wheel, we can think about measuring directly the wheel speed and integrate these measurement to get the travelled distance, and measure the variation in the orientation of the wheel to get the position. But actually there are a lot of imperfection that can lead to error, for example:
@@ -119,17 +120,86 @@ But even if the odometry estimated from the wheels is not a good solution if use
 \end{figure}
 
 \subsection{Differential drive robot}
-In a differential drive system, the movement of the robot is only based on two separately driven wheels, placed on either side of the robot, on the same axis (see Figure \ref{fig:diffDrive}). By recalling the definition of \ac{ICC}, we observe that, if the weels are correctly aligned, a differential drive robot always have a well-defined \ac{ICC} and the slippage of the wheels is not very accentuated. \\
-At each instant in time, since the \ac{ICC} is well-defined, the left and right wheels follow a path that moves around \ac{ICC} at the same angular speed $\omega$, and thus:
+In a differential drive system, the movement of the robot is only based on two separately driven wheels, placed on either side of the robot, on the same axis (see Figure \ref{fig:diffDrive}), and optionally a central, non-actuated caster wheel for stability. The two side wheels are not steerable, so the changes of direction are realized through application of different speed to the two wheels. For example, intuitively, if the wheels move at the same speed and in the same direction, the robot will move straight; if the wheels move at the same speed but different directions, the robot rotates in place.
+ By recalling the definition of \ac{ICC}, we observe that, if the wheels are correctly aligned, a differential drive robot always have a well-defined \ac{ICC} and the slippage of the wheels is not very accentuated. \\
+At each instant in time, since the \ac{ICC} is well-defined, both the left and right wheel follow a path that moves around \ac{ICC} at the same angular speed $\omega$, and thus:
+
+\begin{empheq}[left=\empheqlbrace]{align}
+\omega (R + \frac{L}{2}) = v_r  \label{eq:diffDrive1}\\ 
+\omega (R - \frac{L}{2}) = v_l   \label{eq:diffDrive2}
+\end{empheq}
+
+where $L$ is the distance between the center of the two wheels, $v_r$ and $v_l$ are, respectively, the linear velocity of the right and left wheel, $R$ is the signed distance between the \ac{ICC} and the midpoint of the wheels. Note that the only parameter constant through time is $L$, since it's a physical property of the robot structure, while all other parameter evolve during the movement. \\
+By combining \ref{eq:diffDrive1} and \ref{eq:diffDrive2}, we get:
+
+\begin{empheq} {align}
+R=\frac{L}{2} \frac{(v_r+v_l)}{(v_r-v_l)},  \qquad \omega=\frac{(v_r-v_l)}{L}
+\end{empheq}
+
+Observing these results we can validate the intuitive impressions about particular cases made a few lines above:
+\begin{itemize}
+	\item if $v_r=v_l$, the curvature radius is infinite, because the robot is moving straight.
+	\item if $v_r=-v_l$, the robot is moving around the midpoint of the wheels
+\end{itemize}
+We give now some details about odometry computation. Let's assume, in a certain moment $t=t_0$, that the robot pose is $(x,y,\theta)$. We assume that in the time interval $t_0\rightarrow (t_0 +\delta t$) the values $v_r$ and $v_l$ are constant; if we observe figure \ref{fig:diffDriveDeltaT} under these condition, we have:
 \begin{equation}
-	\begin{cases}
-	\omega (R + \frac{L}{2}) = v_r \\
-	\omega (R - \frac{L}{2}) = v_l 
-	\end{cases}
+	ICC=(x-Rsin\theta, y+Rcos\theta)
 \end{equation}
+Write now the expressions for $(x',y',\theta')$:
 
-where $L$ is the distance between the center of the two wheels.
+\[
+\begin{bmatrix}
+\dot{x} \\
+\dot{y} \\
+\dot{\theta}
+\end{bmatrix}
+ = 
+\begin{bmatrix}
+cos(\omega \delta t) & -sin(\omega \delta t) & 0 \\
+sin(\omega \delta t)  & cos(\omega \delta t) & 0 \\
+0                                       & 0                                      & 1
+\end{bmatrix}
+\begin{bmatrix}
+x-ICC_x\\
+y-ICC _y\\
+\theta
+\end{bmatrix}
++
+\begin{bmatrix}
+ICC_x \\
+ICC_y \\
+\omega \delta t
+\end{bmatrix}
+\]
 
+With this procedure we have identified 3 of the elements of the target tuple (see expression \ref{eq:odometryTuple}), but we still have to retrieve $x$,$y$ and $\theta$. For this reason we consider that by assuming an initial pose ($x_0, y_0, \theta_0$), knowing that:
+\begin{equation}
+	V(t)=\frac{(v_r+v_l)}{2}
+\end{equation}
+where $V(t)$ represent the complexive speed of the robot, and assuming to know the functions $v_r(t)$ and $v_l(t)$ \textit{i.e.} the linear speed of the wheel in time, we can calculate $(x,y,\theta)$ by integrating the speed of the robot over time, that is:
+
+\begin{empheq}{align}
+	x(t)            & = \int_{0}^{t}V(t)cos(\theta(t))dt \\
+	y(t)            & = \int_{0}^{t}V(t)sin(\theta(t))dt \\
+	\theta(t)  & = \int_{0}^{t}\omega(t)d\omega
+\end{empheq}
+
+and, in our specific case we can write it as function of $v_l$ and $v_r$, that are the quantities that are directly measured on the wheels.
+
+\begin{empheq}{align}
+	x(t)            & = \frac{1}{2}\int_{0}^{t}(v_r(t)+v_l(t))cos(\theta(t))dt \\
+	y(t)            & = \frac{1}{2}\int_{0}^{t}(v_r(t)+v_l(t))sin(\theta(t))dt \\
+	\theta(t)  & =\frac{1}{L} \int_{0}^{t}(v_r(t)-v_l(t))(t)
+\end{empheq}
+So the tuple required by the odometry calculation is now complete.
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/diffDriveDeltaT.png}
+	\caption{\textit{Differential drive: $(x,y,\theta) \rightarrow (x',y',\theta')$}}
+	\label{fig:diffDriveDeltaT}
+\end{figure}
 
 
 
