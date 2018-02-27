@@ -26,6 +26,22 @@ these are \ac{ROS} main features:
 
 \item[nodes] The processes that are in the Computation Graph are called \textbf{nodes}, and they are the atomic units of the computational graph. The \ac{ROS} API are available in C++, Python and Lisp, but C++ is the most widely used. One of the aims of \ac{ROS} is to be modular at a fine-grained scale, so a complex task should be achieved through cooperation of several different nodes, each with quite narrow tasks, rather than one large node that include all the functionalities. Nodes can use different techniques for communication, depending whether the message is a part of data stream or it is a request message (\textit{i.e.} a response message is expected) and, in this last case, on the (expected) duration and complexity of the computation of the response.
 
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/ROS_master_example_english_1.png}}
+	\qquad
+	\subfloat[]{%
+		\includegraphics[width=0.25\textwidth]{Images/background_and_tools/ROS_master_example_english_2.png}}
+	\subfloat[]{%
+		\includegraphics[width=0.25\textwidth]{Images/background_and_tools/ROS_master_example_english_3.png}}		
+		
+	\caption{\textit{Three phases of the setup of communication of nodes throught topics.}}
+	\label{fig:topicRegistration}
+\end{figure}
+
+
 \item[topics] Topics implements a \textit{publish-subscribe} paradigm, are they the easiest way that nodes can use to communicate with each other, and basically are named channels, characterized by the type of the messages that are sent through it. When a node \textit{publish} a message on a certain topic, the message is read from all the nodes that previously \textit{subscribed} to that topic, interfacing with the Master. Note that:
 \begin{itemize}
 	\item this technique leads to a strong decoupling between publishers and subscribers to a topic, because a publisher node is, from an high-level perspective\footnote{Actually, publisher nodes always know the list of nodes subscribed to their topics. But this  is only used in connection phase, and to avoid a situation where a node publish on a topic with no subscribers, for the sake of efficiency.},
@@ -34,12 +50,6 @@ these are \ac{ROS} main features:
 \end{itemize}
 We can easily conclude that this method is very suitable for passing streams of data (\textit{e.g.} the handler of a \ac{LIDAR} streams its measurements over the network, or a node publish the velocities commands for the wheels of a robot), but there is no notion of a \textit{response} to a message, so it's not suitable for \textit{request-response} communication. 
 
-\begin{figure}
-	\centering
-	\includegraphics[width=1.1\textwidth]{Images/background_and_tools/rqt_graph.png}
-	\caption{\textit{An example of the \ac{ROS} Computation Graph, visualized with} rqt\textit{: nodes are represented with circles, rectangles represent topics, and arrows go from a node to a topic it publishes on, or from a topic to a node subscribed to it. It's easy to recognize the} many-to-many \textit{relationship.}}
-	\label{fig:tfGraph}
-\end{figure}
 
 \item[services] Services are defined by a name, and a couple of message types that describe the \textit{request} type and the \textit{response} type. Each service is offered by a Service server to any Service client that perform a call. So, Services implement an inter-node communication that is very similar to traditional function calling in most common programming languages (\textit{e.g.} C++, Java), in the sense that:
 \begin{itemize}
@@ -48,8 +58,22 @@ We can easily conclude that this method is very suitable for passing streams of 
 \end{itemize}
 These properties make Services suitable for punctual (in opposition to data stream) inter-node communication, such as: request of parameters values to another node, ask a node that handles a camera to take a picture, ask a node that perform navigation task to clear the current map.
 
-\item[actions] While Services, with their resemblance to traditional function calls, can address pretty well the problem of \textit{one-to-one} inter-node communication, they can be quite unsatisfying if the computation required to produce the response is demanding in term of execution time (\textit{e.g.}, navigation of a robot from one point to another in an environment), because the caller is stuck at the line with the Service invocation until the end of the procedure. Services show their weaknesses also in situations where it could be useful to observe the intermediate results of the computation triggered by the request (\textit{e.g.}, a very complex manipulation procedure). \textbf{Actions} are very suitable in this context because, at the cost of a more complex implementation, provide an asynchronous and fully preemptable remote procedure call, with the possibility of monitoring intermediate results if needed. Differently from Topics and Services, Actions are not native in \ac{ROS}, and their functionalities are built on top of the other \ac{ROS} messagging systems. Asynchronicity is provided by the use of callbacks.
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{Images/background_and_tools/rqt_graph.png}
+	\caption{\textit{An example of the \ac{ROS} Computation Graph, visualized with} rqt\textit{: nodes are represented with circles, rectangles represent topics, and arrows go from a node to a topic it publishes on, or from a topic to a node subscribed to it. It's easy to recognize the} many-to-many \textit{relationship.}}
+	\label{fig:tfGraph}
+\end{figure}
+
+\item[actions] While Services, with their resemblance to traditional function calls, can address pretty well the problem of \textit{one-to-one} inter-node communication, they can be quite unsatisfying if the computation required to produce the response is demanding in term of execution time (\textit{e.g.}, navigation of a robot from one point to another in an environment), because the caller is stuck at the line with the Service invocation until the end of the procedure. Services show their weaknesses also in situations where it could be useful to observe the intermediate results of the computation triggered by the request (\textit{e.g.}, a very complex manipulation procedure). \textbf{Actions} are very suitable in this context because, at the cost of a more complex implementation, provide an asynchronous and fully preemptable remote procedure call, with the possibility of monitoring intermediate results if needed. Differently from Topics and Services, Actions are not native in \ac{ROS}, and their functionalities are built on top of the other \ac{ROS} messagging systems (See figure \ref{fig:actionlib}). Asynchronicity is provided by the use of callbacks.
 \end{description}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.95\textwidth]{Images/background_and_tools/actionlib.png}
+	\caption{\textit{Sketch of the implementation of actionlib, through \ac{ROS} topics and a callback system.}}
+	\label{fig:actionlib}
+\end{figure}
 
 \begin{figure}
 	\centering
@@ -88,13 +112,6 @@ In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the ref
 
 \section{Odometry}\label{sec:odometry}
 
-\begin{figure}
-	\centering
-	\includegraphics[width=0.6\textwidth]{Images/background_and_tools/husky.png}
-	\caption{\textit{Husky platform from Clearpath Robotics is the platform used for the development of \ac{GRAPE} project.}}
-	\label{fig:husky}
-\end{figure}
-
 The problem of odometry, \textit{i.e.} estimation of the position of a robot in an environment is harder than it could seem. Formally, odometry estimation is the problem of estimating over time the tuple: 
 \begin{equation}
 	<x, y, z, \theta,\dot{x}, \dot{y}, \dot{z}, \dot{\theta}>
@@ -119,9 +136,25 @@ But even if the odometry estimated from the wheels is not a good solution if use
 	\label{fig:icc}
 \end{figure}
 
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.55\textwidth]{Images/background_and_tools/diffDrive.png}
+		\label{fig:diffDriveA}}
+	\qquad
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/diffDriveExample.jpg}
+		\label{fig:diffDriveB}}
+	\caption{\textit{On figure \ref{fig:diffDriveA}, the scheme of a differential drive motion model; in figure \ref{fig:diffDriveB}, an example of a differential drive robot (Pioneer 3DX).}}
+	\label{fig:diffDrive}
+\end{figure}
+
 \subsection{Differential drive robot}
 In a differential drive system, the movement of the robot is only based on two separately driven wheels, placed on either side of the robot, on the same axis (see Figure \ref{fig:diffDrive}), and optionally a central, non-actuated caster wheel for stability. The two side wheels are not steerable, so the changes of direction are realized through application of different speed to the two wheels. For example, intuitively, if the wheels move at the same speed and in the same direction, the robot will move straight; if the wheels move at the same speed but different directions, the robot rotates in place.
  By recalling the definition of \ac{ICC}, we observe that, if the wheels are correctly aligned, a differential drive robot always have a well-defined \ac{ICC} and the slippage of the wheels is not very accentuated. \\
+
+
 At each instant in time, since the \ac{ICC} is well-defined, both the left and right wheel follow a path that moves around \ac{ICC} at the same angular speed $\omega$, and thus:
 
 \begin{empheq}[left=\empheqlbrace]{align}
@@ -193,7 +226,6 @@ and, in our specific case we can write it as function of $v_l$ and $v_r$, that a
 \end{empheq}
 So the tuple required by the odometry calculation is now complete.
 
-
 \begin{figure}
 	\centering
 	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/diffDriveDeltaT.png}
@@ -201,40 +233,106 @@ So the tuple required by the odometry calculation is now complete.
 	\label{fig:diffDriveDeltaT}
 \end{figure}
 
+\subsection{Skid-steering}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-\cleardoublepage
+However, observing image \ref{fig:husky}, it's very easy to contest that the Husky platform used in \ac{GRAPE} project is not similar to the model described in previous section, because the number of actuated wheels is four instead of two. However, the motion model of the Husky is more similar to the differential drive because:
 \begin{itemize}
-
-	\item cosa si intende per odometria
-	\item motion models: differential drive e skid steering
-	\item sensor fusion cos'è, e esempio di Robot localization
-	\item localizzazione con amcl
+	\item wheels are not steerable
+	\item being $v_{f\star}$ the speeds of the front wheels, $v_{r\star}$ the speeds of the rear wheels, $v_{\star r}$ the speeds of the right wheels, $v_{\star l}$ the speeds of the left wheels, we always have:
+	\begin{empheq}{align}
+	v_{fr}=v_{rr} \\
+	v_{fl}=v_{rl}
+	\end{empheq}
 \end{itemize}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/background_and_tools/husky.png}
+	\caption{\textit{Husky platform from Clearpath Robotics is the platform used for the development of \ac{GRAPE} project.}}
+	\label{fig:husky}
+\end{figure}
+
+This type of motion model is called \textit{skid steering}, and is often use in real-world applications (see figure \ref{fig:skidSteeringB}) because of its simple and robust mechanical structure that leaving more room in the vehicle for the mission equipment. In
+addition, it has good mobility on a variety of terrains, which makes it suitable
+for all-terrain missions. But, of course, it also present a variety of problems and weakness. For example, if you recall what we told about \ac{ICC} in Section \ref{sec:odometry}, it's clear that the \ac{ICC} of such a model will always be at the infinite, since wheels are organized in 2 parallel rows that cannot steer. Thus, skid steering robots can't turn without slipping of the wheels! 
+From a theoretical point of view, the main consequence is a a complexity in obtaining an accurate kinematics and dynamic model of \textit{skid steering} \parencite{skidSteeringDifficult}. On the other hand, in the context of \ac{GRAPE} project this leads to two major practical problems:
+\begin{itemize}
+	\item the slippage of the robot leads to higher power consuption of the electric engines with respect to the a system with explicit steering \parencite{skidSteeringConsumption}. This is something to be taken into account in the sizing phase of the power system of the robot.
+	\item the estimation of the odometry is going to be much more imprecise than in the differential drive case, for the error introduced by the slipping of the wheels. 
+\end{itemize}
+
 \begin{figure}
 	\centering
 	\subfloat[]{%
-		\includegraphics[width=0.55\textwidth]{Images/background_and_tools/diffDrive.png}
-		\label{fig:diffDriveA}}
+		\includegraphics[width=0.5\textwidth]{Images/background_and_tools/skidSteeringModel.png}
+		\label{fig:skidSteeringA}}
 	\qquad
 	\subfloat[]{%
-		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/diffDriveExample.jpg}
-		\label{fig:diffDriveB}}
-	\caption{\textit{On figure \ref{fig:diffDriveA}, the scheme of a differential drive motion model; in figure \ref{fig:diffDriveB}, an example of a differential drive robot (Pioneer 3DX).}}
-	\label{fig:diffDrive}
+		\includegraphics[width=0.35\textwidth]{Images/background_and_tools/muletto.jpg}
+		\label{fig:skidSteeringB}}
+	\caption{\textit{On figure \ref{fig:skidSteeringA}, the scheme of a skid steering motion model; in figure \ref{fig:skidSteeringB}, an example of a skid steering vehicle.}}
+	\label{fig:skidSteering}
 \end{figure}
+
+Actually, there is a quite simple way  \parencite{skid2diff} to model with an accettable approximation the skid steering as an equivalent differential drive system, where the distance between the wheels is obtained multiplying the original distance for a factor $\chi$ that is function of the physical structure of the robot
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.4\textwidth]{Images/background_and_tools/diffSkidEquivalence.png}
+	\caption{\textit{The equivalence of differential drive motion model and skid steering model according to \cite{skid2diff}}}
+	\label{fig:husky}
+\end{figure}
+
+This approximation relies on some assumptions:
+\begin{itemize}
+	\item the mass center of the robotis located at the geometric center of the body frame.
+	\item the two wheels of each side rotate at the same speed.
+	\item \textbf{the robot is running on a firm ground surface, and four wheels are always in contact with the ground surface.}
+\end{itemize}
+We cannot guarantee that conditions $1)$ and $2)$ will hold in our context, but we are almost sure that condition $3)$ is \textbf{not} going to be verified, given the condition in which our robot is going to operate (vineyard terrain), so this is another reason for the wheel odometry not to be very precise. Thus, the integration of several sensors beyond the wheels encoders is essential to correct the wheel odometry.
+
+\section{Sensor fusion}\label{sec:sensorFusion}
+
+First of all, clarify what we mean for sensor fusion, following the definition of  \cite{sensorFusionDef}:
+\blockquote{\textit{
+"Sensor fusion is the combining of sensory data or data derived from sensory
+data in order to produce enhanced data in form of an internal representation
+of the process environment. The achievements of sensor fusion are
+robustness, extended spatial and temporal coverage, increased confidence,
+reduced ambiguity and uncertainty, and improved resolution."}}
+Let's analyze this last list, element by element, recalling the analysis of \cite{sensorFusionAdvantages}:
+\begin{itemize}
+	\item \textit{robustness}: redundancy generated by the presence of multiple sensors make the robot more resistant to partial failures
+	\item \textit{extended spatial and temporal coverage}: disseminate sensors are more likely to measure the dimension concerned with temporal continuity and from several positions
+	\item \textit{increased confidence}: measures confirmed by more that one sensor are given a larger weight
+	\item \textit{reduced ambiguity and uncertainty}: joint information reduces the set
+of ambiguous interpretations of the measured value
+	\item \textit{robustness against interference}:  by increasing the dimensionality of
+the measurement space (\textit{e.g.}, measuring the desired quantity with op-
+tical sensors and ultrasonic sensors) the system becomes less vulnerable
+against interference.
+\end{itemize}
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/sensorFusionScheme.png}
+		\label{fig:sensorFusionScheme}}
+	\qquad
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/multiSensorScheme.png}
+		\label{fig:multiSensorScheme}}
+	\caption{\textit{Sensor fusion \ref{fig:sensorFusionScheme} vs multi-sensor integration \ref{fig:multiSensorScheme}}}
+	\label{fig:fusionVsMultiSensor}
+\end{figure}
+
+Even if the name could be misleading, sensor fusion is a different from \textit{multi-sensor integration} in the sense that multi-sensor integration only consists in the simultaneous use of disparate sensor sources in order to accomplish a goal task. Sensor fusion tecniques make a step further, and aim to the construction of a single common representation, using all the available sensor sources. The difference betweeen multi-sensor integration and sensor fusion is described graphically in image \ref{fig:fusionVsMultiSensor}, to underline that sensor fusion actually provides one single representation of the state of the environment that is used as a single input stream by the control application, while in multi-sensor integration the application uses each of the sensor data streams as direct input. In this context, we are assuming the definition of environment, from \cite{stateOfEnvironment}: pose of the robot, 	velocity of the robot, and velocity of the joints, configuration of actuators, location and features of surrounding objects, location and velocity of moving object and people.
+
+
+
+% TODO:AMCL se lo useremo
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
