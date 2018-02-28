@@ -91,8 +91,15 @@ These properties make Services suitable for punctual (in opposition to data stre
 \textit{" [...] provide a standard way to keep track of coordinate frames and transform data within an entire system such that individual component users can be confident that the data is in the coordinate frame that they want without requiring knowledge of all the coordinate
 frames in the system" \parencite{tfPaper}}
 }
-The utility of such a component is straightforward, even in quite simple robotic systems. We'll describe here a situation we stumpled upon exactly in the development of the \ac{GRAPE} project, where of the utility of \textit{tf} is very easy to understand; you'll be able to better contextualize this example after you've read Chapter \ref{chap:kinovaArmChapter}. In this example a \ac{LIDAR}, mounted on top of the final joint of a robotic arm, acquires data while the arm is moving in order to create a point cloud that will be processed later. To get a meaningful point cloud, it's mandatory to keep track of the movement of the \ac{LIDAR} with respect to a point with speed equal to zero (\textit{e.g.} the base link of the arm, or the base link of the whole robot), and this gets even more difficult because of the multiple (6 in our specific case) joints of the arm; but this problem can be easily addressed by means of \textit{tf}, that we are now going to describe with more detail. 
-\textit{tf} implementation relies on \ac{ROS} topics (see Section \ref{sec:robotOperatingSystem}) and achieves the goal mentioned before by building an oriented graph where vertices are reference frames, and edges are transformations (rototranslations) between frames. \textit{tf} does not assume a constant structure and, if a path exists between two reference frames in the graph, the direct transformation between them can be computed by composition of transformation. Since, in general, multiple paths between 2 vertices can exists in a directed graph and this could lead to ambiguity in computing the transformation between two reference frames, the graph is forced to be acyclic. Discongit anected subgraphs are allowed, but of course transformation between vertices that belong to different subgraphs cannot be computed. 
+The utility of such a component is straightforward, even in quite simple robotic systems. We'll describe here a situation we stumpled upon exactly in the development of the \ac{GRAPE} project, where of the utility of \textit{tf} is very easy to understand; you'll be able to better contextualize this example after you've read Chapter \ref{chap:kinovaArmChapter}. In this example a \ac{LIDAR}, mounted on top of the final joint of a robotic arm, acquires data while the arm is moving in order to create a point cloud that will be processed later. To get a meaningful point cloud, it's mandatory to keep track of the movement of the \ac{LIDAR} with respect to a point with speed equal to zero (\textit{e.g.} the base link of the arm, or the base link of the whole robot), and this gets even more difficult because of the multiple (6 in our specific case) joints of the arm; but this problem can be easily addressed by means of \textit{tf}.\\
+Note that frames are very useful for two main tasks:
+\begin{itemize}
+	\item represent the configuration of the robot, by assigning frames to the significant physical elements of the robot (\textit{e.g.} joints, sensors, wheels). Since \textit{tf} graph is a tree, a root element of the robot should exists; in a typical configuration, the frame name is \textit{base\_link}, it's placed in the geometrical center of the robot, and all the other frames linked to physical components of the robot belong to the subtree with root \textit{base\_link}.
+	\item represent the position of the robot in an environment. A typical example is the frame \textit{odom}, that is typically centered in the point where the robot is located when it's switched on. Another example is the frame \textit{map}, that is used as a reference in case the robot is localized not only with respect to its initial point, but in a given map.
+\end{itemize}
+
+We are now giving a a bit more techical detail about \textit{tf}.
+\textit{tf} implementation relies on \ac{ROS} topics (see Section \ref{sec:robotOperatingSystem}) and achieves the goal mentioned before by building an oriented graph where vertices are reference frames, and edges are transformations (rototranslations) between frames. \textit{tf} does not assume a constant structure and, if a path exists between two reference frames in the graph, the direct transformation between them can be computed by composition of transformation. Since, in general, multiple paths between 2 vertices can exists in a directed graph and this could lead to ambiguity in computing the transformation between two reference frames, the graph is forced to be acyclic. Disconnected subgraphs are allowed, but of course transformation between vertices that belong to different subgraphs cannot be computed. 
 The main components of the library are:
 \begin{itemize}
 	\item \textbf{\textit{tf} broadcasters}: they are simple software components, that publish a transformation between two reference frames every time an update is available. Different broacasters does not sync together the publishing phase
@@ -345,7 +352,7 @@ Citing Robot Localization documentation\footnote{http://docs.ros.org/kinetic/api
 	\label{fig:robotLocalizationDisegno}
 \end{figure}
 
-The Robot Localization algorithm is implemented specifically for \ac{ROS}, and it's widely adopted by \ac{ROS} community for its documentation, and its easiness of use and configuration. It fuses an unlimited number of sensor sources, for each of which you can specify the message fields to be fused in the global estimate. \\
+The Robot Localization algorithm is implemented specifically for \ac{ROS}, and it's widely adopted by \ac{ROS} community for its documentation, and its easiness of use and configuration. It fuses an unlimited number of sensor sources, for each of which you can specify a configuration vector given in the frame id of the input message \textit{i.e.} you can specify the message fields to be fused in the global estimate. For example, since GPS output is not so precise about altitude estimation, you can specify that only latitude and longitude parameters to be fused in the global estimate. \\
 
 The state variables considered by Robot Localization are:
 \begin{equation}
@@ -355,12 +362,13 @@ The state variables considered by Robot Localization are:
 where $ \psi, \theta, \phi$ correspond to the euler angles \textit{roll, pitch, yaw}. 
 The node accepts as inputs several types of \ac{ROS} messages:
 \begin{itemize}
-	\item \textit{nav\_msgs/Odometry}: the odometry estimation output by another node can be used entirely as input; this is the case of the odometry estimated only using wheels encoders
-	\item \textit{sensor\_msgs/Imu}: the output of an \ac{IMU} sensor
+	\item \textit{nav\_msgs/Odometry}: the odometry estimation output by another node can be used entirely as input; this is the case of the odometry estimated only using wheels encoders, and it also allows for cascaded localization nodes. This will be useful in the \ac{GRAPE} project, as we'll se in Chapter \ref{chap:localization}.
+	\item \textit{sensor\_msgs/Imu}: the output of an \ac{IMU} sensor \textit{i.e.} a device composed by accelerometer, gyroscope, and magnetometer
 	\item \textit{geometry\_msgs/PoseWithCovarianceStamped}: an estimate of the position and orientation of the robot, together with the timestamp of the measure and its covariance matrix
 	\item \textit{geometry\_msgs/TwistWithCovarianceStamped}: an estimate of the linear and angular velocities of the robot, together with the timestamp of the measure and its covariance matrix.
 \end{itemize}
-
+Moreover, the Kalman filter implemented in Robot Localization is capable of \textit{continuous estimation}: if for some reason no data are received from the various sensors for a large enough amount of time, the filter keeps producing odometry estimation exploiting an internal motion model. 
+Remeber that Robot Localization can be configured also to publish the \textit{tf} transformation associated to the estimated odometry. This is one of the usage of \textit{tf} described in Section \ref{sec:tf}.
 
 % TODO:AMCL se lo useremo
 
@@ -368,8 +376,19 @@ The node accepts as inputs several types of \ac{ROS} messages:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Navigation Stack}\label{sec:navigationStack}
-SKETCH:
+
+
+
 \begin{itemize}
 	\item cos'è navigation stack (immagine http://wiki.ros.org/move\_base?action=AttachFile\&do=get\&target=overview\_tf.png)
 	\item local/global costmap
 \end{itemize}
+
+
+
+
+
+
+
+
+
