@@ -2,7 +2,7 @@
 
 \chapter{Background and Tools} \label{chap:backgroundAndToolsChapter}
 
-In this chapter we are going to describe the general concepts this thesis deals with, together with the main tools we used to address the project. Since this thesis is in the frame of \ac{GRAPE} project (see Chapter \ref{chap:grapeProject}),  most of them are typical of the robotic field and, more specifically, of the agricultural robotics. This last field should be seen in the wider context of the so-called \textit{E-agriculture}; to give a precise definition of this term, we make reference to the FAO (Food and Agriculture Organization) definition\footnote{http://www.fao.org/fileadmin/templates/rap/files/uploads/E-agriculture\_Solutions\_Forum.pdf}:
+In this chapter we are going to describe the general concepts this thesis deals with, together with the main tools we used to address the project. Since this thesis is in the frame of \ac{GRAPE} project (see Chapter \ref{chap:grapeProject}),  most of them are typical of the robotic field and, more specifically, of the agricultural robotics. This last field should be seen in the wider context of the so-called \textit{E-agriculture}; to give a precise definition of this term, we make reference to the FAO (Food and Agriculture Organization) definition\footnote{\url{http://www.fao.org/fileadmin/templates/rap/files/uploads/E-agriculture\_Solutions\_Forum.pdf}}:
 \blockquote{\textit{E-agriculture, or ICTs in agriculture, is about designing,
 developing and applying innovative ways to use ICTs with a
 primary focus on agriculture. E-agriculture offers a wide range
@@ -14,13 +14,14 @@ The \ac{GRAPE} project, that will be described with further details in chapter \
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Robot Operating System}\label{sec:robotOperatingSystem}
-\ac{ROS} is the \textit{robotic middleware} we used to develop the sofware components of the system described in this thesis. We decide to use it because of its great modularity, the availability of a very large number of packages, well documented APIs and an active community. Moreover, \ac{ROS} is a very widespread system, so its power and versatility are well known in the field of software development for robotics. Citing words from its offical website\footnote{http://wiki.ros.org/ROS/Introduction},
+\ac{ROS} is the \textit{robotic middleware} we used to develop the sofware components of the system described in this thesis. We decide to use it because of its great modularity, the availability of a very large number of packages, well documented APIs and an active community. Moreover, \ac{ROS} is a very widespread system, so its power and versatility are well known in the field of software development for robotics. Citing words from its offical website\footnote{\url{http://wiki.ros.org/ROS/Introduction}},
 these are \ac{ROS} main features: 
 \blockquote{
 \textit{It provides the services you would expect from an operating system, including hardware abstraction, low-level device control, implementation of commonly-used functionality, message-passing between processes, and package management. It also provides tools and libraries for obtaining, building, writing, and running code across multiple computers}.
 } 
 
 \ac{ROS} is actually a \textit{meta-operating system}, that is, it's not an operating system in the traditional sense (it requires to be run on top of an another operating system; currently, the only officially supported OS is Linux Ubuntu), but it provides a peer-to-peer network that processes can use to create and process data together. This network is implemented through TCP, and it's called \textit{Computation Graph}. In this section, we're going to describe \ac{ROS} with more detail, with particular emphasis on the different tecniques that nodes can use to communicate among them. Keep in mind that, even if these tecniques differs a lot, they all are strongly typed \textit{i.e.} in order to define a channel (with \textit{channel} we now mean one of the tecnique that we are going to describe. It's not the name of a specific communication tool) you also need to define the types of message that are going to be exchanged throught it. \ac{ROS} already defines a lot of useful message types (\textit{e.g.} \textit{LaserScan.msg}, \textit{PoseWithCovarianceStamped.msg}), grouped by domain (\textit{e.g.}, \textit{Sensor\_msgs}, \textit{Geometry\_msgs}). However a simple message definition language is provided, and users are encouraged to define their own message types to make them as self-explanatory as possible.
+
 \begin{description}
 \item[ROS Master] Even if the Computation Graph is a peer-to-peer network, a central process, called  \textbf{\ac{ROS} Master}, is required to exist, to provide naming and registration services to all the user processes In this. Once the processes have located each other through the services offered by the Master, they can communicate peer-to-peer without involving a central entity;
 
@@ -105,16 +106,14 @@ The main components of the library are:
 	\item \textbf{\textit{tf} broadcasters}: they are simple software components, that publish a transformation between two reference frames every time an update is available. Different broacasters does not sync together the publishing phase
 	\item \textbf{\textit{tf} listeners}: they are more complex components, because they take into account that broadcasters are not synced. Since both transformations and queries to \textit{tf} graph are stamped, listeners make use of queues to store the most recent transformations, and they  interpulate old values using SLERP (Spherical Linear intERPolation) to return a transformation for which there is no measured value at the requested timestamp.
 \end{itemize}
+In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the reference frames tracked in a Nao Robot, while figure \ref{fig:tfGraph} shows an example of \textit{tf} graph visualized with visualization framework \textit{rqt}. 
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.6\textwidth]{Images/background_and_tools/tfGraph.JPG}
+	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/tfGraph.JPG}
 	\caption{\textit{An example of} tf \textit{tree}}
 	\label{fig:tfGraph}
 \end{figure}
-
-In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the reference frames tracked in a Nao Robot, while figure \ref{fig:tfGraph} shows an example of \textit{tf} graph visualized with visualization framework \textit{rqt}. 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Odometry}\label{sec:odometry}
@@ -132,26 +131,25 @@ To better understand the complexity of the problem, let's analyze an extremely s
 		\item there is no such thing as a perfect sensor, so the use of encoders introduce an error
 	\end{itemize}
 Even if all these concurrent causes seem negligible, you have to take into account that the errors sum up over time, so an error of a few millimeters per meter might become significant over time. \\ 
-Moreover, the probability of slippage gets higher in systems with more than one wheel, because, because for a system with multiple wheels to move without slippage, a point must exists around which all the wheels can move along a circular path. This point is called \ac{ICC} (see Figure \ref{fig:icc}), and can be easily identified by looking for the intersection of the axis of all wheels. If the intersaction exists in a single point, it's called the \ac{ICC}.
-But even if the odometry estimated from the wheels is not a good solution if used alone, it can be used as a starting point for other, more complex, method. For this reason we are now going to descript how to estimate the odometry starting from the wheels encoders in our specific robot. This computation is different according to the \textbf{motion model} of the considered robot. As we'll see in Section \ref{sec:grapeHwArch}, the robot we used is the Husky platform (see Figure \ref{fig:husky}) from Clearpath Robotics, that moves with a  \textit{skid steering} kinematics, that is a derivative of \textit{differential drive} kinematics. Thus, we're going to describe these two motion model with more detail.
-
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/icc.png}
+	\includegraphics[width=0.7\textwidth]{Images/background_and_tools/icc.png}
 	\caption{\textit{If the axis of all the wheels intersect in a single point, it's called ICC and the robot can move without slipping}}
 	\label{fig:icc}
 \end{figure}
 
+Moreover, the probability of slippage gets higher in systems with more than one wheel, because, because for a system with multiple wheels to move without slippage, a point must exists around which all the wheels can move along a circular path. This point is called \ac{ICC} (see Figure \ref{fig:icc}), and can be easily identified by looking for the intersection of the axis of all wheels. If the intersaction exists in a single point, it's called the \ac{ICC}.
+But even if the odometry estimated from the wheels is not a good solution if used alone, it can be used as a starting point for other, more complex, method. For this reason we are now going to descript how to estimate the odometry starting from the wheels encoders in our specific robot. This computation is different according to the \textbf{motion model} of the considered robot. As we'll see in Section \ref{sec:grapeHwArch}, the robot we used is the Husky platform (see Figure \ref{fig:husky}) from Clearpath Robotics, that moves with a  \textit{skid steering} kinematics, that is a derivative of \textit{differential drive} kinematics. Thus, we're going to describe these two motion model with more detail.
 
 \begin{figure}
 	\centering
 	\subfloat[]{%
-		\includegraphics[width=0.55\textwidth]{Images/background_and_tools/diffDrive.png}
+		\includegraphics[width=0.5\textwidth]{Images/background_and_tools/diffDrive.png}
 		\label{fig:diffDriveA}}
 	\qquad
 	\subfloat[]{%
-		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/diffDriveExample.jpg}
+		\includegraphics[width=0.25\textwidth]{Images/background_and_tools/diffDriveExample.jpg}
 		\label{fig:diffDriveB}}
 	\caption{\textit{On figure \ref{fig:diffDriveA}, the scheme of a differential drive motion model; in figure \ref{fig:diffDriveB}, an example of a differential drive robot (Pioneer 3DX).}}
 	\label{fig:diffDrive}
@@ -283,14 +281,6 @@ From a theoretical point of view, the main consequence is a a complexity in obta
 \end{figure}
 
 Actually, there is a quite simple way  \parencite{skid2diff} to model with an accettable approximation the skid steering as an equivalent differential drive system, where the distance between the wheels is obtained multiplying the original distance for a factor $\chi$ that is function of the physical structure of the robot
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.4\textwidth]{Images/background_and_tools/diffSkidEquivalence.png}
-	\caption{\textit{The equivalence of differential drive motion model and skid steering model according to \cite{skid2diff}}}
-	\label{fig:husky}
-\end{figure}
-
 This approximation relies on some assumptions:
 \begin{itemize}
 	\item the mass center of the robotis located at the geometric center of the body frame.
@@ -298,6 +288,13 @@ This approximation relies on some assumptions:
 	\item \textbf{the robot is running on a firm ground surface, and four wheels are always in contact with the ground surface.}
 \end{itemize}
 We cannot guarantee that conditions $1)$ and $2)$ will hold in our context, but we are almost sure that condition $3)$ is \textbf{not} going to be verified, given the condition in which our robot is going to operate (vineyard terrain), so this is another reason for the wheel odometry not to be very precise. Thus, the integration of several sensors beyond the wheels encoders is essential to correct the wheel odometry.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.4\textwidth]{Images/background_and_tools/diffSkidEquivalence.png}
+	\caption{\textit{The equivalence of differential drive motion model and skid steering model according to \cite{skid2diff}}}
+	\label{fig:husky}
+\end{figure}
 
 \section{Sensor fusion}\label{sec:sensorFusion}
 
@@ -333,16 +330,16 @@ against interference.
 	\label{fig:fusionVsMultiSensor}
 \end{figure}
 
-Even if the name could be misleading, sensor fusion is a different from \textit{multi-sensor integration} in the sense that multi-sensor integration only consists in the simultaneous use of disparate sensor sources in order to accomplish a goal task. Sensor fusion tecniques make a step further, and aim to the construction of a single common representation, using all the available sensor sources. The difference betweeen multi-sensor integration and sensor fusion is described graphically in image \ref{fig:fusionVsMultiSensor}, to underline that sensor fusion actually provides one single representation of the state of the environment that is used as a single input stream by the control application, while in multi-sensor integration the application uses each of the sensor data streams as direct input. In this context, we are assuming the definition of environment, from \cite{stateOfEnvironment}: pose of the robot, 	velocity of the robot, and velocity of the joints, configuration of actuators, location and features of surrounding objects, location and velocity of moving object and people.
+Even if the name could be misleading, sensor fusion is different from \textit{multi-sensor integration} in the sense that multi-sensor integration only consists in the simultaneous use of disparate sensor sources in order to accomplish a goal task. Sensor fusion tecniques make a step further, and aim to the construction of a single common representation, using all the available sensor sources. The difference betweeen multi-sensor integration and sensor fusion is described graphically in image \ref{fig:fusionVsMultiSensor}, to underline that sensor fusion actually provides one single representation of the state of the environment that is used as a single input stream by the control application, while in multi-sensor integration the application uses each of the sensor data streams as direct input. In this context, we are assuming the definition of environment, from \cite{stateOfEnvironment}: pose of the robot, 	velocity of the robot, and velocity of the joints, configuration of actuators, location and features of surrounding objects, location and velocity of moving object and people.
 
 In \ac{ROS} ecosystem, several open source solutions exist that implements \textit{sensor fusion-based} odometry; we tried two of them, which gave proof of good functioning in the past: \textbf{ROAMFREE} (\cite{roamfreePaper}, \cite{roamfreeUtilizzo1}, \cite{roamfreeUtilizzo2}), a graph-based algorithm, and \textbf{Robot Localization} (\cite{robotLocalizationPaper}, \cite{robotLocalizationUtilizzo1}, \cite{robotLocalizationUtlizzo2}), based on Kalman filters.
 
-After the experimental campaign in Casciano Terme, ROAMFREE turned out to be harder to configure for our specific problem, while Robot Localization had some specific documentation about the its usage in the required context\footnote{http://docs.ros.org/kinetic/api/robot\_localization/html/integrating\_gps.html},
-so we opted for this last one. Further details about our usage or Robot Localization will be given in Chapter \ref{chap:localization}, while we are giving a few hints about its general functioning.
+After the experimental campaign in Casciano Terme, ROAMFREE turned out to be harder to configure for our specific problem, while Robot Localization had some specific documentation about the its usage in the required context\footnote{\url{http://docs.ros.org/kinetic/api/robot\_localization/html/integrating\_gps.html}},
+so we opted for this last one. Further details about our usage or Robot Localization will be given in Chapter \ref{chap:localization}, while we are now giving a few hints about its general functioning.
 
 \subsection{Robot Localization}
 
-Citing Robot Localization documentation\footnote{http://docs.ros.org/kinetic/api/robot\_localization/html/}:
+Citing Robot Localization documentation\footnote{\url{http://docs.ros.org/kinetic/api/robot\_localization/html/}}:
 \blockquote{\textit{"Robot\_localization is a collection of state estimation nodes, each of which is an implementation of a nonlinear state estimator for robots moving in 3D space. It contains two state estimation nodes, ekf\_localization\_node and ukf\_localization\_node". In addition, robot\_localization provides navsat\_transform\_node, which aids in the integration of GPS data."}}
 
 \begin{figure}
@@ -377,12 +374,44 @@ Remeber that Robot Localization can be configured also to publish the \textit{tf
 
 \section{Navigation Stack}\label{sec:navigationStack}
 
+In Computer Science, a software stack is a set of programs that collaborate, in order to achieve a common goal. Since we are talking about \ac{ROS} ecosystem, the programs are \ac{ROS} nodes, and in the case of Navigation Stack, the common goal is to provide a modular out-of-the-box navigation system for \ac{UGV}s. It was originally developed for Willow Garage's \textit{PR2} robot, but its usage can be easily extended to differential drive and holonomic wheeled robots. The planner, Move Base, is known to be a very good solution for indoor navigation \parencite{moveBaseIndoor}, so we were not sure about its performance in an outdoor environment as required in \ac{GRAPE} project. Luckily, it turned out to be a very good solution even in our situation, so it was integrated in the final navigation system. We are now giving a brief description of the main building blocks of the Navigation Stack (figure \ref{fig:navStack}):
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/localGlobalCostmap.png}
+		\label{fig:localGlobalCostmap1}}
+	\qquad
+	\subfloat[]{%
+		\includegraphics[width=0.31\textwidth]{Images/background_and_tools/localGlobalCostmap2.png}
+		\label{fig:localGlobalCostmap2}}
+	\caption{\textit{Local and global costmap visualized with} RViZ\textit{. As you can see, the local costmap (in brighter colors) is built around the robot, and moves together with it.}}
+	\label{fig:localGlobalCostmap2}
+\end{figure}
 
 
-\begin{itemize}
-	\item cos'è navigation stack (immagine http://wiki.ros.org/move\_base?action=AttachFile\&do=get\&target=overview\_tf.png)
-	\item local/global costmap
-\end{itemize}
+
+\begin{description}
+	\item[odometry source] A topic from which read the pose estimated from the odometry system \textit{e.g.} simple wheels odometry, output of a sensor fusion node as Robot Localization or ROAMFREE.
+	\item[Sensor source] A topic from which read the data coming from the laser sensors (\ac{LIDAR}) that are probing the environment, for obstacle avoidance, localization and possibly mapping tasks.
+	\item[amcl] Implementation of a probabilistic localization system, based on the Monte Carlo localization, as described in \cite{monteCarloLocalization}. (TODO se alla fine lo usiamo lo descrivo meglio magari).
+	\item[map server] A \ac{ROS} node where the map is published as a single topic message. This block is not used if Move Base is used in mapless mode 
+	\item[base controller] This is the only output topic of the Navigation Stack, and of course it contains speed commands for the base of the robot.
+	\item[local and global costmap] They represent the information about the obstacles on the 2D plane of the ground, with a certain inflation radius that represent the size of the robot base. Each cell of the gridmap is associated to a certain cost that measure "how hard is it" to traverse that cell of the gridmap; possible values to represent the severity of obstacles are \textit{Lethal obstacle}, \textit{Inscribed}, \textit{Possibly circumscribed}, \textit{Freespace}, \textit{Unknown}. The \textbf{global} costmap represent whole environment as is build from a known map, while the \textbf{local} costmap is built using only incoming laser scans. Local map is, in general, a scrolling window that moves in the global costmap in relation to robot current pose, and it's continuously updated.
+	\item[local and global planners] Global planner takes as input the global costmap, and traces the path with lowest cost from current position of the goal position; the local planners instead takes care of continuously update (if required) the global plan in the light of the incoming laser measurements. This combination is essential in case of unexpected obstacles.
+\end{description}
+
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1.1\textwidth]{Images/background_and_tools/navigationStack.png}
+	\caption{\textit{A scheme representation of the Navigation Stack; see the color legend for classification in provided, optional provided, and platform specific nodes.}}
+	\label{fig:navStack}
+\end{figure}
+
+
 
 
 
