@@ -309,8 +309,7 @@ Let's analyze this last list, element by element, recalling the analysis of \cit
 	\item \textit{reduced ambiguity and uncertainty}: joint information reduces the set
 of ambiguous interpretations of the measured value
 	\item \textit{robustness against interference}:  by increasing the dimensionality of
-the measurement space (\textit{e.g.}, measuring the desired quantity with op-
-tical sensors and ultrasonic sensors) the system becomes less vulnerable
+the measurement space (\textit{e.g.}, measuring the desired quantity with optical sensors and ultrasonic sensors) the system becomes less vulnerable
 against interference.
 \end{itemize}
 
@@ -329,6 +328,38 @@ against interference.
 
 Even if the name could be misleading, sensor fusion is a different from \textit{multi-sensor integration} in the sense that multi-sensor integration only consists in the simultaneous use of disparate sensor sources in order to accomplish a goal task. Sensor fusion tecniques make a step further, and aim to the construction of a single common representation, using all the available sensor sources. The difference betweeen multi-sensor integration and sensor fusion is described graphically in image \ref{fig:fusionVsMultiSensor}, to underline that sensor fusion actually provides one single representation of the state of the environment that is used as a single input stream by the control application, while in multi-sensor integration the application uses each of the sensor data streams as direct input. In this context, we are assuming the definition of environment, from \cite{stateOfEnvironment}: pose of the robot, 	velocity of the robot, and velocity of the joints, configuration of actuators, location and features of surrounding objects, location and velocity of moving object and people.
 
+In \ac{ROS} ecosystem, several open source solutions exist that implements \textit{sensor fusion-based} odometry; we tried two of them, which gave proof of good functioning in the past: \textbf{ROAMFREE} (\cite{roamfreePaper}, \cite{roamfreeUtilizzo1}, \cite{roamfreeUtilizzo2}), a graph-based algorithm, and \textbf{Robot Localization} (\cite{robotLocalizationPaper}, \cite{robotLocalizationUtilizzo1}, \cite{robotLocalizationUtlizzo2}), based on Kalman filters.
+
+After the experimental campaign in Casciano Terme, ROAMFREE turned out to be harder to configure for our specific problem, while Robot Localization had some specific documentation about the its usage in the required context\footnote{http://docs.ros.org/kinetic/api/robot\_localization/html/integrating\_gps.html},
+so we opted for this last one. Further details about our usage or Robot Localization will be given in Chapter \ref{chap:localization}, while we are giving a few hints about its general functioning.
+
+\subsection{Robot Localization}
+
+Citing Robot Localization documentation\footnote{http://docs.ros.org/kinetic/api/robot\_localization/html/}:
+\blockquote{\textit{"Robot\_localization is a collection of state estimation nodes, each of which is an implementation of a nonlinear state estimator for robots moving in 3D space. It contains two state estimation nodes, ekf\_localization\_node and ukf\_localization\_node". In addition, robot\_localization provides navsat\_transform\_node, which aids in the integration of GPS data."}}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\textwidth]{Images/background_and_tools/robotLocalizationLogo.png}
+	\caption{\textit{A scheme of Robot Localization senor fusion}}
+	\label{fig:robotLocalizationDisegno}
+\end{figure}
+
+The Robot Localization algorithm is implemented specifically for \ac{ROS}, and it's widely adopted by \ac{ROS} community for its documentation, and its easiness of use and configuration. It fuses an unlimited number of sensor sources, for each of which you can specify the message fields to be fused in the global estimate. \\
+
+The state variables considered by Robot Localization are:
+\begin{equation}
+	<x, y, z, \psi, \theta, \phi, \dot{x}, \dot{y}, \dot{z},\dot{\psi}, \dot{\theta}, \dot{\phi}, \ddot{x}, \ddot{y}, \ddot{z}>
+	\label{eq:robotLocalizationState}
+\end{equation}
+where $ \psi, \theta, \phi$ correspond to the euler angles \textit{roll, pitch, yaw}. 
+The node accepts as inputs several types of \ac{ROS} messages:
+\begin{itemize}
+	\item \textit{nav\_msgs/Odometry}: the odometry estimation output by another node can be used entirely as input; this is the case of the odometry estimated only using wheels encoders
+	\item \textit{sensor\_msgs/Imu}: the output of an \ac{IMU} sensor
+	\item \textit{geometry\_msgs/PoseWithCovarianceStamped}: an estimate of the position and orientation of the robot, together with the timestamp of the measure and its covariance matrix
+	\item \textit{geometry\_msgs/TwistWithCovarianceStamped}: an estimate of the linear and angular velocities of the robot, together with the timestamp of the measure and its covariance matrix.
+\end{itemize}
 
 
 % TODO:AMCL se lo useremo
