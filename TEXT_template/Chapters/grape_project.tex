@@ -14,11 +14,28 @@ The example applications have been selected in order to challenge perception and
 
 It's clear that some of these high-precision tasks are still too complex to be automated, and current state-of-the-art in research and technology have been proved to be not yet mature to give rise to a commercial product able to compete with a skilled agricultural agent. The goal of \ac{GRAPE} is creating the enabling technologies to allow agricultural companies to develop vineyard robots to keep filling the gap that exists with respect to traditional methods.
 
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/grape_project/prunedVine.jpg}
+		\label{fig:vignaSenzaFoglie}}
+	\qquad
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/grape_project/leavesVine.jpg}
+		\label{fig:vignaFoglia}}
+	\caption{\textit{A vine before (\ref{fig:vignaSenzaFoglie}) and after (\ref{fig:vignaFoglia}) le} having leafed out.}
+	\label{fig:vignaConSenzaFoglie}
+\end{figure}
+
+
 \ac{GRAPE} project specification identify these two application examples:
 \begin{itemize}
-	\item \textbf{Vineyard monitoring and autonomous navigation}: the developed robotic platform must be able to autonomously navigate the vineyard and localize itself into a map of the environment (downstream a mapping phase), to be able to monitor the state of the vineyard (\textit{e.g.} foliage and grapes inspection). The project implementation focused on a semi-autonomous monitoring, that consider a fully autonomous navigation platoform, with video stream capability that allows human users to observe in person the live data collected by the robot. 
-	\item \textbf{Autonomous application of pherormone dispenser applications}: pherormone dispensers are used for \textit{mating disruption} tecniques, to protect grapevines from grape moths, by disrupting the bugs' reproductive cycle making use of synthesized sex pherormones. 
+	\item \textbf{Vineyard monitoring and autonomous navigation}: the developed robotic platform must be able to autonomously navigate the vineyard and localize itself into a map of the environment (downstream a mapping phase), to be able to monitor the state of the vineyard (\textit{e.g.} foliage and grapes inspection). The navigation The project implementation focused on a semi-autonomous monitoring, that consider a fully autonomous navigation platoform, with video stream capability that allows human users to observe in person the live data collected by the robot. The localization and navigation parts, however, are a key point for any kind of tasks in the for an \ac{UGV} field robot, because of the probability of high slope ground, rugged terrain morphology and unstructured map. 
+	\item \textbf{Autonomous application of pherormone dispenser applications}: pherormone dispensers are used for \textit{mating disruption} tecniques, to protect grapevines from grape moths, by disrupting the bugs' reproductive cycle making use of synthesized sex pherormones. Also in this case, the most relevant challenge is brought by the unstructured environment, that makes the sensing and manipulation tasks significantly harder.  However, note that pherormones deployment task gets easier if you think that the timing of the reproductive cycle (on which of course we have no control at all) forces this operation to be performed in a season where grape plants are pruned, and have not leafed out yet.\parencite{mateDisruptionEfficiency}. Of course, the absence of foliage and grapes makes this task significantly easier (see Image \ref{fig:vignaConSenzaFoglie}).
 \end{itemize}
+
+The studies of \cite{outdoorNavigation}
+
 
 \begin{figure}
 	\centering
