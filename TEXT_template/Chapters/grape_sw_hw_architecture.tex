@@ -2,9 +2,28 @@
 
 \chapter{Grape hardware and software Architecure} \label{chap:grapeSoftwareArchitecture}
 
-Grape architecture SKETCH:
+In this chapter we are going to describe in a detailed way the architecture of the robotic platform we used to implement the system to fulfill the requirements described in Section \ref{sec:grapeProjectDescription}. First, in Section \ref{sec:grapeHwArch}, we are giving an overview of the hardware components, from the robot base to all the actuators/sensors present on board. In Section \ref{sec:grapeSwArch}, we'll start to analyze the software architecure of the system, explaining what the main modules are, and the relationships between them.
 
-\section{GRAPE hw architecture}\label{sec:grapeHwArch}
+\section{GRAPE hardware architecture}\label{sec:grapeHwArch}
+
+\subsection{Robotic Base}
+The choice of the robotic base is, of course, a crucial point in the development of our system, for two reasons:
+\begin{itemize}
+	\item without a well-functioning robotic base, no other objective can be achieved
+	\item the vineyard environment is particularly challenging in nature (this particular aspect will be well-justified in Chapter \ref{chap:localization}), so we cannot rely on a non-prudent choice.
+\end{itemize}
+As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Husky} \ac{UGV} from Clearpath Robotics\footnote{\url{https://www.clearpathrobotics.com/husky-unmanned-ground-vehicle-robot/}},
+(see Figure \ref{fig:husky}). There are several reasons for the adoption of this specific model:
+\begin{itemize}
+	\item it's a widely used platform (\textit{e.g.}: \cite{husky1}; \cite{husky2}; \cite{husky3})
+	\item it has a \textit{skid steering} kinematics that, as already seen in Section \ref{sec:odometry}, can be essentially reduced to a \textit{differential drive} kinematics, that is very simple.
+	\item it's specifically designed for outdoor use, so robustness and ability to deal with unstructured terrain are problems addressed by its rugged construction and high-torque drivetrain.
+	\item it offers a large payload capacity, to host the moltitude of sensors, actuators and computational units we need
+	\item it's fully supported in \ac{ROS}, with open source drivers, configuration files and examples
+\end{itemize}
+
+This choice turned out to be substantially a good choice. The wheel odometry turned out to be  better than expected (TODO grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization), and the \ac{ROS} were actually pretty easy to use. PROBLEMA FANGO, di' cingoli
+
 \section{GRAPE sw architecture}\label{sec:grapeSwArch}
 
 

@@ -1,16 +1,18 @@
 % !TEX root = ../ClassicThesis_DEIB.tex
-
 \chapter{The GRAPE project} \label{chap:grapeProject}
 
-In this chapter, we are going to give a description of the project this thesis work is part of, with particular emphasis on the parts that were specifically addresses in the thesis work. For the description of the project, we make reference to its official proposal.
+In this chapter, we are going to give a description of the project this thesis work is part of, with particular emphasis on the parts that were specifically addressed in the thesis work. For the description of the project, we make reference to its official proposal.
+
+\section{Project Description and Goals} \label{sec:grapeProjectDescription}
 \ac{GRAPE} is an experimental project of \ac{ECHORD++} and, as hinted in the first part of Chapter \ref{chap:backgroundAndToolsChapter}, it focuses on vineyard farming activities and aims at setting up a robotic manipulation platform able to support lead users to develop a variety of farming applications.
- In effect, the main goal of \ac{GRAPE} is not the complete development of an industrial platform, but, coherently with the research scenario:
+ In effect, the main goal of \ac{GRAPE} is not the complete development of an industrial platform, but, coherently with the research scenario, the primary objectives are:
 \begin{enumerate}
-	\item the development of example applications in the pre-mentioned context, exploiting and improving the so-called \textit{key enabling technologies} in robot navigation, perception and manipulation of the project partners; the resulting capabilities are likely to allow to make it easier for small and medium enterprises working in the fields of agricultural robots and, more in general, plant protection.
-	\item increase of robot acceptance by farmers and agronomists: since the very last goal of this project is not about the pure research but about the enterprise world, particular attention is given into the realization of a robotic platform that could be accepted by potential end users. For this reason, a constant interaction between the project partners and the potential stakeholders (\textit{i.e.} vinegrowers) is mantained also in development phases.
+	\item the development of example applications in the pre-mentioned context, exploiting and improving the so-called \textit{key enabling technologies}\footnote{Key Enabling Technologies are a group of six technologies: micro and nanoelectronics, nanotechnology, industrial biotechnology, advanced materials, photonics, and advanced manufacturing technologies. They have applications in multiple industries and help tackle societal challenges; they are consedidered crucial in the creation of advanced and sustainable economies.} 
+in robot navigation, perception and manipulation of the project partners; the resulting capabilities are likely to allow to make it easier for small and medium enterprises working in the fields of agricultural robots and, more in general, plant protection.
+	\item increase of robot acceptance by farmers and agronomists: since the very last goal of this project is not solely about pure research but about the enterprise world too, particular attention is given into the realization of a robotic platform that could be accepted by potential end users. For this reason, a constant interaction between the project partners and the potential stakeholders (\textit{i.e.} vinegrowers) is mantained also in development phases.
 \end{enumerate}
 
-The example applications have been selected in order to challenge perception and action capabilities, to achieve vineyard monitoring, navigation and manipulation tasks. This decision is taken in the scope of turning traditional farming into precision farming; the realization of such a turn would allow for both the decrease of the chemical load in food and environment, and an improvements of profits and yield for farmers, that would get a return for this investment \parencite{precisionFarming}. The introduction of precision farming tecniques leads indeed to a lot of advantages, for example early detection of plants diseases, or application of pesticides and fungicides with high precision and only when needed.
+The example applications have been selected in order to challenge perception and action capabilities, to achieve vineyard monitoring, navigation and manipulation tasks. This decision is taken in the scope of turning traditional farming into precision farming; the realization of such a turn would allow for both the decrease of the chemical load in food and environment, and an improvements of profits and yield for farmers, that would get a return for their investment \parencite{precisionFarming}. The introduction of precision farming tecniques leads indeed to a lot of advantages, for example early detection of plants diseases, or application of pesticides and fungicides with high precision and only when/where needed.
 
 It's clear that some of these high-precision tasks are still too complex to be automated, and current state-of-the-art in research and technology have been proved to be not yet mature to give rise to a commercial product able to compete with a skilled agricultural agent. The goal of \ac{GRAPE} is creating the enabling technologies to allow agricultural companies to develop vineyard robots to keep filling the gap that exists with respect to traditional methods.
 
@@ -23,15 +25,15 @@ It's clear that some of these high-precision tasks are still too complex to be a
 	\subfloat[]{%
 		\includegraphics[width=0.36\textwidth]{Images/grape_project/leavesVine.jpg}
 		\label{fig:vignaFoglia}}
-	\caption{\textit{A vine before (\ref{fig:vignaSenzaFoglie}) and after (\ref{fig:vignaFoglia}) le} having leafed out.}
+	\caption{\textit{A vine before (\ref{fig:vignaSenzaFoglie}) and after (\ref{fig:vignaFoglia}) having leafed out.}}
 	\label{fig:vignaConSenzaFoglie}
 \end{figure}
 
 
-\ac{GRAPE} project specification identify these two application examples:
+\ac{GRAPE} project specification identifies these two application examples:
 \begin{itemize}
-	\item \textbf{Vineyard monitoring and autonomous navigation}: the developed robotic platform must be able to autonomously navigate the vineyard and localize itself into a map of the environment (downstream a mapping phase), to be able to monitor the state of the vineyard (\textit{e.g.} foliage and grapes inspection). The navigation The project implementation focused on a semi-autonomous monitoring, that consider a fully autonomous navigation platoform, with video stream capability that allows human users to observe in person the live data collected by the robot for assessment of crop condition. The localization and navigation parts, however, are a key point for any kind of tasks in the for an \ac{UGV} field robot, because of the probability of high slope ground, rugged terrain morphology and unstructured map. 
-	\item \textbf{Autonomous application of pherormone dispenser applications}: pherormone dispensers are used for \textit{mating disruption} tecniques, to protect grapevines from grape moths, by disrupting the bugs' reproductive cycle making use of synthesized sex pherormones. Also in this case, the most relevant challenge is brought by the unstructured environment, that makes the sensing and manipulation tasks significantly harder.  However, note that pherormones deployment task gets easier if you think that the timing of the reproductive cycle (on which of course we have no control at all) forces this operation to be performed in a season where grape plants are pruned, and have not leafed out yet \parencite{mateDisruptionEfficiency}. Of course, the absence of foliage and grapes makes this task significantly easier (see Image \ref{fig:vignaConSenzaFoglie}).
+	\item \textbf{Vineyard monitoring and autonomous navigation}: the developed robotic platform must be able to autonomously navigate the vineyard and localize itself into a map of the environment (downstream a mapping phase), to be able to monitor the state of the vineyard (\textit{e.g.} foliage and grapes inspection). The actual project implementation focused on a semi-autonomous monitoring, that considers a fully autonomous navigation platform, with video stream capability that allows human users to observe in person the live data streamed by the robot by means of cameras for assessment of crop condition. The localization and navigation parts, however, are a key point for any kind of tasks for an \ac{UGV} field robot, because of the probability of high slope ground, rugged terrain morphology and unstructured map. We'll see the characterization and analysis of the problem of navigation in a rugged outdoor environment in chapter \ref{chap:localization}.
+	\item \textbf{Autonomous application of pherormone dispensers}: pherormone dispensers are used for \textit{mating disruption} tecniques, to protect grapevines from grape moths, by disrupting the bugs' reproductive cycle making use of synthesized sex pherormones. Also in this case, the most relevant challenge is brought by the unstructured environment, that makes the sensing and manipulation tasks significantly harder.  However, note that pherormones deployment task gets easier if you think that the timing of the reproductive cycle (on which of course we have no control at all) forces this operation to be performed in a season where grape plants are pruned, and have not leafed out yet \parencite{mateDisruptionEfficiency}. Of course, the absence of foliage and grapes makes this task significantly easier (see Image \ref{fig:vignaConSenzaFoglie}).
 \end{itemize}
 
 For what concern the second goal of the project \textit{i.e.} a major commitment about the acceptance of the robotic system in a field that's still strongly led by traditional methods, its realization consists mostly in the creation of an user-friendly interface (possibly for smartphones or tablets) for the \ac{GRAPE} system, that allows an user to:
@@ -42,8 +44,9 @@ For what concern the second goal of the project \textit{i.e.} a major commitment
 \end{itemize}
 The whole project was also to be designed with and adequate degree of modularity, in order to naturally support the possible extension to a fleet of robot able to operate in parallel. Note that, as described in Section \ref{sec:robotOperatingSystem}, this goal gets very easy by the usage of \ac{ROS} framework.
 
+
 The \ac{GRAPE} projects involved three partners, each with different assignments, and different responsibilities in the project context: \textbf{PoliMi}, \textbf{Eurecat} (a technology center located in Catalonia, that operates in many industrial and research fields, including robotics), and \textbf{Vitirover} (an agricultural robots company, located in France).
-To make the different teams interact and test the compatibility of the develop parts, some communal sessions of integration and tests, that we'll call \textit{integration weeks}, have been carried out within the duration of the whole project. In this thesis we are going to focus mostly on the experiments and results carried out during the last \ac{GRAPE} integration week, held in Marc 2018.
+To make the different teams interact and test the compatibility of the different parts of the system, some communal sessions of integration and tests, that we'll call \textit{integration weeks}, have been carried out within the duration of the whole project. In this thesis we are going to focus mostly on the experiments and results carried out during the last \ac{GRAPE} integration week, held in March 2018.
 
 \begin{figure}
 	\centering
@@ -62,14 +65,10 @@ To make the different teams interact and test the compatibility of the develop p
 	\label{fig:dispensers}
 \end{figure}
 
-The problems tackled in this thesis are a subset of the ones assigned to PoliMi in the project proposal; for our work we took advantages from the preceding work and analysis described in \cite{grapeAltroPaper}. These aspects are:
-\begin{itemize}
-	\item design of the overall software architecture, in the \ac{ROS} framework
-	\item revision and enhancement of the mapping, localization and navigation systems
-	\item design and part of the implementation of the pherormone dispenser application
-\end{itemize}
 
-We are presenting a short list of EU projects related to robotics for precision farming, with direct or indirect application to vineyards. All these projects have been developed in the last 5 years, and demonstrate the growing interest of the scientic community and potential end users to this application and research field.
+\section{Contextualization of thesis work in the project} \label{sec:thesisInGrape}
+
+ Since the timespan of the \ac{GRAPE} project as a whole covers 18 months, we took advantage of the preceding work described in \cite{grapeAltroPaper}, that is a description of the ongoing work around the \ac{GRAPE} project. As stated in the paper, some results were already accomplished in a few subjects:
 
 \begin{figure}
 	\centering
@@ -83,22 +82,42 @@ We are presenting a short list of EU projects related to robotics for precision 
 	\caption{\textit{Other field robots developed in EU projects in the last 6 years: \ref{fig:vinerobot} Vinerobot, \ref{fig:vinbot} Vinbot.}}
 \end{figure}
 
-\begin{description}
-	\item[VINEROBOT] Automated measurement and monitoring of parameters such as grape yield, vegetative growth, water status and grape composition in vineyards by use of an \ac{UGV} (see Figure \ref{fig:vinerobot}) endowed with artificial intelligence with sensing technologies. Chlorophyll-based fluorescence, RGB machine vision and thermography technologies are used to monitor vineyard on-the-go \parencite{vinerobot}.
-	\item[VINBOT] Creation of an all-terrain autonomous mobile robot (see Figure \ref{fig:vinbot}) with a set of sensors capable of capturing and analysing vineyard images togethere with 3D data, by means of cloud computing applications, to determine the yield of vineyards and to share information with the winegrowers, in order to mix the grapes of homogeneous quality to efficiently market a range of wines by quality and price \parencite{vinbot}.
-	\item[RHEA]
-	\item[SWEPPER]
-\end{description}
+\begin{itemize}
+	\item in-depth analysis of the main challenge and obstacles in the project, and requirement extraction
+	\item identification and obtainment of the specific hardware components (mobile platform, robotic arm, \ac{LIDAR}s, \ac{IMU}s, cameras, network equipment, computational unit)
+	\item segmentation of the macro objectives into smaller subtasks
+	\item results of intermediate experiments carried out during the first integration week in Garriguella, Spain. The experiments mostly concern the mapping, localization and navigation tasks
+	\item collection of data generated during the same integration week, making use of \ac{ROS} data logging tool (as described in Chapter \ref{sec:robotOperatingSystem})
+\end{itemize}
+
+The problems tackled in this thesis are a subset of the ones assigned to PoliMi in the project proposal. The problems we faced are the following, and will be described in depth in next chapters:
+\begin{itemize}
+	\item design of the overall software architecture in the \ac{ROS} framework (see Chapter \ref{chap:grapeSoftwareArchitecture})
+	\item revision and enhancement of the mapping, localization and navigation systems (see Chapter \ref{chap:localization})
+	\item design and part of the implementation of the pherormone dispenser application (see Chapter \ref{chap:kinovaArmChapter})
+\end{itemize}
+
+\section{Related Projects} \label{sec:relatedProjects}
+
+We are now presenting a short list of EU projects related to robotics for precision farming, with direct or indirect application to vineyards. All these projects have been developed in the last 6 years, and demonstrate the growing interest of the scientic community and potential end users to this application and research field.
 
 \begin{figure}
 	\centering
 	\subfloat[]{%
-		\includegraphics[width=0.5\textwidth]{Images/grape_project/rhea.jpg}
+		\includegraphics[width=0.45\textwidth]{Images/grape_project/rhea.jpg}
 		\label{fig:rhea}}
 	\qquad
 	\subfloat[]{%
-		\includegraphics[width=0.4\textwidth]{Images/grape_project/swepper.jpg}
-		\label{fig:swepper}}
-	\caption{\textit{Other field robots developed in EU projects in the last 6 years: \ref{fig:vinerobot} Rhea, \ref{fig:vinbot} Swepper.}}
+		\includegraphics[width=0.4\textwidth]{Images/grape_project/crops.jpg}
+		\label{fig:crops}}
+	\caption{\textit{Other field robots developed in EU projects in the last 6 years: \ref{fig:rhea} Rhea, \ref{fig:crops} CROPS.}}
 \end{figure}
+
+\begin{description}
+	\item[VINEROBOT] Automated measurement and monitoring of parameters such as grape yield, vegetative growth, water status and grape composition in vineyards by use of an \ac{UGV} (see Figure \ref{fig:vinerobot}) endowed with artificial intelligence with sensing technologies. Chlorophyll-based fluorescence, RGB machine vision and thermography technologies are used to monitor vineyard on-the-go \parencite{vinerobot}.
+	\item[VINBOT] Creation of an all-terrain autonomous mobile robot (see Figure \ref{fig:vinbot}) with a set of sensors capable of capturing and analysing vineyard images togethere with 3D data, by means of cloud computing applications, to determine the yield of vineyards and to share information with the winegrowers, in order to mix the grapes of homogeneous quality to efficiently market a range of wines by quality and price. \parencite{vinbot}.
+	\item[RHEA] Design, development, and testing of a new generation of automatic and robotic systems for both chemical, mechanical and thermal effective weed management focused on both agriculture and forestry, and covering a large variety of European products including agriculture wide row crops and forestry woody perennials. RHEA aims at diminishing the use of agricultural chemical inputs in a 75\%, improving crop quality, health and safety for humans, and reducing production costs by means of sustainable crop management using a fleet (see Figure \ref{fig:rhea}) of heterogeneous robots, both ground and aerial, equipped with advanced sensors, enhanced end effectors and improved decision control algorithms \parencite{rhea}.
+	\item[CROPS] Design and development of an highly configurable, modular and clever carrier platform that includes modular parallel manipulators and intelligent tools (sensors, algorithms, sprayers, grippers) for high value crops like greenhouse vegetables, fruits in orchards, and grapes for premium wines. The CROPS robotic platform (see Figure \ref{fig:crops}) is capable of site-specific spraying (targets spray only towards foliage and selective targets), selective harvesting of fruit (detects the fruit, determines its ripeness, moves towards the fruit, grasps it and softly detaches it), reliable detect and classificate obstacles and other objects to enable successful autonomous navigation and operation in plantations and forests \parencite{crops}. Further development in CROPS projects also includes Sweeper project \parencite{sweeper}.
+\end{description}
+
 

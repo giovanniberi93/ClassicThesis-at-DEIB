@@ -1,5 +1,4 @@
 % !TEX root = ../ClassicThesis_DEIB.tex
-
 \chapter{Background and Tools} \label{chap:backgroundAndToolsChapter}
 
 In this chapter we are going to describe the general concepts this thesis deals with, together with the main tools we used to address the project. Since this thesis is in the frame of \ac{GRAPE} project (see Chapter \ref{chap:grapeProject}),  most of them are typical of the robotic field and, more specifically, of the agricultural robotics. This last field should be seen in the wider context of the so-called \textit{E-agriculture}; to give a precise definition of this term, we make reference to the FAO (Food and Agriculture Organization) definition\footnote{\url{http://www.fao.org/fileadmin/templates/rap/files/uploads/E-agriculture\_Solutions\_Forum.pdf}}:
@@ -71,6 +70,17 @@ These properties make Services suitable for punctual (in opposition to data stre
 
 \begin{figure}
 	\centering
+	\includegraphics[width=0.5\textwidth]{Images/background_and_tools/bagPlay.png}
+	\caption{\textit{Visualization of the \ac{ROS} Computation Graph with} rqt\textit{ in the context of a data bag being played: there is a single node} (GRAPE\_robot) \textit{that simultaneously plays recorded topics messages.}}
+	\label{fig:playBag}
+\end{figure}
+
+A final consideration about the \ac{ROS} mechanism for recording, and playing back, data published on topics. This software module is call \textit{rosbag}, and takes advantage of the fact that \ac{ROS} is aware of all the messages exchanged through its messagging system. This tool gets very useful in a project like \ac{GRAPE}, where is not trivial at all to simulate or replicate in a laboratory environment the physical context of a vineyard, and of course meaningful data are required in order to correctly validate algorithms and tools.
+The paradigm is very simple: in every moment you can invoke a \textit{rosbag record} command, that records every single message exchanged on the \ac{ROS} topics; data are logged in a single file with \textit{.bag} extension, that can be lately filtered and/or compressed. Bag files can be played back in a very easy way invoking \textit{rosbag play} command; the playing of the bag is implemented with a single node that streams messages on all the topics existing in the bag (see Figure \ref{fig:playBag}). The module also provides an option to use \textit{simulated time}, \textit{i.e.} playing the bag exactly with the same message timing as in the real recorded session. In this situation, the decoupling induced by \textit{publish-subscribe} is a strong advantage, since you can substitute all publishing nodes with a single one, with no consequences\footnote{Except in some pathological cases: for example, a node can require the list of  active nodes in the computational graph, and the response would be different when the data are recorded and when the corresponding bag is played.}.
+
+
+\begin{figure}
+	\centering
 	\includegraphics[width=0.95\textwidth]{Images/background_and_tools/actionlib.png}
 	\caption{\textit{Sketch of the implementation of actionlib, through \ac{ROS} topics and a callback system.}}
 	\label{fig:actionlib}
@@ -79,7 +89,7 @@ These properties make Services suitable for punctual (in opposition to data stre
 \begin{figure}
 	\centering
 	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/tf_tree.png}
-	\caption{\textit{A robot in 2 different positions, with} tf \textit{frames in evidence: x-axis is red, y-axis is green, z-axis is blue. The frames are the same in both configuration, but the transformations (i.e. rototranslations) between them are different.}}
+	\caption{\textit{A robot in 2 different positions, with} tf \textit{frames in evidence: x-axis is red, y-axis is green, z-axis is blue. The frames are the same in both configuration, but the transformations (}i.e. \textit{rototranslations) between them are different.}}
 	\label{fig:tfTreeRviz}
 \end{figure}
 
@@ -293,7 +303,7 @@ We cannot guarantee that conditions $1)$ and $2)$ will hold in our context, but 
 	\centering
 	\includegraphics[width=0.4\textwidth]{Images/background_and_tools/diffSkidEquivalence.png}
 	\caption{\textit{The equivalence of differential drive motion model and skid steering model according to \cite{skid2diff}}}
-	\label{fig:husky}
+	\label{fig:diffSkidEquivalence}
 \end{figure}
 
 \section{Sensor fusion}\label{sec:sensorFusion}
@@ -379,11 +389,11 @@ In Computer Science, a software stack is a set of programs that collaborate, in 
 \begin{figure}
 	\centering
 	\subfloat[]{%
-		\includegraphics[width=0.3\textwidth]{Images/background_and_tools/localGlobalCostmap.png}
+		\includegraphics[width=0.4\textwidth]{Images/background_and_tools/localGlobalCostmap.png}
 		\label{fig:localGlobalCostmap1}}
 	\qquad
 	\subfloat[]{%
-		\includegraphics[width=0.31\textwidth]{Images/background_and_tools/localGlobalCostmap2.png}
+		\includegraphics[width=0.41\textwidth]{Images/background_and_tools/localGlobalCostmap2.png}
 		\label{fig:localGlobalCostmap2}}
 	\caption{\textit{Local and global costmap visualized with} RViZ\textit{. As you can see, the local costmap (in brighter colors) is built around the robot, and moves together with it.}}
 	\label{fig:localGlobalCostmap}
@@ -410,13 +420,6 @@ In Computer Science, a software stack is a set of programs that collaborate, in 
 	\caption{\textit{A scheme representation of the Navigation Stack; see the color legend for classification in provided, optional provided, and platform specific nodes.}}
 	\label{fig:navStack}
 \end{figure}
-
-
-
-
-
-
-
 
 
 
