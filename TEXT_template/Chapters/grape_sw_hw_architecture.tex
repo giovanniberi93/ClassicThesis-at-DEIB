@@ -31,6 +31,19 @@ As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Hus
 
 This choice turned out to be substantially good. The wheels odometry turned out to be  better than expected (TODO grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization), and the \ac{ROS} drivers and config files were actually pretty easy to use and modify. The only major weakness identified in the Husky is related to its behavior on muddy ground, and is due to the wheels shape. In effect, after a few minutes of navigation in the mud, the \ac{UGV} tends to collect a significative amount of earth and stones in the wheels groves (see Figure \ref{fig:ruoteFangose}) and, consequentely, lose grip on the ground. This problem is likely to be attenuated or solved by use of tracks instead of wheels.
 
+\subsection{Robotic Arm}
+By observing how pherormone dispensers must be deployed on the vine plant in Figure \ref{fig:dispensers} (in Figure \ref{fig:dispenserNostro}, you can see the dispenser shape that we actually used for \ac{GRAPE} project), it's easy to understand that we require a very flexible robotic arm, with advanced capacity of movement and capable of precise movement. Additional constraints also come from the limited space available on the Husky base, and from the limited power supply at disposal aboard. The choice fell on \textit{Jaco$^2$} arm from Kinova Robotics\footnote{\url{http://www.kinovarobotics.com/wp-content/uploads/2017/06/JACO\%C2\%B2-User-Guide-Asstive-Robotics-April-2017.pdf}}
+(see Figure \ref{fig:kinovaArm}).
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/grape_sw_hw_architecture/kinova.jpg}
+	\caption{\textit{Robotic arm Jaco$^2$ with 3 fingers, from Kinova Robotics.}}
+	\label{fig:kinovaArm}
+\end{figure}
+
+COSA DEI DISABILI, UN PO' DI SPECIFICHE
+
 \section{GRAPE sw architecture}\label{sec:grapeSwArch}
 
 
