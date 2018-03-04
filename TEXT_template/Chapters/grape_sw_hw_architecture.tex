@@ -22,7 +22,14 @@ As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Hus
 	\item it's fully supported in \ac{ROS}, with open source drivers, configuration files and examples
 \end{itemize}
 
-This choice turned out to be substantially a good choice. The wheel odometry turned out to be  better than expected (TODO grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization), and the \ac{ROS} were actually pretty easy to use. PROBLEMA FANGO, di' cingoli
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\textwidth]{Images/grape_sw_hw_architecture/ruoteFangose.jpeg}
+	\caption{\textit{Husky platform after a navigation session in environment. You can easily note the amount of stones and mud stuck into the wheels.}}
+	\label{fig:ruoteFangose}
+\end{figure}
+
+This choice turned out to be substantially good. The wheels odometry turned out to be  better than expected (TODO grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization), and the \ac{ROS} drivers and config files were actually pretty easy to use and modify. The only major weakness identified in the Husky is related to its behavior on muddy ground, and is due to the wheels shape. In effect, after a few minutes of navigation in the mud, the \ac{UGV} tends to collect a significative amount of earth and stones in the wheels groves (see Figure \ref{fig:ruoteFangose}) and, consequentely, lose grip on the ground. This problem is likely to be attenuated or solved by use of tracks instead of wheels.
 
 \section{GRAPE sw architecture}\label{sec:grapeSwArch}
 
