@@ -1,3 +1,8 @@
-grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization
+OBBLIGATORI
 
-foto dei sensori montati sull'end effector del braccio
+ - grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization
+ - foto dei sensori montati sull'end effector del braccio
+ - foto fatte per bene del robot nella configurazione finale
+
+SECONDARI
+ - modulo dell'errore nella posizione dell'end effector (tanti movimenti, misurare errore)

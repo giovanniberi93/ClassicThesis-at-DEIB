@@ -39,6 +39,7 @@ By observing how pherormone dispensers must be deployed on the vine plant in Fig
 	\item 3 fingers can be used for the dispensers deployment
 	\item while programmatic control is necessary for \ac{GRAPE} purpose, the joystick control make it easy to perform quick tests and analyze the robot capabilities
 	\item unlimited joints rotations
+	\item provided mechanical support for sensors mounting on top of the arm 
 	\item reduced weight and power consumption
 	\item small overall dimensions
 	\item \ac{ROS} open source drivers already provided by Kinova Robotics
@@ -102,8 +103,8 @@ By observing how pherormone dispensers must be deployed on the vine plant in Fig
 
  Some of the nice features of this device (weight, dimensions) actually derive from the original purpose of the arm, that is placed in the context of assistive devices for disabled people, to improve quality of life and independence of people on  power wheelchairs (see Figure \ref{fig:kinovaCarrozzina}). But this fact also brought some unexpected weaknesses, that introduced a series quite serious problems that slowed down the development process. The identified weaknesses are:
  \begin{itemize}
- 	\item a very large imprecision in the movements piloted via programmatic control: this is probably due to joystick control seen as a "main mode" control since, as previously stated, the arm is born as an assistive device. This problem was partially solved modifying the open source drivers of the arm, but entire control strategies were introduced to compensate this weakness.
- 	\item buggy implementation of joints constraints, probably due to the same cause of the previous point. This created a major problem mostly because of the wiring used for the sensors (described in next Sections) mounted on the arm, that kept rolling up because of the unlimited joints rotations. TODO a seconda di come alla fine la risolviamo definitivamente (messi a posto i driver, o procedure di controllo) lo scrivo.
+ 	\item a very large imprecision in the movements piloted via programmatic control: this is probably due to joystick control seen as a "main control mode" since, as previously stated, the arm is born as an assistive device. This problem was partially solved modifying the open source drivers of the arm, but entire control strategies were introduced to compensate this weakness. The magnitude of the error, measured as distance between the desired cartesian position of the end effector and the actual one, is $0\div5$cm after the changes to the \ac{ROS} driver of the arm. TODO sarebbe bello avere dei dati per supportare questa misura
+ 	\item buggy implementation of joints constraints, probably due to the same cause of the previous point. This created a major problem mostly because of the wiring used for the sensors (described in next Sections) mounted on the arm, that kept rolling up because of the unlimited joints rotation capability. TODO a seconda di come alla fine la risolviamo definitivamente (messi a posto i driver, o procedure di controllo) lo scrivo.
  \end{itemize}
  
 After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:grapeProjectDescription}), it was decided to use the arm as a support for other sensors, as well as manipulation tool, for the dispenser deployment task: a \ac{LIDAR} and an RGB-D camera (see Image \ref{} TODO fai foto a come i sensori sono montati sull'end effector).
@@ -173,7 +174,7 @@ After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:gr
 \end{figure}
 
 \subsection{RGB-D camera}
-The other sensor mounted on top of the arm end effector is an \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images (see Figure TODO screenshot di rgb e profondità), by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera also applies to operation validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identify exceptional cases (no dispenser left). The positive aspect of this camera model comes from its contained size and weight. We spotted only one significative weak point, that is a quite high minimum depth distance (20 cm), due to the embedded depth technology. This problem created a few complications in dispenser application tasks, but they were easily bypassed.
+The other sensor mounted on top of the arm end effector is an \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images (see Figure TODO screenshot di rgb e profondità), by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera also applies to operation validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identify exceptional cases (no dispenser left). The positive aspect of this camera model comes from its contained size and weight. We spotted only one significative weak point, that is a quite high minimum depth distance (20 cm), due to an intrisic limit of the embedded depth technology. This problem created a few complications in dispenser application tasks, but they were easily bypassed.
 
 \subsection{Other sensors}
 The \ac{UGV} holds onboard a collection of other sensors, useful for the accomplishment of the established tasks. In this section we'll give a short overview of the few remaining ones:
@@ -183,9 +184,209 @@ The \ac{UGV} holds onboard a collection of other sensors, useful for the accompl
 	\item [Cameras] Additional camera mounted in a slightly lifted position, useful in case of teleoperation of the Husky or the robotic arm and for visualization and monitoring purposes.
 \end{description}
 
+You can see the final sensor/actuators arrangement in Figure \ref{fig:disposizioneFinale} TODO foto migliori
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/grape_sw_hw_architecture/disposizioneFinale.jpeg}
+	\caption{\textit{The complete robotic platform, with sensors/actuators final arrangement.}}
+	\label{fig:disposizioneFinale}
+\end{figure}
  
-\section{GRAPE sw architecture}\label{sec:grapeSwArch}
+\section{GRAPE software architecture}\label{sec:grapeSwArch}
 
+Now that the hardware configuration is clear, we'll focus on the \textit{behavior} of the \ac{UGV}. We'll start by a description of the subproblems that we identified starting from the macro goals we talked about in Section \ref{sec:grapeProjectDescription}, and then move to the software architecture. \\
+
+\subsection{Evaluation of vineyard navigation}
+The problem of autonomous navigation of \ac{UGV}s is a very well-known problem, studied at least from the nineties \parencite{storiaUGV}, because of course it's the first problem to deal with in almost all systems involving mobile robots. For this reason, and being our robotic system a prototype, for us the problem of vineyard navigation reduced to the following subproblems:
+\begin{itemize}
+	\item identification of a sensor fusion framework in \ac{ROS}, to provide an odometry estimate, and configuration of such a framework, with particular attention to which sensors fuse together
+	\item identification of a navigation framework in \ac{ROS}, to provide motion planning and speed control of the mobile base, and configuration of such a framework to fit our problem
+\end{itemize}
+Even if these tasks seem trivial, two major problems arose:
+\begin{itemize}
+	\item complex framework like these ones have tenths of parameter to tune, and the documentation is not always very precise
+	\item the \textit{off-the-shelf} navigation systems are usually born for indoor environments, that differ a lot from the very unstructured nature of the vineyards.
+\end{itemize}
+
+As hinted in Section \ref{sec:navigationStack} and \ref{subsec:robotLocalization}, our choices fell on \textbf{Move Base} package for the navigation, and \textbf{Robot Localization} as odometry system. We'll present more detail of the subproblems mentioned above in Chapter \ref{chap:localization}. Move Base offers an \textit{action} (see Section \ref{sec:robotOperatingSystem}) as interface with the \ac{ROS} ecosystem.
+
+\subsection{Evaluation of vineyard monitoring task}
+For the vineyard monitoring task, as foreseen by the project proposal, we opted for a semi-autonomous monitoring: we provided the \ac{UGV} with a camera with video stream capability, that allows human users with competences in the domain of plants health to observe in person the live data streamed by the robot for assessment of crop condition. Human operators are also provided teleoperation interface for navigation and manipulation, for supervisioning and emergency handling function.
+
+This choice came from both the absence in the project proposal of precise objectives on ths topic, and the complexity of feature extraction and evaluation in this context.
+
+\subsection{Evaluation of dispenser application task}
+ While navigation task is a very common problem and \textit{off-the-shelf} solutions are easy to find, dispenser application is a completely non-standard task, so we could only rely on libraries and package for low level subtasks but we had to design and implement the whole procedure from scratch. The procedure is divided in 3 subproblems:
+ \begin{enumerate}
+ 	\item \textbf{Creation of a point cloud of the tree:} the robot is sitting still, with a vine on the same side of the Jaco$^2$ arm. When the procedure is triggered, the arm moves in order to produce a point cloud of the trees close to it, using the \ac{LIDAR} mounted onto it.
+ 	\item \textbf{Deployment points identification:} once the point cloud has been produced, an algorithm based on \ac{PCL} trims the point cloud from the points that don't belong to the tree, process it, and outputs a sequence of 3D points $(x,y,z)$ corresponding to points on the tree suitable for the deployment of the dispenser, ordered from the best one to the worst one.
+ 	\item \textbf{Deployment of the dispenser:} the arm starts the dispenser deployment procedure, taking as input the sequence of points got in the previous step:
+ 	\begin{enumerate}
+ 		\item it grasps the dispenser (if any) from the dedicated support
+ 		\item it applies the dispenser on the best feasible point from the input sequence
+ 		\item it goes back to a retired position, to achieve better stability during the movement of \ac{UGV}.
+ 	\end{enumerate}
+ \end{enumerate}
+
+All these procedures are quite long and complex, we wanted the user to have a high control on them, including the monitoring of intermediate results. For these reasons, these procedure are implemented as \ac{ROS} actions. 
+
+
+
+\subsection{Details of the actions interfaces}
+
+In this section we are giving a detailed description of the action interfaces, to better understand their scope and goals. Note that none of them includes a flag to check for correctness of execution, because we decided to use the internal status variable embedded in \ac{ROS} actions. For some of them we require also to display the structure of user-defined messages.
+
+\subsubsection{Move Base action interface}
+\begin{itemize}
+	\item \textbf{Goal Message}:
+		\begin{itemize}
+			\item \textit{target\_pose}: the pose (position, orientation) we want our robot to reach
+		\end{itemize} 
+	\item  \textbf{Result Message}:
+		\begin{itemize}
+			\item \textit{target\_pose}: the final pose (position, orientation) of the robot; in case of success, it should be very close to the specified \textit{target\_pose}
+		\end{itemize} 
+	\item  \textbf{Feedback Message}: \textit{n.a.}
+\end{itemize}
+
+\subsubsection{Scan motion action interface}
+Note that even an empty \ac{ROS} action like this makes sense, because of the length (\textasciitilde30 seconds) of the procedure that the action call triggers.
+\begin{itemize}
+	\item \textbf{Goal Message}: \textit{n.a.}
+	\item  \textbf{Result Message}: \textit{n.a.}
+	\item  \textbf{Feedback Message}: \textit{n.a.}
+\end{itemize}
+
+\subsubsection{Point cloud process action interface}
+\begin{itemize}
+	\item \textbf{Goal Message}: \textit{n.a.}
+	\item  \textbf{Result Message}: \textit{n.a.}
+	\item  \textbf{Feedback Message}: \textit{n.a.}
+\end{itemize}
+
+\subsubsection{Dispenser deployment action interface}
+\begin{itemize}
+	\item \textbf{Goal Message}: \textit{n.a.}
+	\item  \textbf{Result Message}: \textit{n.a.}
+	\item  \textbf{Feedback Message}: \textit{n.a.}
+\end{itemize}
+
+\begin{table}[tb]
+\footnotesize
+\caption*{\textbf{Move Base action interface}}
+\centering
+\begin{tabularx}{0.85\textwidth}{ll}
+\toprule
+\toprule
+\tablefirstcol{l}{Goal Message}
+& geometry\_msgs/PoseStamped target\_pose \\
+\midrule
+\tablefirstcol{l}{Result Message}
+& geometry\_msgs/PoseStamped base\_position \\
+\midrule
+\tablefirstcol{l}{Feedback Message}
+& - - - \\
+\bottomrule
+\end{tabularx}
+\caption[Move Base action specification]{Move Base action specification}
+\label{tab:moveBaseAction}
+\end{table}
+
+ \begin{table}[tb]
+\footnotesize
+\caption*{\textbf{Scan motion action interface}}
+\centering
+\begin{tabularx}{0.85\textwidth}{ll}
+\toprule
+\toprule
+\tablefirstcol{l}{Goal Message}
+& - - - \\
+\midrule
+\tablefirstcol{l}{Result Message}
+& - - - \\
+\midrule
+\tablefirstcol{l}{Feedback Message}
+& - - - \\
+\bottomrule
+\end{tabularx}
+\caption[Scan motion action specification]{Scan motion action specification}
+\label{tab:scanMotionAction}
+\end{table}
+
+
+ \begin{table}[tb]
+\footnotesize
+\caption*{\textbf{Process point cloud action interface}}
+\centering
+\begin{tabularx}{0.85\textwidth}{ll}
+\toprule
+\toprule
+\tablefirstcol{l}{Goal Message}
+& - - - \\
+\midrule
+\tablefirstcol{l}{Result Message}
+& DeploymentPose[] deployment\_poses \\
+\midrule
+\tablefirstcol{l}{Feedback Message}
+& int8 execution\_percent range [0,100] \\
+\bottomrule
+\end{tabularx}
+\caption[Process point cloud action specification]{Process point cloud action specification}
+\label{tab:processPointCloudAction}
+\end{table}
+
+
+ \begin{table}[tb]
+\footnotesize
+\caption*{\textbf{Dispenser deployment action interface}}
+\centering
+\begin{tabularx}{0.85\textwidth}{ll}
+\hline
+\toprule
+\toprule
+\tablefirstcol{l}{Goal Message}
+& DeploymentPose[] deployment\_poses \\
+& int32 deployMode \\
+\midrule
+\tablefirstcol{l}{Result Message}
+& - - - \\
+\midrule
+\tablefirstcol{l}{Feedback Message}
+& ManipulationStatus status \\
+\bottomrule
+\end{tabularx}
+\caption[Dispenser Deployment action specification]{Dispenser Deployment action specification}
+\label{tab:dispenserDeploymentAction}
+\end{table}
+
+
+
+
+
+
+ 
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
+                    semithick]
+  \tikzstyle{every state}=[fill=white,draw=black,text=black]
+
+  \node[initial,state] (A)                    {$s$};
+  \node[state]         (B) [above right of=A] {$q_b$};
+  \node[state]         (D) [below right of=A] {$q_d$};
+  \node[state]         (C) [below right of=B] {$q_c$};
+  \node[state]         (E) [below of=D]       {$q_e$};
+
+  \path (A) edge              node {0,1,L} (B)
+            edge              node {1,1,R} (C)
+        (B) edge [loop above] node {1,1,L} (B)
+            edge              node {0,1,L} (C)
+        (C) edge              node {0,1,L} (D)
+            edge [bend left]  node {1,0,R} (E)
+        (D) edge [loop below] node {1,1,R} (D)
+            edge              node {0,1,R} (A)
+        (E) edge [bend left]  node {1,0,R} (A);
+\end{tikzpicture}
+	
+	
 
 \begin{itemize}
 \item Hardware del robot:
@@ -201,11 +402,4 @@ The \ac{UGV} holds onboard a collection of other sensors, useful for the accompl
 		\end{itemize}
 	\item foto del robot 
 	%(http://www.grape-project.eu/wp-content/uploads/2017/11/20171030-MacchineTrattori.pdf e eventuali altre che faremo)
-
-\item Software del robot
-	\begin{itemize}
-		\item descrizione più precisa di quale è nel complesso la procedura: viene dato a mano (interfaccia grafica di Eurecat) una posizione finale, e serie di waypoints intermedi. Procedura di scan che usando PCL trova punti adatti al deployment. Procedura di deploymnet. Waypoint successivo.
-		\item struttura col coordinatore, che chiama le 3 action (move\_base, scan, deploy)
-		\item di ogni azione, il file che descrive i tipi di goal/result/feedback, con spiegazioni del significato dei parametri
-	\end{itemize}
 \end{itemize}
