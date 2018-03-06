@@ -228,6 +228,13 @@ This choice came from both the absence in the project proposal of precise object
  	\end{enumerate}
  \end{enumerate}
 
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\textwidth]{Images/grape_sw_hw_architecture/scanPoints.png}
+	\caption{\textit{Examples of point cloud collected with the \ac{LIDAR} on top of the end effector of the arm. You can recognize the vine plant, and part of the Husky base. The colors are only for visualize purpose.}}
+	\label{fig:pointCloudScanned}
+\end{figure}
+
 All these procedures are quite long and complex, we wanted the user to have a high control on them, including the monitoring of intermediate results. For these reasons, these procedure are implemented as \ac{ROS} actions. 
 
 
@@ -250,17 +257,20 @@ In this section we are giving a detailed description of the action interfaces, t
 \end{itemize}
 
 \subsubsection{Scan motion action interface}
-Note that even an empty \ac{ROS} action like this makes sense, because of the length (\textasciitilde30 seconds) of the procedure that the action call triggers.
+Note that even an empty \ac{ROS} action like this makes sense, because of the length (\textasciitilde30 seconds) of the procedure triggered by an action call.
 \begin{itemize}
 	\item \textbf{Goal Message}: \textit{n.a.}
 	\item  \textbf{Result Message}: \textit{n.a.}
 	\item  \textbf{Feedback Message}: \textit{n.a.}
 \end{itemize}
 
-\subsubsection{Point cloud process action interface}
+\subsubsection{Point cloud processing action interface}
 \begin{itemize}
 	\item \textbf{Goal Message}: \textit{n.a.}
-	\item  \textbf{Result Message}: \textit{n.a.}
+	\item  \textbf{Result Message}: 
+		\begin{itemize}
+			\item \textit{deployment\_pose: contain an array ($x,y,z$) of possible deployment poses, identified from the plant point cloud; it will be used as input to the dispenser deployment action server (see Table \ref{tab:processPointCloudAction})}
+		\end{itemize}
 	\item  \textbf{Feedback Message}: \textit{n.a.}
 \end{itemize}
 
@@ -273,18 +283,17 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 
 \begin{table}[tb]
 \footnotesize
-\caption*{\textbf{Move Base action interface}}
 \centering
 \begin{tabularx}{0.85\textwidth}{ll}
 \toprule
 \toprule
-\tablefirstcol{l}{Goal Message}
-& geometry\_msgs/PoseStamped target\_pose \\
+\tablefirstcol{l}{\textbf{\texttt Goal Message}}
+& \tt geometry\_msgs/PoseStamped target\_pose \\
 \midrule
-\tablefirstcol{l}{Result Message}
-& geometry\_msgs/PoseStamped base\_position \\
+\tablefirstcol{l}{\textbf{\texttt Result Message}}
+& \tt geometry\_msgs/PoseStamped base\_position \\
 \midrule
-\tablefirstcol{l}{Feedback Message}
+\tablefirstcol{l}{\textbf{\texttt Feedback Message}}
 & - - - \\
 \bottomrule
 \end{tabularx}
@@ -294,18 +303,17 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 
  \begin{table}[tb]
 \footnotesize
-\caption*{\textbf{Scan motion action interface}}
 \centering
 \begin{tabularx}{0.85\textwidth}{ll}
 \toprule
 \toprule
-\tablefirstcol{l}{Goal Message}
+\tablefirstcol{l}{\textbf{\texttt Goal Message}}
 & - - - \\
 \midrule
-\tablefirstcol{l}{Result Message}
+\tablefirstcol{l}{\textbf{\texttt Result Message}}
 & - - - \\
 \midrule
-\tablefirstcol{l}{Feedback Message}
+\tablefirstcol{l}{\textbf{\texttt Feedback Message}}
 & - - - \\
 \bottomrule
 \end{tabularx}
@@ -316,18 +324,17 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 
  \begin{table}[tb]
 \footnotesize
-\caption*{\textbf{Process point cloud action interface}}
 \centering
 \begin{tabularx}{0.85\textwidth}{ll}
 \toprule
 \toprule
-\tablefirstcol{l}{Goal Message}
+\tablefirstcol{l}{\textbf{\texttt Goal Message}}
 & - - - \\
 \midrule
-\tablefirstcol{l}{Result Message}
+\tablefirstcol{l}{\textbf{\texttt Result Message}}
 & DeploymentPose[] deployment\_poses \\
 \midrule
-\tablefirstcol{l}{Feedback Message}
+\tablefirstcol{l}{\textbf{\texttt Feedback Message}}
 & int8 execution\_percent range [0,100] \\
 \bottomrule
 \end{tabularx}
@@ -338,20 +345,19 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 
  \begin{table}[tb]
 \footnotesize
-\caption*{\textbf{Dispenser deployment action interface}}
 \centering
 \begin{tabularx}{0.85\textwidth}{ll}
 \hline
 \toprule
 \toprule
-\tablefirstcol{l}{Goal Message}
+\tablefirstcol{l}{\textbf{\texttt Goal Message}}
 & DeploymentPose[] deployment\_poses \\
 & int32 deployMode \\
 \midrule
-\tablefirstcol{l}{Result Message}
+\tablefirstcol{l}{\textbf{\texttt Result Message}}
 & - - - \\
 \midrule
-\tablefirstcol{l}{Feedback Message}
+\tablefirstcol{l}{\textbf{\texttt Feedback Message}}
 & ManipulationStatus status \\
 \bottomrule
 \end{tabularx}
@@ -364,42 +370,42 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 
 
 
- 
-\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
-                    semithick]
-  \tikzstyle{every state}=[fill=white,draw=black,text=black]
-
-  \node[initial,state] (A)                    {$s$};
-  \node[state]         (B) [above right of=A] {$q_b$};
-  \node[state]         (D) [below right of=A] {$q_d$};
-  \node[state]         (C) [below right of=B] {$q_c$};
-  \node[state]         (E) [below of=D]       {$q_e$};
-
-  \path (A) edge              node {0,1,L} (B)
-            edge              node {1,1,R} (C)
-        (B) edge [loop above] node {1,1,L} (B)
-            edge              node {0,1,L} (C)
-        (C) edge              node {0,1,L} (D)
-            edge [bend left]  node {1,0,R} (E)
-        (D) edge [loop below] node {1,1,R} (D)
-            edge              node {0,1,R} (A)
-        (E) edge [bend left]  node {1,0,R} (A);
-\end{tikzpicture}
+% 
+%\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
+%                    semithick]
+%  \tikzstyle{every state}=[fill=white,draw=black,text=black]
+%
+%  \node[initial,state] (A)                    {$s$};
+%  \node[state]         (B) [above right of=A] {$q_b$};
+%  \node[state]         (D) [below right of=A] {$q_d$};
+%  \node[state]         (C) [below right of=B] {$q_c$};
+%  \node[state]         (E) [below of=D]       {$q_e$};
+%
+%  \path (A) edge              node {0,1,L} (B)
+%            edge              node {1,1,R} (C)
+%        (B) edge [loop above] node {1,1,L} (B)
+%            edge              node {0,1,L} (C)
+%        (C) edge              node {0,1,L} (D)
+%            edge [bend left]  node {1,0,R} (E)
+%        (D) edge [loop below] node {1,1,R} (D)
+%            edge              node {0,1,R} (A)
+%        (E) edge [bend left]  node {1,0,R} (A);
+%\end{tikzpicture}
+%	
 	
-	
-
-\begin{itemize}
-\item Hardware del robot:
-		\begin{itemize}
-			\item scelta dell'husky (adatto per rugged terrain, supporto di pacchetti ROS), foto
-			\item scelta del braccio, con pro (compatto, 6 dof, power consumption non elevata) e contro (movimenti non precisi, fragile, scarso controllo di collisione)
-			\item lidar sul braccio per scan
-			\item lidar davanti per navigazione e eventualmente localizzazione
-			\item camera montata sul braccio
-			\item velodyne davanti (a cosa serve?)
-			\item camera fissa per eventualmente scattare foto alla vigna
-			\item imu
-		\end{itemize}
-	\item foto del robot 
-	%(http://www.grape-project.eu/wp-content/uploads/2017/11/20171030-MacchineTrattori.pdf e eventuali altre che faremo)
-\end{itemize}
+%
+%\begin{itemize}
+%\item Hardware del robot:
+%		\begin{itemize}
+%			\item scelta dell'husky (adatto per rugged terrain, supporto di pacchetti ROS), foto
+%			\item scelta del braccio, con pro (compatto, 6 dof, power consumption non elevata) e contro (movimenti non precisi, fragile, scarso controllo di collisione)
+%			\item lidar sul braccio per scan
+%			\item lidar davanti per navigazione e eventualmente localizzazione
+%			\item camera montata sul braccio
+%			\item velodyne davanti (a cosa serve?)
+%			\item camera fissa per eventualmente scattare foto alla vigna
+%			\item imu
+%		\end{itemize}
+%	\item foto del robot 
+%	%(http://www.grape-project.eu/wp-content/uploads/2017/11/20171030-MacchineTrattori.pdf e eventuali altre che faremo)
+%\end{itemize}
