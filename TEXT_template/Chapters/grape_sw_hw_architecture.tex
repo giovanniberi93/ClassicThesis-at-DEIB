@@ -31,8 +31,9 @@ As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Hus
 
 This choice turned out to be substantially good. The wheels odometry turned out to be  better than expected (TODO grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization), and the \ac{ROS} drivers and config files were actually pretty easy to use and modify. The only major weakness identified in the Husky is related to its behavior on muddy ground, and is due to the wheels shape. In effect, after a few minutes of navigation in the mud, the \ac{UGV} tends to collect a significative amount of earth and stones in the wheels groves (see Figure \ref{fig:ruoteFangose}) and, consequentely, lose grip on the ground. This problem is likely to be attenuated or solved by use of tracks instead of wheels.
 
+
 \subsection{Robotic Arm}\label{subsec:kinovaArm}
-By observing how pherormone dispensers must be deployed on the vine plant in Figure \ref{fig:dispensers} (in Figure \ref{fig:dispenserNostro}, you can see the dispenser shape that we actually used for \ac{GRAPE} project), it's easy to understand that we require a very flexible robotic arm, with advanced capacity of movement and capable of precise movement. Additional constraints also come from the limited space available on the Husky base, and from the limited power supply at disposal aboard. The choice fell on \textit{Jaco$^2$} arm from Kinova Robotics\footnote{\url{http://www.kinovarobotics.com/wp-content/uploads/2017/06/JACO\%C2\%B2-User-Guide-Asstive-Robotics-April-2017.pdf}}
+By observing how pherormone dispensers must be deployed on the vine plant in Figure \ref{fig:dispensers} (in Figure \ref{fig:dispenserNostro}, you can see the dispenser shape that we actually used for \ac{GRAPE} project; in Figure \ref{fig:nostroDispenserDettaglio}, a close-up of our dispenser type), it's easy to understand that we require a very flexible robotic arm, with advanced capacity of movement and capable of precise movement. Additional constraints also come from the limited space available on the Husky base, and from the limited power supply at disposal aboard. The choice fell on \textit{Jaco$^2$} arm from Kinova Robotics\footnote{\url{http://www.kinovarobotics.com/wp-content/uploads/2017/06/JACO\%C2\%B2-User-Guide-Asstive-Robotics-April-2017.pdf}}
 (see Figure \ref{fig:kinovaArm}, Table \ref{tab:kinovaArmSpecs} for product specifications), for these reasons:
 \begin{itemize}
 	\item 6 DOF provide the required flexibility
@@ -218,21 +219,29 @@ This choice came from both the absence in the project proposal of precise object
 \subsection{Evaluation of dispenser application task}
  While navigation task is a very common problem and \textit{off-the-shelf} solutions are easy to find, dispenser application is a completely non-standard task, so we could only rely on libraries and package for low level subtasks but we had to design and implement the whole procedure from scratch. The procedure is divided in 3 subproblems:
  \begin{enumerate}
- 	\item \textbf{Creation of a point cloud of the tree:} the robot is sitting still, with a vine on the same side of the Jaco$^2$ arm. When the procedure is triggered, the arm moves in order to produce a point cloud of the trees close to it, using the \ac{LIDAR} mounted onto it.
- 	\item \textbf{Deployment points identification:} once the point cloud has been produced, an algorithm based on \ac{PCL} trims the point cloud from the points that don't belong to the tree, process it, and outputs a sequence of 3D points $(x,y,z)$ corresponding to points on the tree suitable for the deployment of the dispenser, ordered from the best one to the worst one.
+ 	\item \textbf{Creation of a point cloud of the tree:} the robot is sitting still, with a vine on the same side of the Jaco$^2$ arm. When the procedure is triggered, the arm moves in order to produce a point cloud of the trees close to it, using the \ac{LIDAR} mounted onto it. 
+ 	\item \textbf{Deployment points identification:} once the point cloud has been produced, an algorithm based on \ac{PCL} trims the point cloud from the points that don't belong to the tree, process it, and outputs a sequence of 3D points $(x,y,z)$ corresponding to points on the tree suitable for the deployment of the dispenser, typically a protubeance of the tree, ordered from the best one to the worst one.
  	\item \textbf{Deployment of the dispenser:} the arm starts the dispenser deployment procedure, taking as input the sequence of points got in the previous step:
  	\begin{enumerate}
  		\item it grasps the dispenser (if any) from the dedicated support
  		\item it applies the dispenser on the best feasible point from the input sequence
  		\item it goes back to a retired position, to achieve better stability during the movement of \ac{UGV}.
  	\end{enumerate}
+ 	In figure \ref{fig:deploymentOnMockup}, you can see an example of successful dispenser application, using the mockup plant.
  \end{enumerate}
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.7\textwidth]{Images/grape_sw_hw_architecture/scanPoints.png}
-	\caption{\textit{Examples of point cloud collected with the \ac{LIDAR} on top of the end effector of the arm. You can recognize the vine plant, and part of the Husky base. The colors are only for visualize purpose.}}
+	\includegraphics[width=0.6\textwidth]{Images/grape_sw_hw_architecture/scanPoints.png}
+	\caption{\textit{Examples of point cloud collected in Casciana Terme during the integration week in January 2018, with the \ac{LIDAR} mounted on top of the end effector of the arm. You can recognize the vine plant, and part of the Husky base. The colors are only for visualization purpose.}}
 	\label{fig:pointCloudScanned}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/grape_sw_hw_architecture/deployOnMockup.jpg}
+	\caption{\textit{Example of a dispenser application task, correctly executed on a mockup plant.}}
+	\label{fig:deploymentOnMockup}
 \end{figure}
 
 All these procedures are quite long and complex, we wanted the user to have a high control on them, including the monitoring of intermediate results. For these reasons, these procedure are implemented as \ac{ROS} actions. 
@@ -251,7 +260,7 @@ In this section we are giving a detailed description of the action interfaces, t
 		\end{itemize} 
 	\item  \textbf{Result Message}:
 		\begin{itemize}
-			\item \textit{target\_pose}: the final pose (position, orientation) of the robot; in case of success, it should be very close to the specified \textit{target\_pose}
+			\item \textit{base\_position}: the final pose (position, orientation) of the robot; in case of success, it should be very close to the specified \textit{target\_pose}
 		\end{itemize} 
 	\item  \textbf{Feedback Message}: \textit{n.a.}
 \end{itemize}
@@ -269,16 +278,30 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 	\item \textbf{Goal Message}: \textit{n.a.}
 	\item  \textbf{Result Message}: 
 		\begin{itemize}
-			\item \textit{deployment\_pose: contain an array ($x,y,z$) of possible deployment poses, identified from the plant point cloud; it will be used as input to the dispenser deployment action server (see Table \ref{tab:processPointCloudAction})}
+			\item \textit{deployment\_pose}: contain an array ($x,y,z$) of possible deployment poses, identified from the plant point cloud; it will be used as input to the dispenser deployment action server (see Table \ref{tab:processPointCloudAction})
 		\end{itemize}
 	\item  \textbf{Feedback Message}: \textit{n.a.}
 \end{itemize}
 
 \subsubsection{Dispenser deployment action interface}
 \begin{itemize}
-	\item \textbf{Goal Message}: \textit{n.a.}
+	\item \textbf{Goal Message}: 
+		\begin{itemize}
+			\item \textit{deployment\_poses}:  sequence of feasible deployment points, ordered from the best one to the worst one. These are the points output by \textit{Point cloud processing action}
+			\item \textit{deploy\_mode}: a integer, used to select the tecnique to be used for the dispenser deployment; in fact, three different mode has been developed, in order to fit the different condition that the \ac{UGV} could face. In short, the modes available for selection are:
+			\begin{itemize}
+				\item Closed loop control, deployment target is a nail, hammered into a pole
+				\item Closed loop control, deployment target is a protuberance of the vine tree
+				\item Open loop control, deployment target is a protuberance of the vine tree
+			\end{itemize}
+			Details about the deployment mode are given in Chapter \ref{chap:kinovaArmChapter}.
+		\end{itemize}
+
 	\item  \textbf{Result Message}: \textit{n.a.}
-	\item  \textbf{Feedback Message}: \textit{n.a.}
+	\item  \textbf{Feedback Message}: 
+		\begin{itemize}
+			\item \textit{ManipulationStatus status}: a message of proprietary type, that contains structures used to communicate the action caller the current execution state  (\textit{e.g.} dispenser fallen, moving in front of the target point).
+		\end{itemize}
 \end{itemize}
 
 \begin{table}[tb]
@@ -342,7 +365,6 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 \label{tab:processPointCloudAction}
 \end{table}
 
-
  \begin{table}[tb]
 \footnotesize
 \centering
@@ -365,14 +387,44 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 \label{tab:dispenserDeploymentAction}
 \end{table}
 
+\subsection{The supervisor}
+Since all main operations in the project structure are implemented through action servers, of course a list of action clients must exists. For our implementation, we opted for a single software module that acts as an action client for all the actions mentioned above. We call this module \textit{Supervisor}, and its implementation uses behavior trees \parencite{behaviorTrees} as an overall model. The objective of the supervisor is to implement the overall \ac{FSA} of the system, where basically \textbf{nodes} are action servers or action clients, and \textbf{edges} are the corresponding request and response. To visualize the \ac{FSA} implemented by the supervisor, make reference to Figure \ref{fig:supervisorFSA}
 
+ 
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.1cm,
+                    semithick]
+   \label{fig:supervisorFSA}
+  \tikzstyle{every state}=[fill=white,draw=black,text=black]
 
+  \node[initial,state] (A)         {$S_1$};
+  \node[state]                            (B) [above right = 0.7cm and 4.0cm of A] {$AS_1$};
+  \node[state]                            (C) [above left = 0.7cm and 4.0cm of B]  {$S_2$};
+  \node[state, fill=cyan]         (D) [above right = 0.7cm and 4.0cm of C] {$AS_2$};
+  \node[state]                            (E) [above left = 0.7cm and 4.0cm of D]  {$S_3$}; 
+  \node[state]                            (F) [above right = 0.7cm and 4.0cm of E] {$AS_3$};
+  \node[state]                           (G) [above left = 0.7cm and 4.0cm of F]  {$S_4$};
+  \node[state, fill=cyan]        (H) [above right = 0.7cm and 4.0cm of G] {$AS_4$};
+  \node[state]                           (I)   [above left = 0.7cm and 4.0cm of H] {$S_5$};
+  
+  \node (Z) [draw=Maroon, fit= (A) (C) (E) (G) (I), inner sep=1.00cm, 
+            dashed, fill=blue!10, fill opacity=0.3] {};
+  \node [xshift=2.40ex,yshift=-1.5ex, Maroon] at (Z.south) {Supervisor};
+\path 
+  (A) edge[sloped, anchor=center, below]    node{Move Base}(B)
+  (B) edge[dotted, sloped, anchor=center, below]    node{Move Base}(C)
+  (C) edge[sloped, anchor=center, below]    node{Scan Motion}(D)
+  (D) edge[dotted, sloped, anchor=center, below]    node{Scan Motion}(E)
+  (E) edge[sloped, anchor=center, below]    node{Point Extraction}(F)
+  (F) edge[dotted, sloped, anchor=center, below]    node{Point Extraction}(G)
+  (G) edge[sloped, anchor=center, below]    node{Deploy}(H)
+  (H) edge[dotted, sloped, anchor=center, below]    node{Deploy}(I)
+  (I) edge[bend right, sloped, anchor=center, below]    node{}(A);
+\end{tikzpicture}
 
-
-
-% 
+ 
 %\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.8cm,
 %                    semithick]
+%   \label{fig:suo}
 %  \tikzstyle{every state}=[fill=white,draw=black,text=black]
 %
 %  \node[initial,state] (A)                    {$s$};
@@ -391,7 +443,7 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 %            edge              node {0,1,R} (A)
 %        (E) edge [bend left]  node {1,0,R} (A);
 %\end{tikzpicture}
-%	
+	
 	
 %
 %\begin{itemize}

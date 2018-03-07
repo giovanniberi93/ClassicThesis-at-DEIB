@@ -33,7 +33,7 @@ It's clear that some of these high-precision tasks are still too complex to be a
 \ac{GRAPE} project specification identifies these two application examples:
 \begin{itemize}
 	\item \textbf{Vineyard monitoring and autonomous navigation}: the developed robotic platform must be able to autonomously navigate the vineyard and localize itself into a map of the environment (downstream a mapping phase), to be able to monitor the state of the vineyard (\textit{e.g.} foliage and grapes inspection). The localization and navigation parts, however, are a key point for any kind of tasks for an \ac{UGV} field robot, because of the probability of high slope ground, rugged terrain morphology and unstructured map. We'll see the characterization and analysis of the problem of navigation in a rugged outdoor environment in chapter \ref{chap:localization}.
-	\item \textbf{Autonomous application of pherormone dispensers}: pherormone dispensers are used for \textit{mating disruption} tecniques, to protect grapevines from grape moths, by disrupting the bugs' reproductive cycle making use of synthesized sex pherormones. Also in this case, the most relevant challenge is brought by the unstructured environment, that makes the sensing and manipulation tasks significantly harder.  However, note that pherormones deployment task gets easier if you think that the timing of the reproductive cycle (on which of course we have no control at all) forces this operation to be performed in a season where grape plants are pruned, and have not leafed out yet \parencite{mateDisruptionEfficiency}. Of course, the absence of foliage and grapes makes this task significantly easier (see Image \ref{fig:vignaConSenzaFoglie}).
+	\item \textbf{Autonomous application of pherormone dispensers}: pherormone dispensers are used for \textit{mating disruption} tecniques, to protect grapevines from grape moths, by disrupting the bugs' reproductive cycle making use of synthesized sex pherormones. Also in this case, the most relevant challenge is brought by the unstructured environment, that makes the sensing and manipulation tasks significantly harder.  However, note that pherormones deployment task gets easier if you think that the timing of the reproductive cycle (on which of course we have no control at all) forces this operation to be performed in a season where grape plants are pruned, and have not leafed out yet \parencite{mateDisruptionEfficiency}. Of course, the absence of foliage and grapes makes this task significantly easier (see Figure \ref{fig:vignaConSenzaFoglie}).
 \end{itemize}
 
 For what concern the second goal of the project \textit{i.e.} a major commitment about the acceptance of the robotic system in a field that's still strongly led by traditional methods, its realization consists mostly in the creation of an user-friendly interface (possibly for smartphones or tablets) for the \ac{GRAPE} system, that allows an user to:
@@ -44,6 +44,13 @@ For what concern the second goal of the project \textit{i.e.} a major commitment
 \end{itemize}
 The whole project was also to be designed with and adequate degree of modularity, in order to naturally support the possible extension to a fleet of robot able to operate in parallel. Note that, as described in Section \ref{sec:robotOperatingSystem}, this goal gets very easy by the usage of \ac{ROS} framework.
 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\textwidth]{Images/grape_project/dispenserNostroVicino.jpg}
+	\caption{\textit{Detail of our dispenser type.}}
+	\label{fig:dispenserNostroDettaglio}
+\end{figure}
 
 The \ac{GRAPE} projects involved three partners, each with different assignments, and different responsibilities in the project context: \textbf{PoliMi}, \textbf{Eurecat} (a technology center located in Catalonia, that operates in many industrial and research fields, including robotics), and \textbf{Vitirover} (an agricultural robots company, located in France).
 To make the different teams interact and test the compatibility of the different parts of the system, some communal sessions of integration and tests, that we'll call \textit{integration weeks}, have been carried out within the duration of the whole project. In this thesis we are going to focus mostly on the experiments and results carried out during the last \ac{GRAPE} integration week, held in March 2018.
@@ -88,7 +95,16 @@ To make the different teams interact and test the compatibility of the different
 	\item segmentation of the macro objectives into smaller subtasks
 	\item results of intermediate experiments carried out during the first integration week in Garriguella, Spain. The experiments mostly concern the mapping, localization and navigation tasks
 	\item collection of data generated during the same integration week, making use of \ac{ROS} data logging tool (as described in Chapter \ref{sec:robotOperatingSystem})
+	\item creation of a 3D printed mockup vine tree (see Figure \ref{fig:mockupPlant}), to make the laboratory work more efficient and meaningful for the development and validation of the parts that would interact directly with the vine trees (\textit{i.e.} dispenser application task). The mockup was created from the laser scans of a real vine tree in Figueres (ES).
 \end{itemize}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/grape_project/mockupPlant.jpg}
+	\caption{\textit{The 3D printed vine tree mockup, used in validation phase of the dispenser application task algorithm.}}
+	\label{fig:mockupPlant}
+\end{figure}
 
 The problems tackled in this thesis are a subset of the ones assigned to PoliMi in the project proposal. The problems we faced are the following, and will be described in depth in next chapters:
 \begin{itemize}
