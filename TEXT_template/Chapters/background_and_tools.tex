@@ -404,14 +404,12 @@ In Computer Science, a software stack is a set of programs that collaborate, in 
 \begin{description}
 	\item[odometry source] A topic from which read the pose estimated from the odometry system \textit{e.g.} simple wheels odometry, output of a sensor fusion node as Robot Localization or ROAMFREE.
 	\item[Sensor source] A topic from which read the data coming from the laser sensors (\ac{LIDAR}) that are probing the environment, for obstacle avoidance, localization and possibly mapping tasks.
-	\item[amcl] Implementation of a probabilistic localization system, based on the Monte Carlo localization, as described in \cite{monteCarloLocalization}. (TODO se alla fine lo usiamo lo descrivo meglio magari).
+	\item[amcl] Implementation of a probabilistic localization system, based on the Monte Carlo localization, as described in \cite{monteCarloLocalization}
 	\item[map server] A \ac{ROS} node where the map is published as a single topic message. This block is not used if Move Base is used in mapless mode 
 	\item[base controller] This is the only output topic of the Navigation Stack, and of course it contains speed commands for the base of the robot.
 	\item[local and global costmap] They represent the information about the obstacles on the 2D plane of the ground, with a certain inflation radius that represent the size of the robot base. Each cell of the gridmap is associated to a certain cost that measure "how hard is it" to traverse that cell of the gridmap; possible values to represent the severity of obstacles are \textit{Lethal obstacle}, \textit{Inscribed}, \textit{Possibly circumscribed}, \textit{Freespace}, \textit{Unknown}. The \textbf{global} costmap represent whole environment as is build from a known map, while the \textbf{local} costmap is built using only incoming laser scans. Local map is, in general, a scrolling window that moves in the global costmap in relation to robot current pose, and it's continuously updated.
 	\item[local and global planners] Global planner takes as input the global costmap, and traces the path with lowest cost from current position of the goal position; the local planners instead takes care of continuously update (if required) the global plan in the light of the incoming laser measurements. This combination is essential in case of unexpected obstacles.
 \end{description}
-
-
 
 
 \begin{figure}
@@ -420,6 +418,113 @@ In Computer Science, a software stack is a set of programs that collaborate, in 
 	\caption{\textit{A scheme representation of the Navigation Stack; see the color legend for classification in provided, optional provided, and platform specific nodes.}}
 	\label{fig:navStack}
 \end{figure}
+
+
+\section{Motion Planning}\label{sec:motionPlanning}
+
+Motion planning is a term used in robotics for the process of breaking down a desired movement task into discrete motions that satisfy movement constraints, and possibly optimize some aspect of the movement. This process is essential for autonomous systems, that accepts high-level description of tasks and should require no further human intervention; in this way the user can focus on \textit{what} he wants done, instead of \textit{how} to do it \parencite{motionPlanning}. Motion planning can be applied to any kind of mechanical device equipped with actuators and sensors under the control of a computing system (\textit{e.g.} a robotic arm that perform \textit{pick-and-place}, a differential drive robot that has to reach a goal in an environment). Motion planning includes (among the others): obstacle avoidance, computation of collision-free paths, building reliable sensory-based motion strategies.
+
+More concisely, the basic problem of motion planning is, given:
+\begin{itemize}
+	\item a start pose of the robot
+	\item a desired goal pose (position, orientation)
+	\item a geometric description of the world
+	\item a geometric description of the robot (both as geometric shape, and as kinematic constraints due to kinematic motion model of the robot)
+\end{itemize}
+finding a path that moves the robot gradually from start to goal while never touching any obstacle.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\textwidth]{Images/background_and_tools/motionPlanningArm.png}
+	\caption{\textit{A graphical representation of the trajectory planned for moving a robotic arm from start (P1) to goal pose (P2), satisfying geometrical constraints of the robot.}}
+	\label{fig:motionPlanningArm}
+\end{figure}
+
+Even if the movement of the robot has to be executed in the real world, the planning of the motion is typically computed in the \textit{configuration space}, or \textit{C-space} \parencite{configurationSpace}. Formally, let: the robot $A$, at a certain position and orientation, be described as a compact subset of $W = {\rm I\!R}^n, N=2$ or $3$, and the obstacles $B_1,\dots,B_n$ be closed subsets of $W$. In addition, let $F_a$ and $F_w$ be cartesian frames embedded in $A$ and $W$, respectively. $F_a$ is a moving frame, while $F_w$ is fixed.  
+A \textbf{configuration $q$} of  $A$ is a specification of the position $T$ and the orientation $\Theta$ of $F_a$ with respect to $F_w$. The \textbf{configuration space} of $A$ is the space $C$ of all the configurations of $A$.
+Usually, configuration space is high dimensional; a configuration is expressed as a vector of positions and orientations, so the robot in configuration space is always represented as a point. We distinguish the configuration space from the \textit{workspace}, that is the physical environment in which the robot move. A few examples:
+\begin{itemize}
+	\item the robot is a single point and the workspace is a 2-dimensional plane; C is a plane, and a configuration can be represented using two parameters $(x, y)$.
+	\item the robot is a 2D shape that can translate and rotate, the workspace is a 2-dimensional plane; C is 3-dimensional and a configuration can be represented using 3 parameters $(x, y, \theta)$.
+	\item the robot is a solid 3D shape that can translate and rotate, the workspace is 3-dimensional; C is 6-dimensional, and a configuration requires 6 parameters: $(x, y, z)$ for translation, and Euler angles $(\psi, \theta, \phi)$.
+	\item the robot is a fixed-base manipulator with $N$ revolute joints and no closed-loops; C is N-dimensional.
+\end{itemize}
+
+Note that, as physical workspace, the configuration space is splitted in free space ($C_{free}$), and obstacle space ($C_{obs}$). From a practical point of view, \textit{C-space} can be drawed by virtually sliding the robot shape along the edge of the obstacle regions, inflating them of the area covered by the robot. You can see some graphical examples of this procedure in Figure \ref{fig:configSpaceWorkspace}.
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+	\includegraphics[width=0.7\textwidth]{Images/background_and_tools/configSpaceBuild2d.png}
+		\label{fig:configSpaceWorkspace2d}
+	}
+	\qquad
+	\subfloat[]{%
+	\includegraphics[width=0.9\textwidth]{Images/background_and_tools/configSpaceBuild3d.png}
+		\label{fig:configSpaceWorkspace3d}
+	}
+	\caption{\textit{The graphical construction of C-space from workspace, by sliding robot shape along the borders of obstacle regions. In Figure \ref{fig:configSpaceWorkspace2d} you can see the procedure in 2D, in Figure \ref{fig:configSpaceWorkspace2d} in 3D. Note that in 3D you only need to compute 2D procedure for each $\theta$, and then stack all obtained images.}}
+	\label{fig:configSpaceWorkspace}
+\end{figure}
+
+In simple configuration spaces, \textit{grid-based search} algorithms can be used. With this approach, a grid is overlayed to configuration space, and assume that each configuration is identified with a grid point. With this approach, the problem is reduced to a graph search and exact algorithms like Dijkstra and A$^*$, or suboptimal algorithms like A$^*$, ARA$^*$, AD$^*$ can be used.
+
+But this approach gets easily unfeasible (for example, A$^*$ has complexity $O(b^d)$ \parencite{aStar}, with $b$ branching factor and $d$ depth of shortest path), so \textbf{sample-based approaches} are currently state-of-the-art planning algorithms. Sampling bases approaches, in a nutshell:
+\begin{itemize}
+	\item are more efficient in most practical problems but offer  weaker guarantees
+	\item are probabilistically complete: increasing computing time, the probability tends to 1 that a solution is found if one exists (otherwise it may still run forever)
+	\item performance degrades in problems with narrow passages
+\end{itemize}
+In sample-based planning there isn't a explicit characterizing of $C_{free}$ and $C_{obs}$, but only a collision detection algorithm that probes $C$ to see whether a certain configuration lies in $C_{free}$ or not. An example of sample-based planning algorithm is \textbf{Rapidly exploring random trees} \parencite{RRT}; its pseudocode is shown in Algorithm \ref{alg:RRT}.
+
+\algdef{SE}[SUBALG]{Indent}{EndIndent}{}{\algorithmicend\ }%
+\algtext*{Indent}
+\algtext*{EndIndent}
+
+\begin{algorithm}
+\caption{RapidlyExploringRandomTrees($q_{goal}$)}\label{alg:RRT}
+\begin{algorithmic}[1]
+\State $\textit{G.init}(q_0)$
+\State $\textit{iterNumber} \gets 0$ 
+\State $\textit{N} \gets 100$ \Comment{for example} 
+\State \textbf{repeat}
+\Indent
+	\If {$\textit{iterNumber}\bmod \textit{N} \neq 0$}
+		\State $q_{rand} \gets \text{RANDOM\_CONFIG}(C)$
+	\EndIf
+	\State \textbf{else}
+	\Indent
+		\State  $q_{rand} \gets q_{goal}$
+	\EndIndent
+	\State $q_{near} \gets \text{NEAREST}(G, q_{rand})$
+	\State $G.\text{add\_edge}(q_{near},q_{rand})$
+	\State $\textit{iterNumber} \gets \textit{iterNumber}+1$ 
+\EndIndent
+\State $\textbf{until } q_{near} = q_{goal}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+	\includegraphics[width=0.5\textwidth]{Images/background_and_tools/rrtExample.png}
+		\label{fig:rrtExample}
+	}
+	\subfloat[]{%
+	\includegraphics[width=0.5\textwidth]{Images/background_and_tools/gridBasedExample.png}
+		\label{fig:gridBasedExample}
+	}
+	\caption{\textit{Graphical representation of the ways of proceeding of a sample-based planner (\ref{fig:rrtExample}), and of a grid-based planner (\ref{fig:gridBasedExample})}}
+	\label{fig:planningExamples}
+\end{figure}
+
+In the context of \ac{GRAPE} project, motion planning is an essential component in two different modules:
+\begin{enumerate}
+	\item Navigation module: \textbf{Move Base}, described in Section \ref{sec:navigationStack} is a motion planner, that makes use of grid-based planning algorithm, and is used for the navigation of the robotic base in the vineyard environment
+	\item Manipulation module: \textbf{MoveIt!} is a sample-based planner, and is used to plan the motion of our robotic arm in manipulation tasks.
+\end{enumerate}
+
+
 
 
 
