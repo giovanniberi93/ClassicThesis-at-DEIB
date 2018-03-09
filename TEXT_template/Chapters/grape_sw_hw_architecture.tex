@@ -2,7 +2,7 @@
 
 \chapter{Grape hardware and software Architecure} \label{chap:grapeSoftwareArchitecture}
 
-In this chapter we are going to describe in a detailed way the architecture of the robotic platform we used to implement the system to fulfill the requirements described in Section \ref{sec:grapeProjectDescription}. First, in Section \ref{sec:grapeHwArch}, we are giving an overview of the hardware components, from the robot base to all the actuators/sensors present on board. In Section \ref{sec:grapeSwArch}, we'll start to analyze the software architecure of the system, explaining what the main modules are, and the relationships between them.
+In this chapter we are going to describe in a detailed way the architecture of the robotic platform we used to implement the system to fulfill the requirements described in Section \ref{sec:grapeProjectDescription}. First, in Section \ref{sec:grapeHwArch}, we are giving an overview of the hardware components, from the robot base to all the actuators/sensors present on board. In Section \ref{sec:grapeSwArch}, we'll start to analyze the software architecture of the system, explaining what the main modules are, and the relationships between them.
 
 \section{GRAPE hardware architecture}\label{sec:grapeHwArch}
 
@@ -18,7 +18,7 @@ As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Hus
 	\item it's a widely used platform (\textit{e.g.}: \cite{husky1}; \cite{husky2}; \cite{husky3})
 	\item it has a \textit{skid steering} kinematics that, as already seen in Section \ref{sec:odometry}, can be essentially reduced to a \textit{differential drive} kinematics, that is very simple.
 	\item it's specifically designed for outdoor use, so robustness and ability to deal with unstructured terrain are problems addressed by its rugged construction and high-torque drivetrain.
-	\item it offers a large payload capacity, to host the moltitude of sensors, actuators and computational units we need
+	\item it offers a large payload capacity, to host the multitude of sensors, actuators and computational units we need
 	\item it's fully supported in \ac{ROS}, with open source drivers, configuration files and examples
 \end{itemize}
 
@@ -29,7 +29,7 @@ As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Hus
 	\label{fig:ruoteFangose}
 \end{figure}
 
-This choice turned out to be substantially good. The wheels odometry turned out to be  better than expected (TODO grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization), and the \ac{ROS} drivers and config files were actually pretty easy to use and modify. The only major weakness identified in the Husky is related to its behavior on muddy ground, and is due to the wheels shape. After a few minutes of navigation in the mud, the \ac{UGV} tends to collect a significative amount of earth and stones in the wheels groves (see Figure \ref{fig:ruoteFangose}) and, consequentely, lose grip on the ground. This problem could be attenuated or solved by use of tracks instead of wheels.
+This choice turned out to be substantially good. The wheels odometry turned out to be  better than expected (TODO grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization), and the \ac{ROS} drivers and config files were actually pretty easy to use and modify. The only major weakness identified in the Husky is related to its behavior on muddy ground, and is due to the wheels shape. After a few minutes of navigation in the mud, the \ac{UGV} tends to collect a significant amount of earth and stones in the wheels groves (see Figure \ref{fig:ruoteFangose}) and, consequentely, lose grip on the ground. This problem could be attenuated or solved by use of tracks instead of wheels.
 
 
 \subsection{Robotic Arm}\label{subsec:kinovaArm}
@@ -93,9 +93,8 @@ By observing how pherormone dispensers must be deployed on the vine plant in Fig
 \begin{figure}
 	\centering
 	\subfloat[]{%
-		\includegraphics[width=0.45\textwidth]{Images/grape_sw_hw_architecture/kinova.jpg}
+		\includegraphics[width=0.5\textwidth]{Images/grape_sw_hw_architecture/kinova.jpg}
 		\label{fig:kinovaArm}}
-	\qquad
 	\subfloat[]{%
 		\includegraphics[width=0.4\textwidth]{Images/grape_sw_hw_architecture/kinovaCarrozzina.jpg}
 		\label{fig:kinovaCarrozzina}}
@@ -182,7 +181,45 @@ After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:gr
 \end{figure}
 
 \subsection{RGB-D camera}
-The other sensor mounted on top of the arm end effector is an \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images (see Figure TODO screenshot di rgb e profondità), by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera also applies to operation validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identify exceptional cases (no dispenser left). The positive aspect of this camera model comes from its contained size and weight. We spotted only one significative weak point, that is a quite high minimum depth distance (20 cm), due to an intrisic limit of the embedded depth technology. This problem created a few complications in dispenser application tasks, but they were easily bypassed.
+The other sensor mounted on top of the arm end effector is an \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images (see Figure TODO screenshot di rgb e profondità), by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera also applies to operation validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identify exceptional cases (no dispenser left). The positive aspect of this camera model comes from its contained size and weight. We spotted only one significant weak point, that is a quite high minimum depth distance (20 cm), due to an intrinsic limit of the embedded depth technology. This problem created a few complications in dispenser application tasks, but they were easily bypassed.
+
+\subsection{Tools for dispensers grasping}
+Additional hardware was placed on the \ac{UGV} specifically for the accomplishment of the grasping of the dispenser, for two separate reasons:
+
+\begin{itemize}
+	\item the shape of the dispenser (see Figure \ref{fig:dispenserNostroDettaglio}) was not directly compatible with the grasping capability of the end effector of Jaco$^2$ arm (see the Jaco$^2$ fingers in Figure \ref{fig:kinovaArm})
+	\item the dispensers have to be stored on the Husky platform, in such a way to make them graspable
+\end{itemize}
+We required very custom hardware to accomplish these objectives so, given the prototype nature of the project, 3D stamped hardware was used.
+For what concern the storage of the pheromone dispensers, the final version of the dispenser feeder was built out of two 3D-printed small towers (see Figure \ref{fig:dispenserFeeder}), with a sequence of very smooth aligned grooves, parallel to the horizontal plane. The smoothness of the grooves is the critical part of the design, indeed the previous versions of the towers, with sharper grooves, highlighted a difficulty of the grasping phase if the dispensers got caught on the feeder's corners.
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.5\textwidth]{Images/grape_sw_hw_architecture/dispenserFeeder.png}
+		\label{fig:dispenserFeeder}}
+		\qquad
+	\subfloat[]{%
+		\includegraphics[width=0.25\textwidth]{Images/grape_sw_hw_architecture/feedereVecchio.png}
+		\label{fig:oldDispenserFeeder}}
+	\caption{\textit{The final version of the 3D-printed dispenser feeder (\ref{fig:dispenserFeeder}), and a 	perspective drawing of one of the earlier versions of it (\ref{fig:oldDispenserFeeder}), with sharper edges.}}
+\end{figure}
+
+
+The fingers of the robot are not all the same, because one of them act as a sort of "opposable thumb", that is useless in our application. So, two "nails" were printed to be applied to the two symmetric fingers, with a side dispenser-sized groove each, that 
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.3\textwidth]{Images/grape_sw_hw_architecture/unghieProspetto.png}
+		\label{fig:unghieProspetto}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/grape_sw_hw_architecture/unghieFoto.png}
+		\label{fig:unghieFoto}}
+	\caption{\textit{The final version of the 3D-printed nails (\ref{fig:unghieFoto}), and their 	perspective drawing (\ref{fig:unghieProspetto})}}
+\end{figure}
+
+
 
 \subsection{Other sensors}
 The \ac{UGV} holds onboard a collection of other sensors, useful for the accomplishment of the established tasks. In this section we'll give a short overview of the few remaining ones:
@@ -295,7 +332,7 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 	\item \textbf{Goal Message}: 
 		\begin{itemize}
 			\item \textit{deployment\_poses}:  sequence of feasible deployment points, ordered from the best one to the worst one. These are the points output by \textit{Point cloud processing action}
-			\item \textit{deploy\_mode}: an integer, used to select the tecnique to be used for the dispenser deployment; in fact, three different mode has been developed, in order to fit the different condition that the \ac{UGV} could face. In short, the modes available for selection are:
+			\item \textit{deploy\_mode}: an integer, used to select the technique to be used for the dispenser deployment; in fact, three different mode has been developed, in order to fit the different condition that the \ac{UGV} could face. In short, the modes available for selection are:
 			\begin{itemize}
 				\item Closed loop control, deployment target is a nail, hammered into a pole
 				\item Closed loop control, deployment target is a protuberance of the vine tree
@@ -444,7 +481,7 @@ Since all main operations in the project structure are implemented through actio
   \end{tikzpicture}
 
 
-As pointed out by Figure \ref{fig:supervisorFSA}, all action clients belong to the supervisor software module, and major tasks are implemented through action servers. In that graph we also specify the division of labour between the different teams:
+As pointed out by Figure \ref{fig:supervisorFSA}, all action clients belong to the supervisor software module, and major tasks are implemented through action servers. In that graph we also specify the division of labor between the different teams:
 
 \begin{itemize}
 	\item Software modules entrusted to \textbf{PoliMi}

@@ -2,14 +2,240 @@
 
 \chapter{Kinova Arm} \label{chap:kinovaArmChapter}
 
-In this chapter, we'll describe our implementation of the action servers 
+In this chapter, we'll explain our implementation of the action servers described in Chapter \ref{chap:grapeSoftwareArchitecture} related to the scan motion for point cloud registration, and to the pheromone dispenser application.
+But before it we'll see the different techniques used in the development of \ac{GRAPE} project for moving the Jaco$^2$ arm we had at disposal.
+
+\section{Motion execution methods for Jaco$^2$ Arm}
+
+\subsection{\textit{MoveIt!} framework}
+The first, and easier, motion execution method analyzed is by using an \textit{off-the-shelf} motion planning and execution framework, \textbf{MoveIt!}. However, in Section \ref{subsec:kinovaArm} we revealed in advance that the movement of the chosen arm, even after a bug fixing session in \ac{ROS} drivers of Jaco$^2$ arm, presented a series of major weakness using the arm \ac{API} through \textit{MoveIt!}. In detail, the problems we identified were:
+\begin{itemize}
+	\item non-repeatability of the movements; this was a problem because in situations with plenty of obstacles like the dispenser application, we could not rely on a few test movement to be sure that the movements did not interfere with obstacles
+	\item lack of precision in the movements; if a target position of the arm was given, the actual position of the end effector at the end of the execution was likely to be several centimeters away from the expected one, about $0\div5$cm. This led to huge problems for precision tasks (dispenser grasping, dispenser deployment) where the maximum tolerable error is of the order of 1mm because of the dispenser narrowness
+	\item inability in following a trajectory, maintaining the end effector orientation; this capability is mostly required during the scan motion, because it guarantees a uniform density of points collected on the plant, and this is useful with a view to the postprocessing operations for the identification of the deployment point. If we impose such a director trajectory, only a small percentage of it is actually executed
+	\item normalization of the joint angular positions in $\lbrack 0;2\pi\rbrack$ planning phase; with resulting loss of information about the absolute angular position of the joints of the arm. Even if in the vast majority of situations this is not a problem (since all joints of the Jaco$^2$ are capable of unlimited rotations), we needed to keep this factor into account because of the wiring for power supply and data interface of the sensors (\ac{LIDAR} and RGB-D camera) mounted on top of the arm end effector. Indeed, even if the end effector joint is capable of infinite rotation, there is only a subset of this interval, that we approximate to $\lbrack0;2\pi\rbrack$ (TODO verifica il range reale nella configurazione finale), that is compatible with the wiring setup of the system. But since the planner has no access to the absolute angular position of the joints, it doesn't exists a smooth solution\footnote{a non-smooth solution using MoveIt! is to consider the revolutions as concatenation of a sequence of rotations of an angle $\theta\in\lbrack0;2\pi)$ of the end effector joint.}
+to the problem of imposing one or more complete revolutions of the end effector joint.
+\end{itemize}
+
+Beyond all the flaws of our specific arm, an intrinsic weakness of this control type is that they can be very precise in reaching a specific target pose, but they cannot handle situations where there is a degree of uncertainty about the target pose, and we are in this situation in two different moments:
+\begin{itemize}
+	\item when we need to grasp a dispenser, because the position of the dispenser in the dispenser feeder depends on how many dispenser have already been removed and however we do not want to have very strict constraints on the positioning of the dispenser in the feeder
+	\item when we need to deploy the dispenser on the plant, because the deployment points output from the point cloud processing are likely not to be perfectly precise.
+\end{itemize}
+For all the aforementioned reasons, \textit{MoveIt!} framework is suitable for the motions where:
+\begin{itemize}
+	\item extreme precision is not a requirement
+	\item constant orientation of the end effector is not a requirement
+	\item absolute angular position of the arm joints is not requested
+	\item the goal position is well known
+\end{itemize}
+
+\subsection{Simple publication of joint velocities}
+We introduced this method to bypass the problem of the normalization of the joints anglular position. This method consists in a very simple closed-loop control that compares the target position of a joint with the the actual one (obtained through Jaco$^2$ \ac{ROS} \ac{API}), and applies a velocity to the concerned joint if the error is still too high. This method is feasible because Jaco$^2$ \ac{ROS} \ac{API} provides (among other) a topic for control speeds in joint space (\textit{i.e.} the configuration space, see Section \ref{sec:motionPlanning}) of the arm, thus we could control the velocity of each of the joints by publishing at a given frequency ($100Hz$) a message with the desired velocity for each joint. This method applies well for:
+\begin{itemize}
+	\item simple movements, with no sophisticated control on velocity or position
+	\item execution through \textit{MoveIt!} is uncomfortable for one of the aforementioned reasons
+\end{itemize}
+In particular, we were interested in applying a constant velocity to the end effector for problem of the wires entanglement, to solve the problem of the normalization of the angular position of the joints in planning phase in \textit{MoveIt!}.
+
+\subsection{Inversion of differential kinematics}
+We introduced the method of \textit{inversion of differential kinematics} to bypass the problem of moving the arm maintaining the end effector pose constant. This method, like the previous one, relies on \ac{ROS} \ac{API} for the publication of velocities in joint speed, but is suitable for more complex movement than the previous one. Our goal is to express the joint velocities in terms of velocity of the end effector frame \textit{i.e.} given the desired velocity of the end effector \textit{i.e.} calculate the 6 joints velocities to publish on the suitable topic in order to achieve the desired end effector velocity. 
+This is a \textit{inversion of differential kinematics} problem, formally: being $q$ a coordinate vector that represent the position of the robot in joint space, 
+$v$ the vector of linear and angular velocity of the end effector frame with respect to the fixed base frame, and $J(q)$ the geometrical Jacobian matrix of the manipulator, composed by the stacking of $J_P(q)$, related to the end effector position, and $J_o(q)$, related to the end effector orientation: 
+\[
+v = \left[\begin{array}{c}\dot{p} \\ \omega\end{array}\right] 	\qquad
+q = \left[\begin{array}{c} q_1 \\ \vdots \\ q_n \end{array}\right]	\qquad
+J(q) =  \left[\begin{array}{c} J_P(q) \\ J_o(q) \end{array}\right]
+\]
+ The following relationships hold: \\
+ \begin{align*}
+ \dot{p} = J_P(q)\cdot\dot{q} \\
+ \omega = J_o(q)\cdot\dot{q} 
+\end{align*}
+In compact form:
+\[
+v = \left[\begin{array}{c}\dot{p} \\ \omega\end{array}\right] = J(q)\cdot\dot{q}
+\]
+Thus, we can solve the initial problem with: \\
+\begin{equation}\label{eq:kinematicInversion}
+\dot{q} = J^{-1}(q)\cdot v
+\end{equation}
+Systematic algorithm exists to compute the geometric Jacobian matrix \parencite{jacobian}; in our case, it's simply provided by \textit{MoveIt!} \ac{ROS} \ac{API}. 
+In our implementation, the computation (with expression \ref{eq:kinematicInversion}) and publication of the joint speed is a periodic task executed with frequency $100Hz$. Of course, this is required because the Jacobian varies in time, according to the positions of the joints.
+
+
+\subsection{Image Based Visual Servoing}
+This technique allows for much more precise positioning of all the other described in previous sections; it is a closed-loop control and makes use of the RGB-D camera mounted on top of the end effector. Now, we'll give a formal descriptionof image based visual servoing algorithm \parencite{imageBasedVisualServo}.
+\par
+Define a feature point as the vector: 
+\[
+f = \left[\begin{array}{c}u \\v\end{array}\right]
+\]
+where $(u,v)$ are the coordinates of the point on the image plane representing the image of the considered point in 3D space. In case more than one 3D point, and thus more than one feature point, a feature vector can be defined as:
+\[
+\boldsymbol{f} = \left[\begin{array}{c}f_1 \\ \vdots \\ f_n\end{array}\right]
+\]
+In IBVS the goal configuration is defined by a desired configuration $\boldsymbol{f_d}$ of the image features. Therefore, the image error function is given by
+\begin{align*}
+f_d=\left[\begin{array}{c} f_u \\ f_v \end{array}\right] \\
+\boldsymbol{e}(t)=\boldsymbol{f}(t)-\boldsymbol{f_d}
+\end{align*}
+The image-based control problem aims at finding a mapping from this error function to a
+commanded camera motion, under the following assumptions:
+\begin{itemize}
+	\item the manipulator is a kinematic positioning device, \textit{i.e.}, manipulator dynamics are neglected
+	\item the trajectories generated by the IBVS controller can be tracked by a lower level
+manipulator controller
+	\item the target is fixed and the desired configuration $\boldsymbol{f_d}$ is constant.
+\end{itemize}
+The most common approach to solve the aforementioned problem is to compute a desired
+camera velocity and use this as the control input, assuming that the robot can be commanded
+by a set of linear and rotational Cartesian velocities.
+The camera velocity can be computed using the relation, represented by the
+\textit{interaction matrix}, between the velocity of the camera frame and the velocity of the features on the image plane:
+\[
+\dot{\boldsymbol{f}}(t) = L(\boldsymbol{f},q)v_{cam}
+\]
+Where the interaction matrix for a feature point is given by:
+\[
+L(f)=
+\begin{bmatrix}
+-\frac{f_u}{Z}	& 0 				& \frac{u}{Z}	& \frac{uv}{f_u} 		& -\frac{f_u^2+u^2}{f_u} & v \\
+0			& -\frac{f_v}{Z}	& \frac{v}{Z}	& \frac{f_v^2+v^2}{f_v} &  -\frac{uv}{f_v} & -u\\
+\end{bmatrix}
+\]
+and $v_{cam}$ is the vector of linear and rotational Cartesian velocities of the camera. In the case of a vector of feature points (\textit{i.e.} $n>1$), the interaction matrix can be obtained stacking the interaction matrices associated to each point.
+Assuming that the number of selected features is such that the whole interaction matrix as
+more rows than columns ($n\geq4$), the previous relation can be inverted using a least squares solution as follows:
+\begin{equation}
+	v_{cam}=(L^TL)^{-1}L^T\dot{\boldsymbol{f}}(t)
+\end{equation}
+Since the derivative of the error function is given by 
+\[
+	\dot{e}(t)=\frac{d}{dt}(f(t)-f_d) = \dot{f}(t) = L(f)v_{cam}
+\]
+the following control rule is obtained:
+\[
+v_{cam}=(L^TL)^{-1}L^T\dot{e}(t)
+\]
+
+Since the Jaco$^2$ arm drivers provide a \ac{ROS} topic to control the end effector in Cartesian velocities, the assumption holds.
+We used this control for high-precision tasks: grasping of the dispenser from the feeder, and deployment of the dispenser.
+
+\section{feeder, cose stampate in 3D}
+\section{Scan motion action server}
+
+The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) you can see the FSA that an action call triggers.
+\\
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.8cm,
+                    semithick, scale=0.6, every node/.style={scale=0.6},
+                     palette1node/.style={shape=circle, draw=black,fill=palette1},
+		  palette2node/.style={shape=circle, draw=black,fill=palette2},
+		  palette3node/.style={shape=circle, draw=black,fill=palette3},
+		  palette4node/.style={shape=circle, draw=black,fill=palette4},		  
+		  palette5node/.style={shape=circle, draw=black,fill=palette5}, ]
+	\label{fig:scanMotionFSA}
+	\tikzstyle{every state}=[fill=white,draw=black,text=black]
+	\tikzset{every loop/.style={min distance=15mm,in=-60,out=-120,looseness=10}}  
+
+  \node[initial,state, fill=palette5]		(A)         {};
+  \node[state, fill=palette5]				(B)	[right = 2.5cm of A] {};
+  \node[state, fill=palette5]				(C)	[below = 2cm of B]  {};
+  \node[state, fill=palette5]				(D)	[right = 2.5cm of B] {};
+  \node[state, fill=palette5]				(E)	[right = 2.5cm of D] {};
+  \node[state, fill=palette5]				(F)	[below= 2cm of E] {};
+  \node[accepting,state, fill=palette1]		(G)	[above= 2cm of D] {};    
+  \node[accepting,state, fill=palette5]		(H)	[left= 2cm of F] {};      
+\path 
+  (A)	edge[sloped, anchor=center, below]		node{Scan init position}(B)
+  
+  (B)	edge[sloped, anchor=center, below]		node{Tangled wires}(C)
+	edge[sloped, anchor=center, below]		node{Untangled wires}(D)
+	
+  (C)	edge[sloped, anchor=center, above]		node{Untangled wires}(D)  
+  	edge[dashed,loop below]				node{Rotate end effector}(C)
+  	
+  (D) edge[sloped, anchor=center, below]		node{End scan movement}(E)
+     	edge[sloped, anchor=center, below]		node{Error}(G)
+     	edge[dashed,loop below]				node{Execute scan motion}(G)
+     	
+  (E)	edge[sloped, anchor=center, below]		node{Tangled wires}(F)
+	edge[sloped, anchor=center, below]		node{Untangled wires}(H)
+	
+  (F)	edge[sloped, anchor=center, below]		node{Untangled wires}(H)
+ 	edge[dashed,loop below]				node{Rotate end effector}(F);  
+
+% legend
+\node[palette1node,label=right:Error state, scale=2.0] (FD) at (1,-7.5)   {};
+\node[palette5node,label=right:Normal execution state, scale=2.0] (FD) at (1,-8.5)   {};
+\node[label=right:Execution with inversion of Jacobian matrix tecnique] at (1,-9.5) {$\xdashrightarrow{\hspace{2.8em}}$};
+\node[label=right:dispenserApplicationFSA] at (1,-10.2) {$\xrightarrow{\hspace{2.8em}}$};
+
+\end{tikzpicture}
+
+
+\section{dispenser application action server}
+
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.8cm,
+		decoration={snake, segment length=1.5mm, amplitude=0.3mm},
+                    semithick, scale=0.6, every node/.style={scale=0.6},
+                     palette1node/.style={shape=circle, draw=black,fill=palette1},
+		  palette2node/.style={shape=circle, draw=black,fill=palette2},
+		  palette3node/.style={shape=circle, draw=black,fill=palette3},
+		  palette4node/.style={shape=circle, draw=black,fill=palette4},		  
+		  palette5node/.style={shape=circle, draw=black,fill=palette5}, ]
+	\label{fig:scanMotionFSA}
+	\tikzstyle{every state}=[fill=white,draw=black,text=black]
+	\tikzset{every loop/.style={min distance=15mm,in=-60,out=-120,looseness=10}}  
+
+	\node[initial,state, fill=palette5]		(A)	{};
+	\node[state, fill=palette5]			(B)	[right = of A] {};
+	\node[state, fill=palette5]			(C)	[right = of B] {};
+	\node[state, fill=palette5]			(D)	[right = of C] {};
+	\node[state, fill=palette5]			(Z)	[right = of D] {};
+	\node[state, fill=palette5]			(E)	[below = of Z] {};
+	\node[state, fill=palette5]			(F)	[below = of E] {};	
+	\node[state, fill=palette5]			(H)	[left = of F] {};
+	\node[state, fill=palette5]			(G)	[below = of F] {};
+	\node[state, fill=palette5]			(I)	[below = of H] {};
+\path 
+	(A)	edge[sloped, anchor=center, below]		node{Pre-pick pose}(B)
+	
+	(B)	edge[sloped, anchor=center, above]		node{Compute marker}(C)
+		edge[sloped, anchor=center, below]		node{features}(C)
+		
+	(C)	edge[sloped, anchor=center, below]		node{Target reached}(D)
+  		edge[loop above, decorate,min distance=15mm,in=120,out=60,looseness=10] node{Visual Servoing}(C)
+  	(D)	edge[sloped, anchor=center, below]		node{Open fingers}(Z)
+  	
+  	(Z) 	edge[sloped, anchor=center, above]		node{Extract}(E)
+	  	edge[sloped, anchor=center, below]		node{dispenser}(E)
+	  	
+	(E)	edge[sloped, anchor=center, above]		node{Nail deployment}(F)
+		edge[sloped, anchor=center, above]		node{Plant deployment}(H)
+
+	(F)	edge[sloped, anchor=center, above]		node{Fixed frontal}(G)
+		edge[sloped, anchor=center, below]		node{position}(G)
+		
+	(H)	edge[sloped, anchor=center, above]		node{Frontal position}(I);
+% legend
+\node[palette1node,label=right:Error state, scale=2.0] (FD) at (1,-7.5)   {};
+\node[palette5node,label=right:Normal execution state, scale=2.0] (FD) at (1,-8.5)   {};
+\node[label=right:Execution with inversion of Jacobian matrix tecnique] at (1,-9.5) {$\xdashrightarrow{\hspace{2.8em}}$};
+\node[label=right:scanMotionFSA] at (1,-10.2) {$\xrightarrow{\hspace{2.8em}}$};
+
+  \end{tikzpicture}
+
 
 Kinova Arm chapter: SKETCH
 \begin{itemize}
-	\item moveit: cos'è, concetti di planning e execution
 	\item scopo del braccio in GRAPE: scan della pianta, deployment, automa a stati che rappresenta la sequenza di azioni del braccio 
 	\item problema 1 dovuto alla scarsa precisione: accenni alle parti di visual servo con marker per compensare questo problema in fase di grasping e deployment (cenni, fatta da Polito e Bascetta).
 	\item problema 2 dovuto ai limiti di execution di moveit: impossibilità di fare un movimento di scansione fluido e completo usando moveit, metodo della jacobiana e la pubblicazione delle velocità
 	\item utilizzo della camera per validazione del grasping e del deployment
 	\item foto del braccio, immagini della nuvola di punti processata dal codice di ferran, alcune immagini dell'image processing nelle fasi di visual servo e di validazione di grasping/deployment
 \end{itemize}
+
+
+
+

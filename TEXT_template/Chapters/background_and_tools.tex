@@ -13,18 +13,18 @@ The \ac{GRAPE} project, that will be described with further details in chapter \
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Robot Operating System}\label{sec:robotOperatingSystem}
-\ac{ROS} is the \textit{robotic middleware} we used to develop the sofware components of the system described in this thesis. We decide to use it because of its great modularity, the availability of a very large number of packages, well documented APIs and an active community. Moreover, \ac{ROS} is a very widespread system, so its power and versatility are well known in the field of software development for robotics. Citing words from its offical website\footnote{\url{http://wiki.ros.org/ROS/Introduction}},
+\ac{ROS} is the \textit{robotic middleware} we used to develop the software components of the system described in this thesis. We decide to use it because of its great modularity, the availability of a very large number of packages, well documented \ac{API}s and an active community. Moreover, \ac{ROS} is a very widespread system, so its power and versatility are well known in the field of software development for robotics. Citing words from its official website\footnote{\url{http://wiki.ros.org/ROS/Introduction}},
 these are \ac{ROS} main features: 
 \blockquote{
 \textit{It provides the services you would expect from an operating system, including hardware abstraction, low-level device control, implementation of commonly-used functionality, message-passing between processes, and package management. It also provides tools and libraries for obtaining, building, writing, and running code across multiple computers}.
 } 
 
-\ac{ROS} is actually a \textit{meta-operating system}, that is, it's not an operating system in the traditional sense (it requires to be run on top of an another operating system; currently, the only officially supported OS is Linux Ubuntu), but it provides a peer-to-peer network that processes can use to create and process data together. This network is implemented through TCP, and it's called \textit{Computation Graph}. In this section, we're going to describe \ac{ROS} with more detail, with particular emphasis on the different tecniques that nodes can use to communicate among them. Keep in mind that, even if these tecniques differs a lot, they all are strongly typed \textit{i.e.} in order to define a channel (with \textit{channel} we now mean one of the tecnique that we are going to describe. It's not the name of a specific communication tool) you also need to define the types of message that are going to be exchanged throught it. \ac{ROS} already defines a lot of useful message types (\textit{e.g.} \textit{LaserScan.msg}, \textit{PoseWithCovarianceStamped.msg}), grouped by domain (\textit{e.g.}, \textit{Sensor\_msgs}, \textit{Geometry\_msgs}). However a simple message definition language is provided, and users are encouraged to define their own message types to make them as self-explanatory as possible.
+\ac{ROS} is actually a \textit{meta-operating system}, that is, it's not an operating system in the traditional sense (it requires to be run on top of an another operating system; currently, the only officially supported OS is Linux Ubuntu), but it provides a peer-to-peer network that processes can use to create and process data together. This network is implemented through TCP, and it's called \textit{Computation Graph}. In this section, we're going to describe \ac{ROS} with more detail, with particular emphasis on the different techniques that nodes can use to communicate among them. Keep in mind that, even if these techniques differs a lot, they all are strongly typed \textit{i.e.} in order to define a channel (with \textit{channel} we now mean one of the technique that we are going to describe. It's not the name of a specific communication tool) you also need to define the types of message that are going to be exchanged through it. \ac{ROS} already defines a lot of useful message types (\textit{e.g.} \textit{LaserScan.msg}, \textit{PoseWithCovarianceStamped.msg}), grouped by domain (\textit{e.g.}, \textit{Sensor\_msgs}, \textit{Geometry\_msgs}). However a simple message definition language is provided, and users are encouraged to define their own message types to make them as self-explanatory as possible.
 
 \begin{description}
 \item[ROS Master] Even if the Computation Graph is a peer-to-peer network, a central process, called  \textbf{\ac{ROS} Master}, is required to exist, to provide naming and registration services to all the user processes In this. Once the processes have located each other through the services offered by the Master, they can communicate peer-to-peer without involving a central entity;
 
-\item[nodes] The processes that are in the Computation Graph are called \textbf{nodes}, and they are the atomic units of the computational graph. The \ac{ROS} API are available in C++, Python and Lisp, but C++ is the most widely used. One of the aims of \ac{ROS} is to be modular at a fine-grained scale, so a complex task should be achieved through cooperation of several different nodes, each with quite narrow tasks, rather than one large node that include all the functionalities. Nodes can use different techniques for communication, depending whether the message is a part of data stream or it is a request message (\textit{i.e.} a response message is expected) and, in this last case, on the (expected) duration and complexity of the computation of the response.
+\item[nodes] The processes that are in the Computation Graph are called \textbf{nodes}, and they are the atomic units of the computational graph. The \ac{ROS} \ac{API} are available in C++, Python and Lisp, but C++ is the most widely used. One of the aims of \ac{ROS} is to be modular at a fine-grained scale, so a complex task should be achieved through cooperation of several different nodes, each with quite narrow tasks, rather than one large node that include all the functionalities. Nodes can use different techniques for communication, depending whether the message is a part of data stream or it is a request message (\textit{i.e.} a response message is expected) and, in this last case, on the (expected) duration and complexity of the computation of the response.
 
 
 \begin{figure}
@@ -45,7 +45,7 @@ these are \ac{ROS} main features:
 \item[topics] Topics implements a \textit{publish-subscribe} paradigm, are they the easiest way that nodes can use to communicate with each other, and basically are named channels, characterized by the type of the messages that are sent through it. When a node \textit{publish} a message on a certain topic, the message is read from all the nodes that previously \textit{subscribed} to that topic, interfacing with the Master. Note that:
 \begin{itemize}
 	\item this technique leads to a strong decoupling between publishers and subscribers to a topic, because a publisher node is, from an high-level perspective\footnote{Actually, publisher nodes always know the list of nodes subscribed to their topics. But this  is only used in connection phase, and to avoid a situation where a node publish on a topic with no subscribers, for the sake of efficiency.},
-	not even aware of the presence of subscribers, and viceversa.
+	not even aware of the presence of subscribers, and vice versa.
 	\item the relationship between publishers and subscribers is \textit{many-to-many}, \textit{i.e.} multiple nodes can publish on a topic, and multiple nodes can subscribe to a topic.
 \end{itemize}
 We can easily conclude that this method is very suitable for passing streams of data (\textit{e.g.} the handler of a \ac{LIDAR} streams its measurements over the network, or a node publish the velocities commands for the wheels of a robot), but there is no notion of a \textit{response} to a message, so it's not suitable for \textit{request-response} communication. 
@@ -65,7 +65,7 @@ These properties make Services suitable for punctual (in opposition to data stre
 	\label{fig:tfComputationGraph}
 \end{figure}
 
-\item[actions] While Services, with their resemblance to traditional function calls, can address pretty well the problem of \textit{one-to-one} inter-node communication, they can be quite unsatisfying if the computation required to produce the response is demanding in term of execution time (\textit{e.g.}, navigation of a robot from one point to another in an environment), because the caller is stuck at the line with the Service invocation until the end of the procedure. Services show their weaknesses also in situations where it could be useful to observe the intermediate results of the computation triggered by the request (\textit{e.g.}, a very complex manipulation procedure). \textbf{Actions} are very suitable in this context because, at the cost of a more complex implementation, provide an asynchronous and fully preemptable remote procedure call, with the possibility of monitoring intermediate results if needed, and a native exit status to check the state (active, rejected, preempted, succeded, aborted...) of the execution. Differently from Topics and Services, Actions are not native in \ac{ROS}, and their functionalities are built on top of the other \ac{ROS} messagging systems (See figure \ref{fig:actionlib}). Asynchronicity is provided by the use of callbacks.
+\item[actions] While Services, with their resemblance to traditional function calls, can address pretty well the problem of \textit{one-to-one} inter-node communication, they can be quite unsatisfying if the computation required to produce the response is demanding in term of execution time (\textit{e.g.}, navigation of a robot from one point to another in an environment), because the caller is stuck at the line with the Service invocation until the end of the procedure. Services show their weaknesses also in situations where it could be useful to observe the intermediate results of the computation triggered by the request (\textit{e.g.}, a very complex manipulation procedure). \textbf{Actions} are very suitable in this context because, at the cost of a more complex implementation, provide an asynchronous and fully preemptable remote procedure call, with the possibility of monitoring intermediate results if needed, and a native exit status to check the state (active, rejected, preempted, succeeded, aborted...) of the execution. Differently from Topics and Services, Actions are not native in \ac{ROS}, and their functionalities are built on top of the other \ac{ROS} messaging systems (See figure \ref{fig:actionlib}). Asynchronicity is provided by the use of callbacks.
 \end{description}
 
 \begin{figure}
@@ -75,7 +75,7 @@ These properties make Services suitable for punctual (in opposition to data stre
 	\label{fig:playBag}
 \end{figure}
 
-A final consideration about the \ac{ROS} mechanism for recording, and playing back, data published on topics. This software module is call \textit{rosbag}, and takes advantage of the fact that \ac{ROS} is aware of all the messages exchanged through its messagging system. This tool gets very useful in a project like \ac{GRAPE}, where is not trivial at all to simulate or replicate in a laboratory environment the physical context of a vineyard, and of course meaningful data are required in order to correctly validate algorithms and tools.
+A final consideration about the \ac{ROS} mechanism for recording, and playing back, data published on topics. This software module is call \textit{rosbag}, and takes advantage of the fact that \ac{ROS} is aware of all the messages exchanged through its messaging system. This tool gets very useful in a project like \ac{GRAPE}, where is not trivial at all to simulate or replicate in a laboratory environment the physical context of a vineyard, and of course meaningful data are required in order to correctly validate algorithms and tools.
 The paradigm is very simple: in every moment you can invoke a \textit{rosbag record} command, that records every single message exchanged on the \ac{ROS} topics; data are logged in a single file with \textit{.bag} extension, that can be lately filtered and/or compressed. Bag files can be played back in a very easy way invoking \textit{rosbag play} command; the playing of the bag is implemented with a single node that streams messages on all the topics existing in the bag (see Figure \ref{fig:playBag}). The module also provides an option to use \textit{simulated time}, \textit{i.e.} playing the bag exactly with the same message timing as in the real recorded session. In this situation, the decoupling induced by \textit{publish-subscribe} is a strong advantage, since you can substitute all publishing nodes with a single one, with no consequences\footnote{Except in some pathological cases: for example, a node can require the list of  active nodes in the computational graph, and the response would be different when the data are recorded and when the corresponding bag is played.}.
 
 
@@ -102,7 +102,7 @@ The paradigm is very simple: in every moment you can invoke a \textit{rosbag rec
 \textit{" [...] provide a standard way to keep track of coordinate frames and transform data within an entire system such that individual component users can be confident that the data is in the coordinate frame that they want without requiring knowledge of all the coordinate
 frames in the system" \parencite{tfPaper}}
 }
-The utility of such a component is straightforward, even in quite simple robotic systems. We'll describe here a situation we stumpled upon exactly in the development of the \ac{GRAPE} project, where of the utility of \textit{tf} is very easy to understand; you'll be able to better contextualize this example after you've read Chapter \ref{chap:kinovaArmChapter}. In this example a \ac{LIDAR}, mounted on top of the final joint of a robotic arm, acquires data while the arm is moving in order to create a point cloud that will be processed later. To get a meaningful point cloud, it's mandatory to keep track of the movement of the \ac{LIDAR} with respect to a point with speed equal to zero (\textit{e.g.} the base link of the arm, or the base link of the whole robot), and this gets even more difficult because of the multiple (6 in our specific case) joints of the arm; but this problem can be easily addressed by means of \textit{tf}.\\
+The utility of such a component is straightforward, even in quite simple robotic systems. We'll describe here a situation we stumbled upon exactly in the development of the \ac{GRAPE} project, where of the utility of \textit{tf} is very easy to understand; you'll be able to better contextualize this example after you've read Chapter \ref{chap:kinovaArmChapter}. In this example a \ac{LIDAR}, mounted on top of the final joint of a robotic arm, acquires data while the arm is moving in order to create a point cloud that will be processed later. To get a meaningful point cloud, it's mandatory to keep track of the movement of the \ac{LIDAR} with respect to a point with speed equal to zero (\textit{e.g.} the base link of the arm, or the base link of the whole robot), and this gets even more difficult because of the multiple (6 in our specific case) joints of the arm; but this problem can be easily addressed by means of \textit{tf}.\\
 Note that frames are very useful for two main tasks:
 \begin{itemize}
 	\item represent the configuration of the robot, by assigning frames to the significant physical elements of the robot (\textit{e.g.} joints, sensors, wheels). Since \textit{tf} graph is a tree, a root element of the robot should exists; in a typical configuration, the frame name is \textit{base\_link}, it's placed in the geometrical center of the robot, and all the other frames linked to physical components of the robot belong to the subtree with root \textit{base\_link}.
@@ -114,7 +114,7 @@ We are now giving a a bit more techical detail about \textit{tf}.
 The main components of the library are:
 \begin{itemize}
 	\item \textbf{\textit{tf} broadcasters}: they are simple software components, that publish a transformation between two reference frames every time an update is available. Different broacasters does not sync together the publishing phase
-	\item \textbf{\textit{tf} listeners}: they are more complex components, because they take into account that broadcasters are not synced. Since both transformations and queries to \textit{tf} graph are stamped, listeners make use of queues to store the most recent transformations, and they  interpulate old values using SLERP (Spherical Linear intERPolation) to return a transformation for which there is no measured value at the requested timestamp.
+	\item \textbf{\textit{tf} listeners}: they are more complex components, because they take into account that broadcasters are not synced. Since both transformations and queries to \textit{tf} graph are stamped, listeners make use of queues to store the most recent transformations, and they  interpolate old values using SLERP (Spherical Linear intERPolation) to return a transformation for which there is no measured value at the requested timestamp.
 \end{itemize}
 In figure \ref{fig:tfTreeRviz} you can see a graphical representation of the reference frames tracked in a Nao Robot, while figure \ref{fig:tfGraph} shows an example of \textit{tf} graph visualized with visualization framework \textit{rqt}. 
 
@@ -134,9 +134,9 @@ The problem of odometry, \textit{i.e.} estimation of the position of a robot in 
 	\label{eq:odometryTuple}
 \end{equation} 
 given the measurement of some motion sensors. 
-To better understand the complexity of the problem, let's analyze an extremely simple model: a robot with a single, freely rotating wheel. In this frame, assuming rotary encoders on the wheel, we can think about measuring directly the wheel speed and integrate these measurement to get the travelled distance, and measure the variation in the orientation of the wheel to get the position. But actually there are a lot of imperfection that can lead to error, for example:
+To better understand the complexity of the problem, let's analyze an extremely simple model: a robot with a single, freely rotating wheel. In this frame, assuming rotary encoders on the wheel, we can think about measuring directly the wheel speed and integrate these measurement to get the traveled distance, and measure the variation in the orientation of the wheel to get the position. But actually there are a lot of imperfection that can lead to error, for example:
 	\begin{itemize}
-		\item wheel can be non perfectly perendicular to the ground
+		\item wheel can be non perfectly perpendicular to the ground
 		\item the friction between the floor and the wheel might not be enough to avoid slippage (expecially )
 		\item there is no such thing as a perfect sensor, so the use of encoders introduce an error
 	\end{itemize}
@@ -149,8 +149,8 @@ Even if all these concurrent causes seem negligible, you have to take into accou
 	\label{fig:icc}
 \end{figure}
 
-Moreover, the probability of slippage gets higher in systems with more than one wheel, because, because for a system with multiple wheels to move without slippage, a point must exists around which all the wheels can move along a circular path. This point is called \ac{ICC} (see Figure \ref{fig:icc}), and can be easily identified by looking for the intersection of the axis of all wheels. If the intersaction exists in a single point, it's called the \ac{ICC}.
-But even if the odometry estimated from the wheels is not a good solution if used alone, it can be used as a starting point for other, more complex, method. For this reason we are now going to descript how to estimate the odometry starting from the wheels encoders in our specific robot. This computation is different according to the \textbf{motion model} of the considered robot. As we'll see in Section \ref{sec:grapeHwArch}, the robot we used is the Husky platform (see Figure \ref{fig:husky}) from Clearpath Robotics, that moves with a  \textit{skid steering} kinematics, that is a derivative of \textit{differential drive} kinematics. Thus, we're going to describe these two motion model with more detail.
+Moreover, the probability of slippage gets higher in systems with more than one wheel, because, because for a system with multiple wheels to move without slippage, a point must exists around which all the wheels can move along a circular path. This point is called \ac{ICC} (see Figure \ref{fig:icc}), and can be easily identified by looking for the intersection of the axis of all wheels. If the intersection exists in a single point, it's called the \ac{ICC}.
+But even if the odometry estimated from the wheels is not a good solution if used alone, it can be used as a starting point for other, more complex, method. For this reason we are now going to describe how to estimate the odometry starting from the wheels encoders in our specific robot. This computation is different according to the \textbf{motion model} of the considered robot. As we'll see in Section \ref{sec:grapeHwArch}, the robot we used is the Husky platform (see Figure \ref{fig:husky}) from Clearpath Robotics, that moves with a  \textit{skid steering} kinematics, that is a derivative of \textit{differential drive} kinematics. Thus, we're going to describe these two motion model with more detail.
 
 \begin{figure}
 	\centering
@@ -224,7 +224,7 @@ With this procedure we have identified 3 of the elements of the target tuple (se
 \begin{equation}
 	V(t)=\frac{(v_r+v_l)}{2}
 \end{equation}
-where $V(t)$ represent the complexive speed of the robot, and assuming to know the functions $v_r(t)$ and $v_l(t)$ \textit{i.e.} the linear speed of the wheel in time, we can calculate $(x,y,\theta)$ by integrating the speed of the robot over time, that is:
+where $V(t)$ represent the overall speed of the robot, and assuming to know the functions $v_r(t)$ and $v_l(t)$ \textit{i.e.} the linear speed of the wheel in time, we can calculate $(x,y,\theta)$ by integrating the speed of the robot over time, that is:
 
 \begin{empheq}{align}
 	x(t)            & = \int_{0}^{t}V(t)cos(\theta(t))dt \\
@@ -273,7 +273,7 @@ addition, it has good mobility on a variety of terrains, which makes it suitable
 for all-terrain missions. But, of course, it also present a variety of problems and weakness. For example, if you recall what we told about \ac{ICC} in Section \ref{sec:odometry}, it's clear that the \ac{ICC} of such a model will always be at the infinite, since wheels are organized in 2 parallel rows that cannot steer. Thus, skid steering robots can't turn without slipping of the wheels! 
 From a theoretical point of view, the main consequence is a a complexity in obtaining an accurate kinematics and dynamic model of \textit{skid steering} \parencite{skidSteeringDifficult}. On the other hand, in the context of \ac{GRAPE} project this leads to two major practical problems:
 \begin{itemize}
-	\item the slippage of the robot leads to higher power consuption of the electric engines with respect to the a system with explicit steering \parencite{skidSteeringConsumption}. This is something to be taken into account in the sizing phase of the power system of the robot.
+	\item the slippage of the robot leads to higher power consumption of the electric engines with respect to the a system with explicit steering \parencite{skidSteeringConsumption}. This is something to be taken into account in the sizing phase of the power system of the robot.
 	\item the estimation of the odometry is going to be much more imprecise than in the differential drive case, for the error introduced by the slipping of the wheels. 
 \end{itemize}
 
@@ -290,10 +290,10 @@ From a theoretical point of view, the main consequence is a a complexity in obta
 	\label{fig:skidSteering}
 \end{figure}
 
-Actually, there is a quite simple way  \parencite{skid2diff} to model with an accettable approximation the skid steering as an equivalent differential drive system, where the distance between the wheels is obtained multiplying the original distance for a factor $\chi$ that is function of the physical structure of the robot
+Actually, there is a quite simple way  \parencite{skid2diff} to model with an acceptable approximation the skid steering as an equivalent differential drive system, where the distance between the wheels is obtained multiplying the original distance for a factor $\chi$ that is function of the physical structure of the robot
 This approximation relies on some assumptions:
 \begin{itemize}
-	\item the mass center of the robotis located at the geometric center of the body frame.
+	\item the mass center of the robot located at the geometric center of the body frame.
 	\item the two wheels of each side rotate at the same speed.
 	\item \textbf{the robot is running on a firm ground surface, and four wheels are always in contact with the ground surface.}
 \end{itemize}
@@ -340,7 +340,7 @@ against interference.
 	\label{fig:fusionVsMultiSensor}
 \end{figure}
 
-Even if the name could be misleading, sensor fusion is different from \textit{multi-sensor integration} in the sense that multi-sensor integration only consists in the simultaneous use of disparate sensor sources in order to accomplish a goal task. Sensor fusion tecniques make a step further, and aim to the construction of a single common representation, using all the available sensor sources. The difference betweeen multi-sensor integration and sensor fusion is described graphically in image \ref{fig:fusionVsMultiSensor}, to underline that sensor fusion actually provides one single representation of the state of the environment that is used as a single input stream by the control application, while in multi-sensor integration the application uses each of the sensor data streams as direct input. In this context, we are assuming the definition of environment, from \cite{stateOfEnvironment}: pose of the robot, 	velocity of the robot, and velocity of the joints, configuration of actuators, location and features of surrounding objects, location and velocity of moving object and people.
+Even if the name could be misleading, sensor fusion is different from \textit{multi-sensor integration} in the sense that multi-sensor integration only consists in the simultaneous use of disparate sensor sources in order to accomplish a goal task. Sensor fusion techniques make a step further, and aim to the construction of a single common representation, using all the available sensor sources. The difference between multi-sensor integration and sensor fusion is described graphically in image \ref{fig:fusionVsMultiSensor}, to underline that sensor fusion actually provides one single representation of the state of the environment that is used as a single input stream by the control application, while in multi-sensor integration the application uses each of the sensor data streams as direct input. In this context, we are assuming the definition of environment, from \cite{stateOfEnvironment}: pose of the robot, 	velocity of the robot, and velocity of the joints, configuration of actuators, location and features of surrounding objects, location and velocity of moving object and people.
 
 In \ac{ROS} ecosystem, several open source solutions exist that implements \textit{sensor fusion-based} odometry; we tried two of them, which gave proof of good functioning in the past: \textbf{ROAMFREE} (\cite{roamfreePaper}, \cite{roamfreeUtilizzo1}, \cite{roamfreeUtilizzo2}), a graph-based algorithm, and \textbf{Robot Localization} (\cite{robotLocalizationPaper}, \cite{robotLocalizationUtilizzo1}, \cite{robotLocalizationUtlizzo2}), based on Kalman filters.
 
@@ -366,7 +366,7 @@ The state variables considered by Robot Localization are:
 	<x, y, z, \psi, \theta, \phi, \dot{x}, \dot{y}, \dot{z},\dot{\psi}, \dot{\theta}, \dot{\phi}, \ddot{x}, \ddot{y}, \ddot{z}>
 	\label{eq:robotLocalizationState}
 \end{equation}
-where $ \psi, \theta, \phi$ correspond to the euler angles \textit{roll, pitch, yaw}. 
+where $ \psi, \theta, \phi$ correspond to the Euler angles \textit{roll, pitch, yaw}. 
 The node accepts as inputs several types of \ac{ROS} messages:
 \begin{itemize}
 	\item \textit{nav\_msgs/Odometry}: the odometry estimation output by another node can be used entirely as input; this is the case of the odometry estimated only using wheels encoders, and it also allows for cascaded localization nodes. This will be useful in the \ac{GRAPE} project, as we'll se in Chapter \ref{chap:localization}.
@@ -375,7 +375,7 @@ The node accepts as inputs several types of \ac{ROS} messages:
 	\item \textit{geometry\_msgs/TwistWithCovarianceStamped}: an estimate of the linear and angular velocities of the robot, together with the timestamp of the measure and its covariance matrix.
 \end{itemize}
 Moreover, the Kalman filter implemented in Robot Localization is capable of \textit{continuous estimation}: if for some reason no data are received from the various sensors for a large enough amount of time, the filter keeps producing odometry estimation exploiting an internal motion model. 
-Remeber that Robot Localization can be configured also to publish the \textit{tf} transformation associated to the estimated odometry. This is one of the usage of \textit{tf} described in Section \ref{sec:tf}.
+Remember that Robot Localization can be configured also to publish the \textit{tf} transformation associated to the estimated odometry. This is one of the usage of \textit{tf} described in Section \ref{sec:tf}.
 
 % TODO:AMCL se lo useremo
 
@@ -422,7 +422,7 @@ In Computer Science, a software stack is a set of programs that collaborate, in 
 
 \section{Motion Planning}\label{sec:motionPlanning}
 
-Motion planning is a term used in robotics for the process of breaking down a desired movement task into discrete motions that satisfy movement constraints, and possibly optimize some aspect of the movement. This process is essential for autonomous systems, that accepts high-level description of tasks and should require no further human intervention; in this way the user can focus on \textit{what} he wants done, instead of \textit{how} to do it \parencite{motionPlanning}. Motion planning can be applied to any kind of mechanical device equipped with actuators and sensors under the control of a computing system (\textit{e.g.} a robotic arm that perform \textit{pick-and-place}, a differential drive robot that has to reach a goal in an environment). Motion planning includes (among the others): obstacle avoidance, computation of collision-free paths, building reliable sensory-based motion strategies.
+Motion planning is a term used in robotics for the process of breaking down a desired movement task into discrete motions that satisfy movement constraints, and possibly optimize some aspect of the movement. This process is essential for autonomous systems, that accepts high-level description of tasks and should require no further human intervention; in this way the user can focus on \textit{what} he wants done, instead of \textit{how} to do it \parencite{motionPlanning}. Motion planning can be applied to any kind of mechanical device equipped with actuators and sensors under the control of a computing system (\textit{e.g.} a robotic arm that perform \textit{pick-and-place}, a differential drive robot that has to reach a goal in an environment). Motion planning includes (among other): obstacle avoidance, computation of collision-free paths, building reliable sensory-based motion strategies.
 
 More concisely, the basic problem of motion planning is, given:
 \begin{itemize}
@@ -440,7 +440,7 @@ finding a path that moves the robot gradually from start to goal while never tou
 	\label{fig:motionPlanningArm}
 \end{figure}
 
-Even if the movement of the robot has to be executed in the real world, the planning of the motion is typically computed in the \textit{configuration space}, or \textit{C-space} \parencite{configurationSpace}. Formally, let: the robot $A$, at a certain position and orientation, be described as a compact subset of $W = {\rm I\!R}^n, N=2$ or $3$, and the obstacles $B_1,\dots,B_n$ be closed subsets of $W$. In addition, let $F_a$ and $F_w$ be cartesian frames embedded in $A$ and $W$, respectively. $F_a$ is a moving frame, while $F_w$ is fixed.  
+Even if the movement of the robot has to be executed in the real world, the planning of the motion is typically computed in the \textit{configuration space}, or \textit{C-space} \parencite{configurationSpace}. Formally, let: the robot $A$, at a certain position and orientation, be described as a compact subset of $W = {\rm I\!R}^n, N=2$ or $3$, and the obstacles $B_1,\dots,B_n$ be closed subsets of $W$. In addition, let $F_a$ and $F_w$ be Cartesian frames embedded in $A$ and $W$, respectively. $F_a$ is a moving frame, while $F_w$ is fixed.  
 A \textbf{configuration $q$} of  $A$ is a specification of the position $T$ and the orientation $\Theta$ of $F_a$ with respect to $F_w$. The \textbf{configuration space} of $A$ is the space $C$ of all the configurations of $A$.
 Usually, configuration space is high dimensional; a configuration is expressed as a vector of positions and orientations, so the robot in configuration space is always represented as a point. We distinguish the configuration space from the \textit{workspace}, that is the physical environment in which the robot move. A few examples:
 \begin{itemize}
@@ -467,7 +467,7 @@ Note that, as physical workspace, the configuration space is splitted in free sp
 	\label{fig:configSpaceWorkspace}
 \end{figure}
 
-In simple configuration spaces, \textit{grid-based search} algorithms can be used. With this approach, a grid is overlayed to configuration space, and assume that each configuration is identified with a grid point. With this approach, the problem is reduced to a graph search and exact algorithms like Dijkstra and A$^*$, or suboptimal algorithms like A$^*$, ARA$^*$, AD$^*$ can be used.
+In simple configuration spaces, \textit{grid-based search} algorithms can be used. With this approach, a grid is overlaid to configuration space, and assume that each configuration is identified with a grid point. With this approach, the problem is reduced to a graph search and exact algorithms like Dijkstra and A$^*$, or suboptimal algorithms like A$^*$, ARA$^*$, AD$^*$ can be used.
 
 But this approach gets easily unfeasible (for example, A$^*$ has complexity $O(b^d)$ \parencite{aStar}, with $b$ branching factor and $d$ depth of shortest path), so \textbf{sample-based approaches} are currently state-of-the-art planning algorithms. Sampling bases approaches, in a nutshell:
 \begin{itemize}
@@ -521,7 +521,8 @@ In sample-based planning there isn't a explicit characterizing of $C_{free}$ and
 In the context of \ac{GRAPE} project, motion planning is an essential component in two different modules:
 \begin{enumerate}
 	\item Navigation module: \textbf{Move Base}, described in Section \ref{sec:navigationStack} is a motion planner, that makes use of grid-based planning algorithm, and is used for the navigation of the robotic base in the vineyard environment
-	\item Manipulation module: \textbf{MoveIt!} is a sample-based planner, and is used to plan the motion of our robotic arm in manipulation tasks.
+	\item Manipulation module: \textbf{MoveIt!}\footnote{\url{http://moveit.ros.org/}}
+is a state-of-the-art sample-based planner, and is used to plan the motion of our robotic arm in manipulation tasks.
 \end{enumerate}
 
 
