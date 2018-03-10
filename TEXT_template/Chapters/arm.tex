@@ -30,7 +30,7 @@ For all the aforementioned reasons, \textit{MoveIt!} framework is suitable for t
 	\item the goal position is well known
 \end{itemize}
 
-\subsection{Simple publication of joint velocities}
+\subsection{Direct publication of joint velocities}
 We introduced this method to bypass the problem of the normalization of the joints anglular position. This method consists in a very simple closed-loop control that compares the target position of a joint with the the actual one (obtained through Jaco$^2$ \ac{ROS} \ac{API}), and applies a velocity to the concerned joint if the error is still too high. This method is feasible because Jaco$^2$ \ac{ROS} \ac{API} provides (among other) a topic for control speeds in joint space (\textit{i.e.} the configuration space, see Section \ref{sec:motionPlanning}) of the arm, thus we could control the velocity of each of the joints by publishing at a given frequency ($100Hz$) a message with the desired velocity for each joint. This method applies well for:
 \begin{itemize}
 	\item simple movements, with no sophisticated control on velocity or position
@@ -140,10 +140,11 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
   \node[state, fill=palette5]				(B)	[right = 2.5cm of A] {};
   \node[state, fill=palette5]				(C)	[below = 2cm of B]  {};
   \node[state, fill=palette5]				(D)	[right = 2.5cm of B] {};
-  \node[state, fill=palette5]				(E)	[right = 2.5cm of D] {};
+  \node[state, fill=palette5]				(Z)	[right= 2cm of D] {};   
+  \node[state, fill=palette5]				(E)	[below = 2.5cm of Z] {};
   \node[state, fill=palette5]				(F)	[below= 2cm of E] {};
   \node[accepting,state, fill=palette1]		(G)	[above= 2cm of D] {};    
-  \node[accepting,state, fill=palette5]		(H)	[left= 2cm of F] {};      
+  \node[accepting,state, fill=palette5]		(H)	[left= 2cm of F] {};         
 \path 
   (A)	edge[sloped, anchor=center, below]		node{Scan init position}(B)
   
@@ -151,24 +152,32 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 	edge[sloped, anchor=center, below]		node{Untangled wires}(D)
 	
   (C)	edge[sloped, anchor=center, above]		node{Untangled wires}(D)  
-  	edge[dashed,loop below]				node{Rotate end effector}(C)
+  	edge[densely dotted,loop below]				node{Rotate end effector}(C)
   	
-  (D) edge[sloped, anchor=center, below]		node{End scan movement}(E)
+  (D) edge[sloped, anchor=center, below]		node{Position reached}(Z)
      	edge[sloped, anchor=center, below]		node{Error}(G)
      	edge[dashed,loop below]				node{Execute scan motion}(G)
      	
   (E)	edge[sloped, anchor=center, below]		node{Tangled wires}(F)
-	edge[sloped, anchor=center, below]		node{Untangled wires}(H)
+	edge[sloped, anchor=center, above]		node{Untangled wires}(H)
 	
   (F)	edge[sloped, anchor=center, below]		node{Untangled wires}(H)
- 	edge[dashed,loop below]				node{Rotate end effector}(F);  
+ 	edge[densely dotted,loop below]		node{Rotate end effector}(F)
+
+  (Z)	edge[sloped, anchor=center, below]		node{Park position}(E);
 
 % legend
-\node[palette1node,label=right:Error state, scale=2.0] (FD) at (1,-7.5)   {};
-\node[palette5node,label=right:Normal execution state, scale=2.0] (FD) at (1,-8.5)   {};
-\node[label=right:Execution with inversion of Jacobian matrix tecnique] at (1,-9.5) {$\xdashrightarrow{\hspace{2.8em}}$};
-\node[label=right:dispenserApplicationFSA] at (1,-10.2) {$\xrightarrow{\hspace{2.8em}}$};
+\node[palette1node,label=right:Error state, scale=2.0] (FD) 				at (-1,-7.5)   {};
+\node[palette5node,label=right:Normal execution state, scale=2.0] (FD) 	at (-1,-8.5)   {};
 
+\node at(0,-9.55)[label=right:{MoveIt!}]{};
+\draw[] (-50pt,-9.5) -- (0pt,-9.5);
+
+\node at(0,-10.25)[label=right:{Inversion of differential kinematics technique}]{};
+\draw[dash pattern=on 3pt off 3pt] (-50pt,-10.2) -- (0pt,-10.2);
+
+\node at(0,-10.95)[label=right:{Direct publication of joint velocities}]{};
+\draw[dash pattern=on 1pt off 1pt] (-50pt,-10.9) -- (0pt,-10.9);
 \end{tikzpicture}
 
 
@@ -188,7 +197,7 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 		leftLoop/.style={loop left,in=210,out=150, min distance=15mm,looseness=10},			]
 	\label{fig:scanMotionFSA}
 	\tikzstyle{every state}=[fill=white,draw=black,text=black]	
-	\tikzset{every edge/.style={draw=black,sloped, anchor=center}} 
+	\tikzset{every edge/.style={draw=black,sloped, anchor=center, above}} 
 
 
 	\node[initial,state, fill=palette5]		(A)	{};
@@ -198,38 +207,82 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 	\node[state, fill=palette5]			(Z)	[right = of D] {};
 	\node[state, fill=palette5]			(E)	[below = of Z] {};
 	\node[state, fill=palette5]			(F)	[below = of E] {};	
-	\node[state, fill=palette5]			(H)	[left = of F] {};
+	\node[state, fill=palette5]			(H)	[left = of E] {};
 	\node[state, fill=palette5]			(G)	[below = of F] {};
 	\node[state, fill=palette5]			(I)	[below = of H] {};
+	\node[state, fill=palette5]			(J)	[below = of I] {};
+	\node[state, fill=palette5]			(K)	[below left = of I] {};		
+	\node[state, fill=palette5]			(M)	[below = of J] {};
+	\node[state, fill=palette5]			(N)	[left = of M] {};
+	\node[state, fill=palette5]			(O)	[left = of N] {};
+	\node[state, fill=palette5]			(P)	[above left = of O] {};
+	\node[state, fill=palette5]			(Q)	[above = of P] {};
+	\node[accepting,state, fill=palette5]			(R)	[right= of Q] {};
+	\node[accepting,state, fill=palette1]	(ERROR)	[left= of H] {};
 \path 
-	(A)	edge[below]				node{Pre-pick pose}(B)
+	(A)	edge[]				node{Pre-pick pose}(B)
 	
-	(B)	edge[draw=white,above]	node{Compute marker}(C)
+	(B)	edge[draw=white]			node{Compute marker}(C)
 		edge[below]				node{features}(C)
+		edge[below]				node{No dispenser found}(ERROR)
 		
-	(C)	edge[below]				node{Target reached}(D)
+	(C)	edge[]					node{Target reached}(D)
   		edge[upLoop, decorate] 	node{Visual Servoing}(C)
 
-  	(D)	edge[below]				node{Open fingers}(Z)
+  	(D)	edge[]					node{Open fingers}(Z)
   	
-  	(Z) 	edge[draw=white, above]	node{Extract}(E)
+  	(Z) 	edge[draw=white]			node{Extract}(E)
 	  	edge[below]				node{dispenser}(E)
+	  	edge[]					node{Grasping failed}(ERROR)
 	  	
-	(E)	edge[above]				node{Nail deployment}(F)
-		edge[above]				node{Plant deployment}(H)
-
-	(F)	edge[draw=white, above]	node{Fixed frontal}(G)
+	(E)	edge[draw=white]			node{Nail}(F)
+		edge[below]				node{deployment}(F)
+		edge[draw=white]			node{Plant}(H)
+		edge[below]				node{deployment}(H)
+		
+	(F)	edge[draw=white]			node{Fixed frontal}(G)
 		edge[below]				node{position}(G)
 		
-	(H)	edge[above]				node{Frontal position}(I)
+	(H)	edge[]					node{Frontal position}(I)
 	
-	(G)	edge[downLoop,below]	node{}(G);
+	(G)	edge[rightLoop, above, decorate]node{Visual Servoing}(G)
+		edge[below]				node{Position reached}(M)
 	
+	(I)	edge[]					node{MoveIt! mode}	(K)
+		edge[draw=white]			node{Visual Servo} (J)
+		edge[below]				node{Mode}(J)
+		
+	(J)	edge[rightLoop, above, decorate]node{Visual Servoing}(J)
+		edge[]					node{Pos. reached}(M)
+	
+	(K)	edge[bend right, below]	node{Position reached}(M)
+	
+	(M)	edge[below]				node{Close fingers} (N)
+	
+	(N)	edge[draw=white]			node{Back to} (O)
+		edge[below]				node{frontal pose}(O)
+
+	(O)	edge[]					node{Park position}(P)
+		edge[bend right]			node{Deployment failed}(ERROR)	
+	(P)	edge[]					node{Tangled wires}(Q)
+		edge[]					node{Untangled wires}(R)
+
+	(Q)	edge[]					node{Untangled wires}(R)
+		edge[densely dotted,leftLoop, below]		node{Rotate end effector}(Q);
+
+
 % legend
-\node[palette1node,label=right:Error state, scale=2.0] (FD) at (1,-7.5)   {};
-\node[palette5node,label=right:Normal execution state, scale=2.0] (FD) at (1,-8.5)   {};
-\node[label=right:Execution with inversion of Jacobian matrix tecnique] at (1,-9.5) {$\xdashrightarrow{\hspace{2.8em}}$};
-\node[label=right:scanMotionFSA] at (1,-10.2) {$\xrightarrow{\hspace{2.8em}}$};
+\node[palette1node,label=right:Error state, scale=2.0] (FD) at (-3,-3)   {};
+\node[palette5node,label=right:Normal execution state, scale=2.0] (FD) at (-3,-4)   {};
+
+\node at(-2,-5.05)[label=right:{MoveIt!}]{};
+\draw[] (-110pt,-5) -- (-60pt,-5);
+
+\node at(-2,-5.75)[label=right:{Direct publication of joint velocities}]{};
+\draw[dash pattern=on 1pt off 1pt] (-110pt,-5.7) -- (-60pt,-5.7);
+
+\node at(-2,-6.45)[label=right:{Visual servoing controlled}]{};
+\draw[decorate] (-110pt,-6.4) -- (-60pt,-6.4);
 
   \end{tikzpicture}
 
