@@ -123,8 +123,11 @@ Since the Jaco$^2$ arm drivers provide a \ac{ROS} topic to control the end effec
 
 \section{Scan motion action server}
 
-The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) you can see the FSA that an action call triggers.
-\\
+The scan motion is a quite simple procedure; in Figure \ref{fig:scanMotionFSA} you can see the \ac{FSA} triggered by the action call, with highlight of the different motion methods used for each of the motions. As you can see, most of the movements are implemented through \textit{MoveIt!} framework, except for:
+\begin{itemize}
+	\item the disentanglement of the wires after critical movements. The wires problem was mostly accentuated in the scan movement because some of the joints were more stretched, so a check is made before and after the scan motion. The motion is implemented with direct publication of end effector joint velocity
+	\item the scan motion itself, that requires constant orientation of the \ac{LIDAR} and so of the end effector, too. The motion is implemented through inversion of differential kinematic to maintain the end effector orientation.
+\end{itemize}
 \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.8cm,
                     semithick, scale=0.6, every node/.style={scale=0.6},
                      palette1node/.style={shape=circle, draw=black,fill=palette1},
@@ -173,8 +176,8 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 \node at(0,-9.55)[label=right:{MoveIt!}]{};
 \draw[] (-50pt,-9.5) -- (0pt,-9.5);
 
-\node at(0,-10.25)[label=right:{Inversion of differential kinematics technique}]{};
-\draw[dash pattern=on 3pt off 3pt] (-50pt,-10.2) -- (0pt,-10.2);
+\node at(0,-10.25)[label=right:{Constant end effector orientation}]{};
+\draw[dash pattern=on 4pt off 4pt] (-50pt,-10.2) -- (0pt,-10.2);
 
 \node at(0,-10.95)[label=right:{Direct publication of joint velocities}]{};
 \draw[dash pattern=on 1pt off 1pt] (-50pt,-10.9) -- (0pt,-10.9);
@@ -182,6 +185,19 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 
 
 \section{dispenser application action server}\label{sec:dispenserApplicationImplementation}
+
+In Figure \ref{fig:dispenserApplicationFSA} you can see the \ac{FSA} triggered by the action call, with highlight of the different motion methods used for each of the motions. As in the previous action, most of the movements are executed with \textit{MoveIt!}, except for:
+\begin{itemize}
+	\item the disentanglement of the wires, as in scan motion action server
+	\item the grasping of the dispenser from the feeder, executed with visual servoing control
+	\item the deployment of the dispenser in nail mode, executed with visual servoing control
+	\item one of the dispenser deployment mode on the plant, executed with visual servoing
+\end{itemize}
+This action is composed of two main parts:
+\begin{enumerate}
+	\item Grasping of the dispenser, and image-based grasping validation
+	\item Deployment of the dispenser, and image-based deployment validation
+\end{enumerate}
 
 \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.8cm,
 		decoration={snake, segment length=1.5mm, amplitude=0.3mm},
@@ -195,7 +211,7 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 		downLoop/.style={loop below,in=-120,out=-60, min distance=15mm,looseness=10},
 		rightLoop/.style={loop right,in=-30,out=30,min distance=15mm,looseness=10},
 		leftLoop/.style={loop left,in=210,out=150, min distance=15mm,looseness=10},			]
-	\label{fig:scanMotionFSA}
+	\label{fig:dispenserApplicationFSA}
 	\tikzstyle{every state}=[fill=white,draw=black,text=black]	
 	\tikzset{every edge/.style={draw=black,sloped, anchor=center, above}} 
 
@@ -233,13 +249,13 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
   	
   	(Z) 	edge[draw=white]			node{Extract}(E)
 	  	edge[below]				node{dispenser}(E)
-	  	edge[]					node{Grasping failed}(ERROR)
 	  	
 	(E)	edge[draw=white]			node{Nail}(F)
 		edge[below]				node{deployment}(F)
 		edge[draw=white]			node{Plant}(H)
 		edge[below]				node{deployment}(H)
-		
+	  	edge[bend right]					node{Grasping failed}(ERROR)
+	  			
 	(F)	edge[draw=white]			node{Fixed frontal}(G)
 		edge[below]				node{position}(G)
 		
@@ -286,8 +302,66 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 
   \end{tikzpicture}
 
-\subsection{validazione delle cose, con alette}
-\subsection{visual servoing nei 2 cosi}
+Our image processing tasks are based on C++ \ac{API} of \textbf{OpenCV library}\footnote{\url{https://opencv.org/}}.
+Implementation detail are provided in Sections \ref{subsec:imageBasedValidationSec} and \ref{subsec:visualServoingNellaAction}.
+
+\subsection{Image based validation}\label{subsec:imageBasedValidationSec}
+In order to check for the presence of dispensers in the feeder, and validate the grasp and deploy operations, we make use of the Intel RealSense RGB-D camera mounted on top of the arm end effector. The thinness of dispensers with respect to the camera resolution make them hard to detect, especially if, after a deployment operation, a rotation of the dispenser occurs and it's not possible framing it from a frontal position. For this reason, all our dispensers are equipped with two small red flaps built out of tape, one on each side, as showed in Figure \ref{fig:deploymentOnMockup}. Note that the red color of the wings was chosen because it stands out with respect to the typical colors of the vineyard during winter or spring months, and it's an important factor in the image processing algorithms that follow. 
+
+\begin{description}
+	\item [Check dispenser availability] In this phase, the camera is placed on the vertical of the feeder and, to check for dispenser availability, it looks for two red wings in a rectangular area that contains the feeder. In Figure \ref{fig:checkDispenserAvailability}, you can see some intermediate results of the algorithm execution:
+		\begin{enumerate}
+			\item Color segmentation of the image, to find pixel areas with color similar to the wings one \ref{fig:dispenserAvailability1}
+			\item Morphological operations (\textit{dilatation} and \textit{erosion}) on the selected pixel regions, for noise reduction and discarding of too small regions \ref{fig:dispenserAvailability2}
+			\item Discard of the regions outside a predefined rectangular area in the center of the image \ref{fig:dispenserAvailability3}
+		\end{enumerate}
+	In Image \ref{fig:dispenserAvailability4} you can see the outcome of the aforementioned analysis; the wings identification is successful and their detected contour highlighted.
+	
+	\item[Grasping validation] As you can see in Figure \ref{fig:dispenserApplicationFSA}, this check is performed after the fingers has opened and the end effector has already moved from the grasping pose but it still is on the vertical of the feeder, because we want to detect a possible failure as soon as possible. 
+\end{description}
+
+
+
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/detect_a_3.png}
+		\label{fig:dispenserAvailability1}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/detect_a_4.png}
+		\label{fig:dispenserAvailability2}}
+	\\
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/detect_b_4.png}
+		\label{fig:dispenserAvailability3}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/depth_estimation_2.png}
+		\label{fig:dispenserAvailability4}}
+	\caption{\textit{Visual representation of the dispenser availability check algorithm.}}
+	\label{fig:checkDispenserAvailability}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/checkgrasp_01.png}
+		\label{fig:graspChecking1}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/checkgrasp_05.png}
+		\label{fig:graspChecking2}}
+	\\
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/checkgrasp_06.png}
+		\label{fig:graspChecking3}}
+	\caption{\textit{Different outcomes of the grasp validation algorithm: true positive (\ref{fig:graspChecking1}), true negative (\ref{fig:graspChecking2}), false positive (\ref{fig:graspChecking3})}}
+	\label{fig:graspChecking}
+\end{figure}
+
+
+
+\subsection{visual servoing nei 2 cosi}\label{subsec:visualServoingNellaAction}
 
 
 Kinova Arm chapter: SKETCH
