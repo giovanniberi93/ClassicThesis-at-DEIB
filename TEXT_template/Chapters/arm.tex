@@ -3,7 +3,7 @@
 \chapter{Kinova Arm} \label{chap:kinovaArmChapter}
 
 In this chapter, we'll explain our implementation of the action servers described in Chapter \ref{chap:grapeSoftwareArchitecture} related to the scan motion for point cloud registration, and to the pheromone dispenser application.
-But before it we'll see the different techniques used in the development of \ac{GRAPE} project for moving the Jaco$^2$ arm we had at disposal.
+But before it we'll see the different techniques we used for the motion planning and execution for the Jaco$^2$ arm.
 
 \section{Motion execution methods for Jaco$^2$ Arm}
 
@@ -119,10 +119,8 @@ the following control rule is obtained:
 v_{cam}=(L^TL)^{-1}L^T\dot{e}(t)
 \]
 
-Since the Jaco$^2$ arm drivers provide a \ac{ROS} topic to control the end effector in Cartesian velocities, the assumption holds.
-We used this control for high-precision tasks: grasping of the dispenser from the feeder, and deployment of the dispenser.
+Since the Jaco$^2$ arm drivers provide a \ac{ROS} topic to control the end effector in Cartesian velocities, the assumption holds. The usage of visual servoing techniques in our imlementation will be clearer in Section \ref{sec:dispenserApplicationImplementation}.
 
-\section{feeder, cose stampate in 3D}
 \section{Scan motion action server}
 
 The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) you can see the FSA that an action call triggers.
@@ -174,19 +172,24 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 \end{tikzpicture}
 
 
-\section{dispenser application action server}
+\section{dispenser application action server}\label{sec:dispenserApplicationImplementation}
 
 \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.8cm,
 		decoration={snake, segment length=1.5mm, amplitude=0.3mm},
-                    semithick, scale=0.6, every node/.style={scale=0.6},
-                     palette1node/.style={shape=circle, draw=black,fill=palette1},
-		  palette2node/.style={shape=circle, draw=black,fill=palette2},
-		  palette3node/.style={shape=circle, draw=black,fill=palette3},
-		  palette4node/.style={shape=circle, draw=black,fill=palette4},		  
-		  palette5node/.style={shape=circle, draw=black,fill=palette5}, ]
+		semithick, scale=0.6, every node/.style={scale=0.6},
+		palette1node/.style={shape=circle, draw=black,fill=palette1},
+		palette2node/.style={shape=circle, draw=black,fill=palette2},
+		palette3node/.style={shape=circle, draw=black,fill=palette3},
+		palette4node/.style={shape=circle, draw=black,fill=palette4},		  
+		palette5node/.style={shape=circle, draw=black,fill=palette5}, 
+		upLoop/.style={loop above,in=120,out=60,min distance=15mm,looseness=10},
+		downLoop/.style={loop below,in=-120,out=-60, min distance=15mm,looseness=10},
+		rightLoop/.style={loop right,in=-30,out=30,min distance=15mm,looseness=10},
+		leftLoop/.style={loop left,in=210,out=150, min distance=15mm,looseness=10},			]
 	\label{fig:scanMotionFSA}
-	\tikzstyle{every state}=[fill=white,draw=black,text=black]
-	\tikzset{every loop/.style={min distance=15mm,in=-60,out=-120,looseness=10}}  
+	\tikzstyle{every state}=[fill=white,draw=black,text=black]	
+	\tikzset{every edge/.style={draw=black,sloped, anchor=center}} 
+
 
 	\node[initial,state, fill=palette5]		(A)	{};
 	\node[state, fill=palette5]			(B)	[right = of A] {};
@@ -199,25 +202,29 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 	\node[state, fill=palette5]			(G)	[below = of F] {};
 	\node[state, fill=palette5]			(I)	[below = of H] {};
 \path 
-	(A)	edge[sloped, anchor=center, below]		node{Pre-pick pose}(B)
+	(A)	edge[below]				node{Pre-pick pose}(B)
 	
-	(B)	edge[sloped, anchor=center, above]		node{Compute marker}(C)
-		edge[sloped, anchor=center, below]		node{features}(C)
+	(B)	edge[draw=white,above]	node{Compute marker}(C)
+		edge[below]				node{features}(C)
 		
-	(C)	edge[sloped, anchor=center, below]		node{Target reached}(D)
-  		edge[loop above, decorate,min distance=15mm,in=120,out=60,looseness=10] node{Visual Servoing}(C)
-  	(D)	edge[sloped, anchor=center, below]		node{Open fingers}(Z)
-  	
-  	(Z) 	edge[sloped, anchor=center, above]		node{Extract}(E)
-	  	edge[sloped, anchor=center, below]		node{dispenser}(E)
-	  	
-	(E)	edge[sloped, anchor=center, above]		node{Nail deployment}(F)
-		edge[sloped, anchor=center, above]		node{Plant deployment}(H)
+	(C)	edge[below]				node{Target reached}(D)
+  		edge[upLoop, decorate] 	node{Visual Servoing}(C)
 
-	(F)	edge[sloped, anchor=center, above]		node{Fixed frontal}(G)
-		edge[sloped, anchor=center, below]		node{position}(G)
+  	(D)	edge[below]				node{Open fingers}(Z)
+  	
+  	(Z) 	edge[draw=white, above]	node{Extract}(E)
+	  	edge[below]				node{dispenser}(E)
+	  	
+	(E)	edge[above]				node{Nail deployment}(F)
+		edge[above]				node{Plant deployment}(H)
+
+	(F)	edge[draw=white, above]	node{Fixed frontal}(G)
+		edge[below]				node{position}(G)
 		
-	(H)	edge[sloped, anchor=center, above]		node{Frontal position}(I);
+	(H)	edge[above]				node{Frontal position}(I)
+	
+	(G)	edge[downLoop,below]	node{}(G);
+	
 % legend
 \node[palette1node,label=right:Error state, scale=2.0] (FD) at (1,-7.5)   {};
 \node[palette5node,label=right:Normal execution state, scale=2.0] (FD) at (1,-8.5)   {};
@@ -225,6 +232,9 @@ The scan motion is a quite simple procedure (in Figure \ref{fig:scanMotionFSA}) 
 \node[label=right:scanMotionFSA] at (1,-10.2) {$\xrightarrow{\hspace{2.8em}}$};
 
   \end{tikzpicture}
+
+\subsection{validazione delle cose, con alette}
+\subsection{visual servoing nei 2 cosi}
 
 
 Kinova Arm chapter: SKETCH

@@ -191,7 +191,7 @@ Additional hardware was placed on the \ac{UGV} specifically for the accomplishme
 	\item the dispensers have to be stored on the Husky platform, in such a way to make them graspable
 \end{itemize}
 We required very custom hardware to accomplish these objectives so, given the prototype nature of the project, 3D stamped hardware was used.
-For what concern the storage of the pheromone dispensers, the final version of the dispenser feeder was built out of two 3D-printed small towers (see Figure \ref{fig:dispenserFeeder}), with a sequence of very smooth aligned grooves, parallel to the horizontal plane. The smoothness of the grooves is the critical part of the design, indeed the previous versions of the towers, with sharper grooves, highlighted a difficulty of the grasping phase if the dispensers got caught on the feeder's corners.
+For what concern the storage of the pheromone dispensers, the final version of the dispenser feeder was built out of two 3D-printed small towers (see Figure \ref{fig:dispenserFeeder}), with a sequence of very smooth aligned grooves, parallel to the horizontal plane, where the dispensers are slotted in. The smoothness of the grooves is the critical part of the design, indeed the previous versions of the towers, with sharper grooves, highlighted a difficulty of the grasping phase if the dispensers got caught on the feeder's corners.
 
 \begin{figure}
 	\centering
@@ -206,7 +206,7 @@ For what concern the storage of the pheromone dispensers, the final version of t
 \end{figure}
 
 
-The fingers of the robot are not all the same, because one of them act as a sort of "opposable thumb", that is useless in our application. So, two "nails" were printed to be applied to the two symmetric fingers, with a side dispenser-sized groove each, that 
+The fingers of the robot are not all the same, because one of them act as a sort of "opposable thumb", that is useless in our application. So, two "nails" were printed to be applied to the two symmetric fingers, with a side dispenser-sized groove each, in order to grasp the dispenser by opening the two symmetric fingers.
 
 \begin{figure}
 	\centering
@@ -271,13 +271,26 @@ This choice came from both the absence in the project proposal of precise object
  		\item it applies the dispenser on the best feasible point from the input sequence
  		\item it goes back to a retired position, to achieve better stability during the movement of \ac{UGV}.
  	\end{enumerate}
- 	In figure \ref{fig:deploymentOnMockup}, you can see an example of successful dispenser application, using the mockup plant.
+ 	In figure \ref{fig:deploymentOnMockup}, you can see an example of successful dispenser application, using the mockup plant. \textbf{NOTE:} the integration weeks were not all held in the same place (two of them in Garriguella (ES), and one in Casciana Terme (IT)), so we could observe that the vine trees shape is very different in the different locations (for example, the trees in Garriguella tend to have small almost vertical branches on the top of the pruned tree, while the Italian ones had smaller protuberances with variable orientation). This factor makes our system much harder to validate, because it's even more difficult to identify useful features in the unstructured vineyard environment. Thus, we introduced a further deployment mode, to be used in case our deployment procedure on the plants turned out not versatile enough to be efficient on a new tree type. Since we wanted to bypass the problems due to different tree structures, in this mode we assume to have some appropriately shaped nails, expressly arranged for dispenser applications. As we'll see in Chapter \ref{chap:kinovaArmChapter}, this deployment mode also requires the application of \textit{binary square fiducial markers} (see Figure \ref{fig:arucoMarkers}), so in this way our application pushes a bit more towards a vineyard that modifies in order to be more suitable to robotic applications.\\
+ 	The steps of this deployment mode are slightly different from the previous ones:
+ 	\begin{enumerate}
+ 		\item it grasps the dispenser (if any) from the dedicated support
+ 		\item it applies the dispenser on the nail, regardless of the input sequence (which become useless)
+ 		\item it goes back to a retired position, to achieve better stability during the movement of \ac{UGV}.
+ 	\end{enumerate}
  \end{enumerate}
 
 \begin{figure}
 	\centering
+	\includegraphics[width=0.4\textwidth]{Images/grape_sw_hw_architecture/arucoMarkers.png}
+	\caption{\textit{Examples of visual markers (more specifically, ArUco markers) as the ones we used in visual servoing applications.}}
+	\label{fig:arucoMarkers}
+\end{figure}
+
+\begin{figure}
+	\centering
 	\includegraphics[width=0.6\textwidth]{Images/grape_sw_hw_architecture/scanPoints.png}
-	\caption{\textit{Examples of point cloud collected in Casciana Terme during the integration week in January 2018, with the \ac{LIDAR} mounted on top of the end effector of the arm. You can recognize the vine plant, and part of the Husky base. The colors are only for visualization purpose.}}
+	\caption{\textit{Examples of laser scans collected in Casciana Terme during the integration week in January 2018, with the \ac{LIDAR} mounted on top of the end effector of the arm. You can recognize the vine plant, and part of the Husky base. The colors are only for visualization purpose.}}
 	\label{fig:pointCloudScanned}
 \end{figure}
 
@@ -334,7 +347,7 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 			\item \textit{deployment\_poses}:  sequence of feasible deployment points, ordered from the best one to the worst one. These are the points output by \textit{Point cloud processing action}
 			\item \textit{deploy\_mode}: an integer, used to select the technique to be used for the dispenser deployment; in fact, three different mode has been developed, in order to fit the different condition that the \ac{UGV} could face. In short, the modes available for selection are:
 			\begin{itemize}
-				\item Closed loop control, deployment target is a nail, hammered into a pole
+				\item Closed loop control, deployment target is an expressely placed nail, hammered into a pole
 				\item Closed loop control, deployment target is a protuberance of the vine tree
 				\item Open loop control, deployment target is a protuberance of the vine tree
 			\end{itemize}
