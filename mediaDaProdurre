@@ -6,3 +6,4 @@ OBBLIGATORI
 
 SECONDARI
  - modulo dell'errore nella posizione dell'end effector (tanti movimenti, misurare errore)
+ - esempi di match con il convex hull

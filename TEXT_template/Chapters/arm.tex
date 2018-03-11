@@ -64,7 +64,7 @@ Systematic algorithm exists to compute the geometric Jacobian matrix \parencite{
 In our implementation, the computation (with expression \ref{eq:kinematicInversion}) and publication of the joint speed is a periodic task executed with frequency $100Hz$. Of course, this is required because the Jacobian varies in time, according to the positions of the joints.
 
 
-\subsection{Image Based Visual Servoing}
+\subsection{Image Based Visual Servoing}\label{subsec:visualServoing}
 This technique allows for much more precise positioning of all the other described in previous sections; it is a closed-loop control and makes use of the RGB-D camera mounted on top of the end effector. Now, we'll give a formal descriptionof image based visual servoing algorithm \parencite{imageBasedVisualServo}.
 \par
 Define a feature point as the vector: 
@@ -309,19 +309,48 @@ Implementation detail are provided in Sections \ref{subsec:imageBasedValidationS
 In order to check for the presence of dispensers in the feeder, and validate the grasp and deploy operations, we make use of the Intel RealSense RGB-D camera mounted on top of the arm end effector. The thinness of dispensers with respect to the camera resolution make them hard to detect, especially if, after a deployment operation, a rotation of the dispenser occurs and it's not possible framing it from a frontal position. For this reason, all our dispensers are equipped with two small red flaps built out of tape, one on each side, as showed in Figure \ref{fig:deploymentOnMockup}. Note that the red color of the wings was chosen because it stands out with respect to the typical colors of the vineyard during winter or spring months, and it's an important factor in the image processing algorithms that follow. 
 
 \begin{description}
-	\item [Check dispenser availability] In this phase, the camera is placed on the vertical of the feeder and, to check for dispenser availability, it looks for two red wings in a rectangular area that contains the feeder. In Figure \ref{fig:checkDispenserAvailability}, you can see some intermediate results of the algorithm execution:
+	\item [Check dispenser availability] In this phase, the camera is placed on the vertical of the feeder and, to check for dispenser availability, it looks for two red wings in a central rectangular area (\textit{valid area}) that should contain the feeder. In Figure \ref{fig:checkDispenserAvailability}, you can see some intermediate results of the algorithm execution:
 		\begin{enumerate}
-			\item Color segmentation of the image, to find pixel areas with color similar to the wings one \ref{fig:dispenserAvailability1}
-			\item Morphological operations (\textit{dilatation} and \textit{erosion}) on the selected pixel regions, for noise reduction and discarding of too small regions \ref{fig:dispenserAvailability2}
-			\item Discard of the regions outside a predefined rectangular area in the center of the image \ref{fig:dispenserAvailability3}
+			\item Color segmentation of the image, to find pixel areas with color similar to the wings (see \ref{fig:dispenserAvailability1})
+			\item Morphological operations (\textit{dilatation} and \textit{erosion}) on the selected pixel regions, for noise reduction and discard of too small regions (see Figure \ref{fig:dispenserAvailability2})
+			\item Discard of the regions outside a predefined rectangular area in the center of the image (see Figure \ref{fig:dispenserAvailability3})
 		\end{enumerate}
 	In Image \ref{fig:dispenserAvailability4} you can see the outcome of the aforementioned analysis; the wings identification is successful and their detected contour highlighted.
 	
-	\item[Grasping validation] As you can see in Figure \ref{fig:dispenserApplicationFSA}, this check is performed after the fingers has opened and the end effector has already moved from the grasping pose but it still is on the vertical of the feeder, because we want to detect a possible failure as soon as possible. 
+	\item[Grasping validation] As you can see in Figure \ref{fig:dispenserApplicationFSA}, this check is performed after the fingers has opened and the end effector has already moved from the grasping pose but it still is on the vertical of the feeder, because we want to detect a possible failure as soon as possible. In case of successful grasping, we expect to see the red wing of the dispenser in the bottom right corner of the image (\textit{valid area}). The copious amount of tests showed that that the grasping procedure couldn't lead to a deterministic position of the wing in the image plane, thus we had to take additional measure for the validation procedure to be effective. In particular, in the laboratory environment where our procedure were developed, problems came from:
+	
+	\begin{itemize}
+		\item the color of the test bench similar shade of the dispenser wings color, especially under direct enlightenment
+		\item the reflectivity of the desk surface causes noise in the depth sensing when using stereoscopic infrared sensors \parencite{reflectionDepthSensing}, in particular the depth of pixels belonging to highly reflective surfaces is always very low. For this reason, discarding pixel regions by thresholding over the distance of the regions from the camera is useful, but not sufficient to discard the
+	\end{itemize}
+
+Because of the non-deterministic position of the dispenser in the image, we could not simply discard these noise by cropping a narrower valid area or setting a stricter threshold value for the region area. We noted that noise regions that survive the first steps of the filtering procedure often have a jagged contour, while we know that the dispenser wings have very sharp edges in the image. Basing on this observation, we introduced an additional filtering step, where for each of the pixel regions survived to previous filtering steps:
+\begin{itemize}
+	\item compute the convex hull of that region \textit{i.e.} the smallest convex set of pixels that contains it (see Figure \ref{fig:convexHullExample})
+	\item compute the matching between the region itself, and its convex hull; the OpenCV method for calculation of the match between different images are based on the Hu invariants \parencite{huInvariants}
+	\item discard of the regions with matching value below a fixed threshold
+\end{itemize}
+The idea behind this filtering procedure is that the trapezoid region of the dispenser is very regular and convex so it will be very similar to its convex hull, while the jagged contour of a noise region will be quite different from its convex hull. \\
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/arm/convexHullExampleClean.png}
+	\caption{\textit{Convex hull computation of the edges of a sample image.}}
+	\label{fig:convexHullExample}
+\end{figure}
+
+Even if these problems were due to elements in the test environment and not in the actual vineyard, we decided to introduce the additional measure also in the final version of the procedure to make it more robust to possible noise we were not aware of in development phase.
+
+The algorithm steps for the validation of the dispenser grasping  are:
+	\begin{enumerate}
+		\item Color segmentation of the image, to find pixel areas with color similar to the wings (see Figure \ref{fig:graspValidation1})
+		\item Morphological operations (\textit{dilatation} and \textit{erosion}) on the selected pixel regions, for noise reduction and discard of too small regions (see Figure \ref{fig:graspValidation2})
+		\item Discard regions with too high depth value \textit{e.g.} wings of dispensers still in the feeder, that are not took into account (see Figure \ref{fig:graspChecking2})
+		\item Discard regions outside the valid area (bottom right corner)
+		\item Discard region with a too low degree of similarity with their convex hull
+	\end{enumerate}
+If at least one region survives the whole filtering procedure, this region is likely to be the one identified by the dispenser and the grasping is validated. \textbf{NOTE:} we check for \textit{at least} one region instead of \textit{exactly} one, because the procedure is much more likely to select noise regions as correct than discard the dispenser region, so false negatives are very unlikely and if we checked for exactly one region we would be more likely to produce false positives.
 \end{description}
-
-
-
 
 \begin{figure}
 	\centering
@@ -346,6 +375,25 @@ In order to check for the presence of dispensers in the feeder, and validate the
 \begin{figure}
 	\centering
 	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/grasp_validate1.png}
+		\label{fig:graspValidation1}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/grasp_validate2.png}
+		\label{fig:graspValidation2}}
+	\\
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/grasp_validate3.png}
+		\label{fig:graspValidation3}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/grasp_validate4.png}
+		\label{fig:graspValidation4}}
+	\caption{\textit{Visual representation of the dispenser availability check algorithm.}}
+	\label{fig:graspValidation}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
 		\includegraphics[width=0.4\textwidth]{Images/arm/checkgrasp_01.png}
 		\label{fig:graspChecking1}}
 	\subfloat[]{%
@@ -355,23 +403,51 @@ In order to check for the presence of dispensers in the feeder, and validate the
 	\subfloat[]{%
 		\includegraphics[width=0.4\textwidth]{Images/arm/checkgrasp_06.png}
 		\label{fig:graspChecking3}}
-	\caption{\textit{Different outcomes of the grasp validation algorithm: true positive (\ref{fig:graspChecking1}), true negative (\ref{fig:graspChecking2}), false positive (\ref{fig:graspChecking3})}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/checkgrasp_03.png}
+		\label{fig:graspChecking4}}
+		
+	\caption{\textit{Different outcomes of the grasp validation algorithm: true positive (\ref{fig:graspChecking1}), true negative (\ref{fig:graspChecking2}), false positive (\ref{fig:graspChecking3}), error situation that however brings to a true positive (\ref{fig:graspChecking4})}}
 	\label{fig:graspChecking}
 \end{figure}
 
 
+\subsection{VIsual servoing tasks}\label{subsec:visualServoingNellaAction}
+In this section we'll describe with more detail each of the operation executed with visual servoing control. However, this is done mostly for the sake of completeness, because the design and implementation of the automatic control was not directly part of this thesis work, so technical details will be omitted.
 
-\subsection{visual servoing nei 2 cosi}\label{subsec:visualServoingNellaAction}
-
-
-Kinova Arm chapter: SKETCH
+As mentioned in Section \ref{subsec:visualServoing}, for executing image based visual servoing control, some features must be tracked in order to calculate the cartesian velocities for the end effector. For each case, we'll see which features are used and how. We'll see that some of the operations rely on ArUco markers \parencite{aruco}; they are a type of binary square fiducial markers (see Figure \ref{fig:arucoMarkers}), with some characteristics designed to make them particularly suitable for obtainment of the camera pose for computer vision applications:
 \begin{itemize}
-	\item scopo del braccio in GRAPE: scan della pianta, deployment, automa a stati che rappresenta la sequenza di azioni del braccio 
-	\item problema 1 dovuto alla scarsa precisione: accenni alle parti di visual servo con marker per compensare questo problema in fase di grasping e deployment (cenni, fatta da Polito e Bascetta).
-	\item problema 2 dovuto ai limiti di execution di moveit: impossibilità di fare un movimento di scansione fluido e completo usando moveit, metodo della jacobiana e la pubblicazione delle velocità
-	\item utilizzo della camera per validazione del grasping e del deployment
-	\item foto del braccio, immagini della nuvola di punti processata dal codice di ferran, alcune immagini dell'image processing nelle fasi di visual servo e di validazione di grasping/deployment
+	\item a black wide black border that facilitates its fast detection in the image\
+	\item an inner binary matrix which determines its identifier and allows for the application of error detection and correction techniques
+	\item  the marker size determines the size of the internal matrix \textit{e.g.} a marker size of 4x4 is composed by 16 bits.
 \end{itemize}
+Make reference to the \ac{FSA} of figure \ref{fig:dispenserApplicationFSA} for better understanding of the operations in the whole context.
+
+\begin{description}
+	\item[Dispenser grasping] For this task, the tracked features are the 4 corners of an ArUco marker placed on the side of the dispenser feeder, in a fixed position with respect to the feeder center. For this task, the desired target positions of the marker corners (the tracked features) are computed starting from the detected position (in image frame) of the midpoint of the two dispenser wings, and the sensed depth of the wings pixel regions. This last information is required because the desired target of the end effector varies according to the position of the highest dispenser in the feeder. In the first implementation of this operation problems occurred when, during the descent of the end effector toward the feeder, the specular reflection from the marker surface pointed directly the camera eye. In that case the noise in the image was too high to detect the marker features. For this reason, a second marker was placed next to the previous one,on the same side of the feeder, because it must be framed from the camera (see Figure \ref{fig:twoMarkersControl}). Before visual servoing control kicks in, the target positions of the features of both markers are computed independently; the procedure has a "main" reference marker that
+\end{description}
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/markerRobust_1.png}
+		\label{fig:graspChecking1}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/markerRobust3.png}
+		\label{fig:graspChecking2}}
+		
+	\caption{\textit{afds}}
+	\label{fig:twoMarkersControl}
+\end{figure}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/arm/depth_estimation_2.png}
+	\caption{\textit{Example of the computed wings midpoint, used to compute the target position of the features (marker corners)}}
+	\label{fig:computedFeatures}
+\end{figure}
+
 
 
 
