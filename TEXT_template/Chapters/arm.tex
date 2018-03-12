@@ -121,7 +121,7 @@ v_{cam}=(L^TL)^{-1}L^T\dot{e}(t)
 
 Since the Jaco$^2$ arm drivers provide a \ac{ROS} topic to control the end effector in Cartesian velocities, the assumption holds. The usage of visual servoing techniques in our imlementation will be clearer in Section \ref{sec:dispenserApplicationImplementation}.
 
-\section{Scan motion action server}
+\section{Scan motion action server}\label{sec:scanMotionActionServer}
 
 The scan motion is a quite simple procedure; in Figure \ref{fig:scanMotionFSA} you can see the \ac{FSA} triggered by the action call, with highlight of the different motion methods used for each of the motions. As you can see, most of the movements are implemented through \textit{MoveIt!} framework, except for:
 \begin{itemize}
@@ -315,14 +315,23 @@ In order to check for the presence of dispensers in the feeder, and validate the
 			\item Morphological operations (\textit{dilatation} and \textit{erosion}) on the selected pixel regions, for noise reduction and discard of too small regions (see Figure \ref{fig:dispenserAvailability2})
 			\item Discard of the regions outside a predefined rectangular area in the center of the image (see Figure \ref{fig:dispenserAvailability3})
 		\end{enumerate}
-	In Image \ref{fig:dispenserAvailability4} you can see the outcome of the aforementioned analysis; the wings identification is successful and their detected contour highlighted.
+	In Image \ref{fig:dispenserAvailability4} you can see the outcome of the aforementioned analysis; the wings identification is successful and their detected contour highlighted. The whole procedure is declared \textit{failed} if no marker is detected in the image plane for a given amount of time (\textit{e.g.} 5 seconds).
 	
 	\item[Grasping validation] As you can see in Figure \ref{fig:dispenserApplicationFSA}, this check is performed after the fingers has opened and the end effector has already moved from the grasping pose but it still is on the vertical of the feeder, because we want to detect a possible failure as soon as possible. In case of successful grasping, we expect to see the red wing of the dispenser in the bottom right corner of the image (\textit{valid area}). The copious amount of tests showed that that the grasping procedure couldn't lead to a deterministic position of the wing in the image plane, thus we had to take additional measure for the validation procedure to be effective. In particular, in the laboratory environment where our procedure were developed, problems came from:
 	
 	\begin{itemize}
 		\item the color of the test bench similar shade of the dispenser wings color, especially under direct enlightenment
-		\item the reflectivity of the desk surface causes noise in the depth sensing when using stereoscopic infrared sensors \parencite{reflectionDepthSensing}, in particular the depth of pixels belonging to highly reflective surfaces is always very low. For this reason, discarding pixel regions by thresholding over the distance of the regions from the camera is useful, but not sufficient to discard the
+		\item the \textit{specular component} (see Figure \ref{fig:specularComponent}) of the reflection from the desk surface causes noise in the depth sensing when using stereoscopic infrared sensors \parencite{reflectionDepthSensing}, in particular the depth of pixels belonging to highly reflective surfaces is always very low. For this reason, discarding pixel regions by thresholding over the distance of the regions from the camera is useful, but not sufficient to discard all the noise regions.
 	\end{itemize}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.6\textwidth]{Images/arm/specularReflection.png}
+	\caption{\textit{Reprentation of the reflection of light on a glossy surface: a ray incident on the surface is both scattered at many angles (\textbf{diffuse reflection} component), and reflected at one single angle (\textbf{specular reflection} component).}}
+	\label{fig:specularComponent}
+\end{figure}
+
 
 Because of the non-deterministic position of the dispenser in the image, we could not simply discard these noise by cropping a narrower valid area or setting a stricter threshold value for the region area. We noted that noise regions that survive the first steps of the filtering procedure often have a jagged contour, while we know that the dispenser wings have very sharp edges in the image. Basing on this observation, we introduced an additional filtering step, where for each of the pixel regions survived to previous filtering steps:
 \begin{itemize}
@@ -350,7 +359,42 @@ The algorithm steps for the validation of the dispenser grasping  are:
 		\item Discard region with a too low degree of similarity with their convex hull
 	\end{enumerate}
 If at least one region survives the whole filtering procedure, this region is likely to be the one identified by the dispenser and the grasping is validated. \textbf{NOTE:} we check for \textit{at least} one region instead of \textit{exactly} one, because the procedure is much more likely to select noise regions as correct than discard the dispenser region, so false negatives are very unlikely and if we checked for exactly one region we would be more likely to produce false positives.
+At each grasp validation request, the whole filtering procedure is executed on a fixed number of consecutive frames (\textit{e.g. 50} frames), and the final output is given by the majority vote of the cumulated executions. This procedure is made to reduce the effect of random noise in the measurement.
+
+\item[Deployment validation] This operation is similar to the previous one, because we assume that, if the deployment task has been successful, by moving the camera back and a few centimeters downward maintaining the deployment orientation, we expect to detect the dispenser in the captured image. In our implementation we do not deal with cases where the dispenser rotates and, from the side, the wings are not visible. There is a slightly difference between the case of deployment on the nail and on the plant, because:
+\begin{itemize}
+	\item in nail mode, the camera position from which search for the dispenser wings is fixed
+	\item in plant mode, the camera position from which search for the dispensers wings is computed as fixed offset from the deployment point took as an input by the action server.
+\end{itemize}
+Apart from that, the validation procedure is the same in both plant and nail mode, and it's composed by the following steps:
+	\begin{enumerate}
+		\item Color segmentation of the image, to find pixel areas with color similar to the wings
+		\item Morphological operations (\textit{dilatation} and \textit{erosion}) on the selected pixel regions, for noise reduction and discard of too small regions 
+		\item Discard regions with too high depth value \textit{e.g.} wings of dispenser deployed on other plants, in adjacent rows
+		\item Discard region with a too low degree of similarity with their convex hull
+	\end{enumerate}
+Like grasping validation, also the deployment validation procedure is executed on a fixed number of consecutive frames, that produce a cumulated result given by their majority vote.
+In figure \ref{fig:deployChecking} you can see possible outcomes of the deployment validation.
+
 \end{description}
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/checkdeployMoveit_01.png}
+		\label{fig:deployChecking1}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/checkdeployMoveit_02.png}
+		\label{fig:deployChecking2}}
+	\\
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/checkdeployNail_01.png}
+		\label{fig:deployChecking3}}
+		
+	\caption{\textit{Different outcomes of the deployment validation algorithm: success in plant mode (Figure \ref{fig:deployChecking1}), failure in plant mode (FIgure \ref{fig:deployChecking2}; the dispenser in the background does not induce a false positive because it does not satisfy depth requirements), success in nail mode (Figure \ref{fig:deployChecking3}).}}
+	\label{fig:deployChecking}
+\end{figure}
+
 
 \begin{figure}
 	\centering
@@ -424,8 +468,15 @@ As mentioned in Section \ref{subsec:visualServoing}, for executing image based v
 Make reference to the \ac{FSA} of figure \ref{fig:dispenserApplicationFSA} for better understanding of the operations in the whole context.
 
 \begin{description}
-	\item[Dispenser grasping] For this task, the tracked features are the 4 corners of an ArUco marker placed on the side of the dispenser feeder, in a fixed position with respect to the feeder center. For this task, the desired target positions of the marker corners (the tracked features) are computed starting from the detected position (in image frame) of the midpoint of the two dispenser wings, and the sensed depth of the wings pixel regions. This last information is required because the desired target of the end effector varies according to the position of the highest dispenser in the feeder. In the first implementation of this operation problems occurred when, during the descent of the end effector toward the feeder, the specular reflection from the marker surface pointed directly the camera eye. In that case the noise in the image was too high to detect the marker features. For this reason, a second marker was placed next to the previous one,on the same side of the feeder, because it must be framed from the camera (see Figure \ref{fig:twoMarkersControl}). Before visual servoing control kicks in, the target positions of the features of both markers are computed independently; the procedure has a "main" reference marker that
-\end{description}
+	\item[Dispenser grasping] For this task, the tracked features are the 4 corners of an ArUco marker placed on the side of the dispenser feeder, in a fixed position with respect to the feeder center. For this task, the desired target positions of the marker corners (the tracked features) are computed starting from the detected position (in image frame) of the midpoint of the two dispenser wings, and the sensed depth of the wings pixel regions. This last information is required because the desired target of the end effector varies according to the position of the highest dispenser in the feeder.
+	
+	In the first implementation of this operation problems occurred when, during the descent of the end effector toward the feeder, the \textit{specular component} of the reflection from the marker surface pointed directly the camera eye. In that case the noise in the image was too high to detect the marker features. For this reason, a second marker with different ID (see Image \ref{fig:twoMarkersControl}) was placed next to the previous one, on the same side of the feeder, in order to be always visible from the camera. Before visual servoing control kicks in, the target positions of the features of both markers are computed independently; the procedure has a "main" reference marker that, if detected, provides the features for the visual control; if the primary marker is not visible (see Figure \ref{fig:graspChecking1}), the control procedure smoothly switches to use the features of the second marker for the visual control. 
+	
+	As explained in Section \ref{subsec:visualServoing}, if the number of features is enough, we can compute a full set of linear and angular Cartesian velocities
+	\[
+		<\dot{x},\dot{y},\dot{z},\dot{\psi}, \dot{\theta}, \dot{\phi}>
+	\]
+for the end effector. Since we have at disposal 4 features in this task, the end effector speed can be fully determined by visual servoing control. 
 
 \begin{figure}
 	\centering
@@ -436,19 +487,30 @@ Make reference to the \ac{FSA} of figure \ref{fig:dispenserApplicationFSA} for b
 		\includegraphics[width=0.4\textwidth]{Images/arm/markerRobust3.png}
 		\label{fig:graspChecking2}}
 		
-	\caption{\textit{afds}}
+	\caption{\textit{Two markers used for visual servo task in grasping phase. In Figure \ref{fig:graspChecking2} both the markers are detected, while in Figure \ref{fig:graspChecking1} the dispenser with ID$=0$ is not visible due to specular reflection on marker surface, but the other marker is still detected so the visual servo task can proceed.}}
 	\label{fig:twoMarkersControl}
 \end{figure}
 
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.6\textwidth]{Images/arm/depth_estimation_2.png}
+	\includegraphics[width=0.4\textwidth]{Images/arm/depth_estimation_2.png}
 	\caption{\textit{Example of the computed wings midpoint, used to compute the target position of the features (marker corners)}}
 	\label{fig:computedFeatures}
 \end{figure}
 
+	\item[Deployment in nail mode] This task is very similar to a simpler version of the previous one, because:
+	\begin{itemize}
+		\item also in this case, the features are given by the corners of an ArUco marker, placed this time at a small fixed offset from the target nail (see Figure \ref{fig:deployChecking3})
+		\item a single marker is used, because the specular reflection effect is much less relevant on a vertical surface 
+		\item the target positions of the features are a fixed value, because there is no such a thing like different dispenser height in grasping phase.
+	\end{itemize}
+	Note that, also in this phase, we can rely on 4 different features (the marker corners) to be tracked in the control phase, so all 6 linear and angular velocities can be computed.
+	
+\item[deploment in plant mode] This tasks is quite different from the previous ones, because of course we cannot take advantage of markers since our deployment point has been selected through the scan procedure described in Section \ref{sec:scanMotionActionServer}, so a new feature type is tracked. In this application only one feature is used, obtained starting from the deployment point got as an input to the deployment action server. First of all, the camera is brought in a frontal position with respect to the target point, in order to have it in the image plane. 
 
+	
+\end{description}
 
 
 
