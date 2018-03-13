@@ -2,8 +2,14 @@ OBBLIGATORI
 
  - grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization
  - foto fatte per bene del robot nella configurazione finale
-  - foto fatte per bene della fase di grasping con unghie e torrette, che non le ho
+ - foto fatte per bene della fase di grasping con unghie e torrette, che non le ho
 
 SECONDARI
  - modulo dell'errore nella posizione dell'end effector (tanti movimenti, misurare errore)
  - esempi di match con il convex hull
+ - Manipulability index, based on the computation of the robot Jacobian matrix, is the most well-
+ known and commonly used index to measure kinematic performance. The index is a measure
+ of the manipulation ability of a robotic arm in positioning and orienting the end-effector, and it
+ allows also to quantify the proximity of the robot to a singularity.
+ The manipulability is defined as the square root of the determinant of the product of the
+ manipulator Jacobian by its transpose ---------> grafico della distanza dal punto finale, e del manipuliability index

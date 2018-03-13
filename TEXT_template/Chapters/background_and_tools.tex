@@ -522,8 +522,16 @@ In the context of \ac{GRAPE} project, motion planning is an essential component 
 \begin{enumerate}
 	\item Navigation module: \textbf{Move Base}, described in Section \ref{sec:navigationStack} is a motion planner, that makes use of grid-based planning algorithm, and is used for the navigation of the robotic base in the vineyard environment
 	\item Manipulation module: \textbf{MoveIt!}\footnote{\url{http://moveit.ros.org/}}
-is a state-of-the-art sample-based planner, and is used to plan the motion of our robotic arm in manipulation tasks.
+is a state-of-the-art sample-based planner, and is used to plan the motion of our robotic arm in manipulation tasks (see Figure \ref{moveItScheme} for a block scheme of \textit{MoveIt!} architecture).
 \end{enumerate}
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/background_and_tools/moveit.jpg}
+	\caption{\textit{A block scheme representing the high-level MoveIt! architecture.}}
+	\label{fig:moveItScheme}
+\end{figure}
 
 
 
