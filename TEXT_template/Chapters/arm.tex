@@ -1,13 +1,13 @@
 % !TEX root = ../ClassicThesis_DEIB.tex
 
-\chapter{Kinova Arm} \label{chap:kinovaArmChapter}
+\chapter{Manipulation} \label{chap:kinovaArmChapter}
 
 In this chapter, we'll explain our implementation of the action servers described in Chapter \ref{chap:grapeSoftwareArchitecture} related to the scan motion for point cloud registration, and to the pheromone dispenser application.
 But before it, we'll see a few deail about the Kinova \ac{API}, and the different techniques we used for the motion planning and execution for the Jaco$^2$ arm.
 
 \section{Kinova ROS API}
-\ac{ROS} drivers of Kinova devices are very complex and powerful, and provide a large amount of \ac{API} useful for both monitoring the arm state, and controlling it. Besides it, \textit{jaco\_arm\_driver} node also publishes the \textit{tf} subtree that describes the position of all the arm joints, mainly for visualization purpose.
-In this section we do not want to provide a deep analysis of the drivers software architecture, but we we limit ourselves to list the interfaces offered as \ac{ROS} topics, since they are the ones that we used in \ac{GRAPE} project. The subscribed topics are, used to control the arm, are: TODO
+\ac{ROS} drivers of Kinova devices are very complex, and provide via \ac{ROS} topics a large amount of \ac{API} useful for both monitoring the arm state, and controlling it. Besides it, \textit{jaco\_arm\_driver} node also publishes the \textit{tf} subtree that describes the position of all the arm joints.
+In this section we do not want to provide a deep analysis of the drivers software architecture, but we limit ourselves to list the interfaces offered as \ac{ROS} topics, since they are the ones that we used in \ac{GRAPE} project. The subscribed topics are, used to control the arm, are: TODO
 The published topics, used for monitoring of the state, are: TODO
 
 
@@ -15,18 +15,18 @@ The published topics, used for monitoring of the state, are: TODO
 \section{Motion execution methods for Jaco$^2$ Arm}
 
 \subsection{\textit{MoveIt!} framework}
-The first, and easier, motion execution method analyzed is by using an \textit{off-the-shelf} motion planning and execution framework, \textbf{MoveIt!}. However, in Section \ref{subsec:kinovaArm} we revealed in advance that the movement of the chosen arm, even after a bug fixing session in \ac{ROS} drivers of Jaco$^2$ arm, presented a series of major weakness using the arm \ac{API} through \textit{MoveIt!}. In detail, the problems we identified were:
+The first, and easier, motion execution method analyzed is simply to use an \textit{off-the-shelf} motion planning and execution framework, \textbf{MoveIt!}. However, in Section \ref{subsec:kinovaArm} we revealed in advance that the movement of the chosen arm, even after a bug fixing session in \ac{ROS} drivers of Jaco$^2$ arm, presented a series of major weakness using the arm \ac{API} through \textit{MoveIt!}. In detail, the problems we identified were:
 \begin{itemize}
 	\item non-repeatability of the movements; this was a problem because in situations with plenty of obstacles like the dispenser application, we could not rely on a few test movement to be sure that the movements did not interfere with obstacles
 	\item lack of precision in the movements; if a target position of the arm was given, the actual position of the end effector at the end of the execution was likely to be several centimeters away from the expected one, about $0\div5$cm. This led to huge problems for precision tasks (dispenser grasping, dispenser deployment) where the maximum tolerable error is of the order of 1mm because of the dispenser narrowness
 	\item inability in following a trajectory, maintaining the end effector orientation; this capability is mostly required during the scan motion, because it guarantees a uniform density of points collected on the plant, and this is useful with a view to the postprocessing operations for the identification of the deployment point. If we impose such a director trajectory, only a small percentage of it is actually executed
-	\item normalization of the joint angular positions in $\lbrack 0;2\pi\rbrack$ planning phase; with resulting loss of information about the absolute angular position of the joints of the arm. Even if in the vast majority of situations this is not a problem (since all joints of the Jaco$^2$ are capable of unlimited rotations), we needed to keep this factor into account because of the wiring for power supply and data interface of the sensors (\ac{LIDAR} and RGB-D camera) mounted on top of the arm end effector. Indeed, even if the end effector joint is capable of infinite rotation, there is only a subset of this interval, that we approximate to $\lbrack0;2\pi\rbrack$ (TODO verifica il range reale nella configurazione finale), that is compatible with the wiring setup of the system. But since the planner has no access to the absolute angular position of the joints, it doesn't exists a smooth solution\footnote{a non-smooth solution using \textit{MoveIt!} is to consider the revolutions as concatenation of a sequence of rotations of an angle $\theta\in\lbrack0;2\pi)$ of the end effector joint.}
+	\item normalization of the joint angular positions in $\lbrack 0;2\pi\rbrack$ planning phase, with resulting loss of information about the absolute angular position of the joints of the arm. Even if in the vast majority of situations this is not a problem (since all joints of the Jaco$^2$ are capable of unlimited rotations), we needed to keep this factor into account because of the wiring for power supply and data interface of the sensors (\ac{LIDAR} and RGB-D camera) mounted on top of the arm end effector. Indeed, even if the end effector joint is capable of infinite rotation, there is only a subset of this interval, that we approximate to $\lbrack0;2\pi\rbrack$ (TODO verifica il range reale nella configurazione finale), that is compatible with the wiring setup of the system, to avoid the wires being pulled. But since the planner has no access to the absolute angular position of the joints, it doesn't exists a smooth solution\footnote{a non-smooth solution using \textit{MoveIt!} is to consider the revolutions as concatenation of a sequence of rotations of an angle $\theta\in\lbrack0;2\pi)$ of the end effector joint.}
 to the problem of imposing one or more complete revolutions of the end effector joint.
 \end{itemize}
 
-Beyond all the flaws of our specific arm, an intrinsic weakness of this control type is that they can be very precise in reaching a specific target pose, but they cannot handle situations where there is a degree of uncertainty about the target pose, and we are in this situation in two different moments:
+Beyond all the flaws of our specific arm, an intrinsic weakness of this control type is that it can be very precise in reaching a specific target pose, but they cannot handle situations where there is a degree of uncertainty about the target pose, and we are in this situation in two different moments:
 \begin{itemize}
-	\item when we need to grasp a dispenser, because the position of the dispenser in the dispenser feeder depends on how many dispenser have already been removed and however we do not want to have very strict constraints on the positioning of the dispenser in the feeder
+	\item when we need to grasp a dispenser, because the position of the dispenser in the dispenser feeder depends on how many dispenser have already been removed and however we do not want to have very strict constraints on the positioning of the dispensers in the feeder
 	\item when we need to deploy the dispenser on the plant, because the deployment points output from the point cloud processing are likely not to be perfectly precise.
 \end{itemize}
 However, one big advantage of \textit{MoveIt!} framework is that it supports, in planning phase, the specification in URDF\footnote{Unified Robot Description Format; it's an XML format used for representing physical components of a robot model}
@@ -36,7 +36,7 @@ For all the aforementioned reasons, \textit{MoveIt!} framework is suitable for t
 \begin{itemize}
 	\item extreme precision is not a requirement
 	\item constant orientation of the end effector is not a requirement
-	\item absolute angular position of the arm joints is not requested
+	\item no constraints abount the absolute angular position of the arm joints
 	\item the goal position is well known
 \end{itemize}
 
@@ -44,13 +44,13 @@ For all the aforementioned reasons, \textit{MoveIt!} framework is suitable for t
 \begin{figure}
 	\centering
 	\includegraphics[width=0.8\textwidth]{Images/arm/kinova_prepare_rviz.png}
-	\caption{\textit{Visual representation with RViZ of the obstacles on top of the Husky (red shape) used by MoveIt! planner: the Velodyne sensor (light blue shape), and the physical support for camera, \ac{GPS} and \ac{IMU} (green shapes).}}
+	\caption{\textit{Visual representation with RViZ of the obstacles on top of the Husky (red shape) used by MoveIt! planner: the Velodyne sensor (light blue shape), and the physical support for camera, GPS and \ac{IMU} (green shapes).}}
 	\label{fig:moveItObstacles}
 \end{figure}
 
 
 \subsection{Direct publication of joint velocities}
-We introduced this method to bypass the problem of the normalization of the joints anglular position. This method consists in a very simple closed-loop control that compares the target position of a joint with the the actual one (obtained through Jaco$^2$ \ac{ROS} \ac{API}), and applies a velocity to the concerned joint if the error is still too high. This method is feasible because Jaco$^2$ \ac{ROS} \ac{API} provides (among other) a topic for control speeds in joint space (\textit{i.e.} the configuration space, see Section \ref{sec:motionPlanning}) of the arm, thus we could control the velocity of each of the joints by publishing at a given frequency ($100Hz$) a message with the desired velocity for each joint. The stop condition in movements executed with this method is given by a target angular position for the controlled joint, that is compared with the actual joint position every time the current joint state is published on the appropriate topic from Jaco$^2$ \ac{ROS} \ac{API}.
+We introduced this method to bypass the problem of the normalization of the joints angular position. This method consists in a very simple closed-loop control that compares the target position of a joint with the the actual one (obtained through Jaco$^2$ \ac{ROS} \ac{API}), and applies a velocity to the concerned joint if the error is still too high. This method is feasible because Jaco$^2$ \ac{ROS} \ac{API} provides (among other) a topic for controlling speeds in joint space (\textit{i.e.} the configuration space, see Section \ref{sec:motionPlanning}) of the arm, thus we could control the velocity of each of the joints by publishing at a given frequency ($100Hz$) a message with the desired velocity for each joint. The stop condition in movements executed with this method is given by the distance of the joint position from the target angular position for the controlled joint being less than a given threshold. The actual joint position is monitored on the specific topic, published by Jaco$^2$ \ac{ROS} \ac{API}.
 
 This method applies well for:
 \begin{itemize}
@@ -60,7 +60,7 @@ This method applies well for:
 In particular, we were interested in applying a constant velocity to the end effector for problem of the wires entanglement, to solve the problem of the normalization of the angular position of the joints in planning phase in \textit{MoveIt!}.
 
 \subsection{Inversion of differential kinematics}
-We introduced the method of \textit{inversion of differential kinematics} to bypass the problem of moving the arm maintaining the end effector pose constant. This method, like the previous one, relies on \ac{ROS} \ac{API} for the publication of velocities in joint speed, but is suitable for more complex movement than the previous one. Our goal is to express the joint velocities in terms of velocity of the end effector frame \textit{i.e.} given the desired velocity of the end effector \textit{i.e.} calculate the 6 joints velocities to publish on the suitable topic in order to achieve the desired end effector velocity. 
+We introduced the method of \textit{inversion of differential kinematics} to bypass the problem of moving the arm maintaining the end effector pose constant. This method, like the previous one, relies on \ac{ROS} \ac{API} for the publication of velocities in joint speed, but is suitable for more complex movement than the previous one. Our goal is to express the velocity of the end effector frame in terms of  joint velocities \textit{i.e.} given the desired velocity of the end effector, calculate the 6 joints velocities to be published on the suitable topic in order to achieve the desired end effector velocity. 
 This is a \textit{inversion of differential kinematics} problem, formally: being $q$ a coordinate vector that represent the position of the robot in joint space, 
 $v$ the vector of linear and angular velocity of the end effector frame with respect to the fixed base frame, and $J(q)$ the geometrical Jacobian matrix of the manipulator, composed by the stacking of $J_P(q)$, related to the end effector position, and $J_o(q)$, related to the end effector orientation: 
 \[
@@ -84,13 +84,13 @@ Thus, we can solve the initial problem with: \\
 Systematic algorithm exists to compute the geometric Jacobian matrix \parencite{jacobian}; in our case, it's simply provided by \textit{MoveIt!} \ac{ROS} \ac{API}. 
 In our implementation, the computation (with expression \ref{eq:kinematicInversion}) and publication of the joint speed is a periodic task executed with frequency $100Hz$. Of course, this is required because the Jacobian varies in time, according to the positions of the joints. Since this motion technique allows for very smooth and uniform motion of the end effector, maintaining its orientation, we used it to execute the arm scan motion that requires exactly the aforementioned characteristics.
 
-Note that, even if this method is very effective, it has some limitations for what concerns the \textit{exceptional behavior}, since it does not embed dangerous situation detection (that is instead provided by more complex frameworks like \textit{MoveIt!}). After a few tests, it was clear that we had to introduce some checks during movements executed with this method, since the poses required to perform the scan motion were dangerously close to arm singularities. The check we introduced acts like a stop condition for the movement execution, and it's based on the assumption that, in a non-pathological context, the Cartesian distance between the end effector pose and the target pose is monotonically decreasing in time. The value $d(t)$ computed as:
+Note that, even if this method is very effective, it has some limitations for what concerns the \textit{exceptional behavior}, since it does not embed dangerous situations detection (that is instead provided by more complex frameworks like \textit{MoveIt!}). After a few tests, it was clear that we had to introduce some checks during movements executed with this method, since the poses required to perform the scan motion were dangerously close to arm singularities. The check we introduced acts like a stop condition for the movement execution, and it's based on the assumption that, in a non-pathological context, the Cartesian distance between the end effector pose and the target pose is monotonically decreasing in time. The value $d(t)$ computed as:
 \begin{align*}
 	& p_{endEffector}(t) = (x_c(t),y_c(t),z_c(t)) \\
 	& p_{target} = (x_t,y_t,z_t) \\
 	& d(t)=\sqrt{(x_c(t)-x_t)^2+(y_c(t)-y_t)^2+(z_c(t)-z_t)^2}
 \end{align*}
-is monitored in time using the values of $p_{endEffector} provided by $Jaco$^2$ drivers, and the arm is stopped with consequent abortion of the corresponding action if $d(t)$ is observed to have grown in time instead of shrinking. In order to avoid false positives due to sensor noise when the arm still has to actually start to move in the very first moment of the action execution (the arm is not moving, but of course the sensed end effector pose is not $100\%$ stable over time), we apply this error detection measure only after the arm has moved a few centimeters (\textit{e.g.} 2-3 cm) from the initial pose. Of course, the other stop condition for the motion execution is that the value of $d(t)$ shrinks under a certain threshold (\textit{e.g. 2-3cm}). Keep in mind that the focus in this motion technique is on smoothness if the movement and constancy in the end effector orientation, rather than the precision in reaching the target pose. 
+is monitored in time using the values of $p_{endEffector}$ provided by Jaco$^2$ drivers, and the arm is stopped with consequent abortion of the corresponding action if $d(t)$ is observed to have grown in time instead of shrinking. In order to avoid false positives due to sensor noise when the arm still has to actually start to move in the very first moments of the action execution (the arm is not moving, but of course the sensed end effector pose is not $100\%$ stable over time), we apply this error detection measure only after the arm has moved a few centimeters (\textit{e.g.} 2-3 cm) from the initial pose. Of course, the other stop condition for the motion execution is that the value of $d(t)$ shrinks under a certain threshold (\textit{e.g. 2-3cm}). Keep in mind that the focus in this motion technique is on smoothness of the movement and constancy in the end effector orientation, rather than the precision in reaching the target pose. 
 
 \subsection{Image Based Visual Servoing}\label{subsec:visualServoing}
 This technique allows for much more precise positioning of all the other described in previous sections; it is a closed-loop control and makes use of the RGB-D camera mounted on top of the end effector. Now, we'll give a formal description of image-based visual servoing algorithm \parencite{imageBasedVisualServo}.
@@ -135,7 +135,7 @@ L(f)=
 and $v_{cam}$ is the vector of linear and rotational Cartesian velocities of the camera. In the case of a vector of feature points (\textit{i.e.} $n>1$), the interaction matrix can be obtained stacking the interaction matrices associated to each point.
 Assuming that the number of selected features is such that the whole interaction matrix as
 more rows than columns ($n\geq4$), the previous relation can be inverted using a least squares solution as follows:
-\begin{equation}
+\begin{equation}\label{eq:velCameraVisServo}
 	v_{cam}=(L^TL)^{-1}L^T\dot{\boldsymbol{f}}(t)
 \end{equation}
 Since the derivative of the error function is given by 
@@ -341,7 +341,7 @@ Our image processing tasks are based on C++ \ac{API} of \textbf{OpenCV library}\
 Implementation detail are provided in Sections \ref{subsec:imageBasedValidationSec} and \ref{subsec:visualServoingNellaAction}.
 
 \subsection{Image based validation}\label{subsec:imageBasedValidationSec}
-In order to check for the presence of dispensers in the feeder, and validate the grasp and deploy operations, we make use of the Intel RealSense RGB-D camera mounted on top of the arm end effector. The thinness of dispensers with respect to the camera resolution make them hard to detect, especially if, after a deployment operation, a rotation of the dispenser occurs and it's not possible framing it from a frontal position. For this reason, all our dispensers are equipped with two small red flaps built out of tape, one on each side, as showed in Figure \ref{fig:deploymentOnMockup}. Note that the red color of the wings was chosen because it stands out with respect to the typical colors of the vineyard during winter or spring months, and it's an important factor in the image processing algorithms that follow. 
+In order to check for the presence of dispensers in the feeder, and validate the grasp and deploy operations, we make use of the Intel RealSense RGB-D camera mounted on top of the arm end effector. The thinness of dispensers with respect to the camera resolution make them hard to detect, especially if, after a deployment operation, a rotation of the dispenser occurs and it's not possible framing it from a frontal position. For this reason, all our dispensers are equipped with two small red wings built out of tape, one on each side, as showed in Figure \ref{fig:deploymentOnMockup}. Note that the red color of the wings was chosen because it stands out with respect to the typical colors of the vineyard during winter or spring months, and it's an important factor in the image processing algorithms that follow. 
 
 \begin{description}
 	\item [Check dispenser availability] In this phase, the camera is placed on the vertical of the feeder and, to check for dispenser availability, it looks for two red wings in a central rectangular area (\textit{valid area}) that should contain the feeder. In Figure \ref{fig:checkDispenserAvailability}, you can see some intermediate results of the algorithm execution:
@@ -399,7 +399,7 @@ At each grasp validation request, the whole filtering procedure is executed on a
 \item[Deployment validation] This operation is similar to the previous one, because we assume that, if the deployment task has been successful, by moving the camera back and a few centimeters downward maintaining the deployment orientation, we expect to detect the dispenser in the captured image. In our implementation we do not deal with cases where the dispenser rotates and, from the side, the wings are not visible. There is a slightly difference between the case of deployment on the nail and on the plant, because:
 \begin{itemize}
 	\item in nail mode, the camera position from which search for the dispenser wings is fixed
-	\item in plant mode, the camera position from which search for the dispensers wings is computed as fixed offset from the deployment point took as an input by the action server.
+	\item in plant mode, the camera position from which search for the dispensers wings is computed as fixed offset from the deployment point took as an input by the action server, while in this mode it's a fixed position.
 \end{itemize}
 Apart from that, the validation procedure is the same in both plant and nail mode, and it's composed by the following steps:
 	\begin{enumerate}
@@ -491,10 +491,11 @@ In figure \ref{fig:deployChecking} you can see possible outcomes of the deployme
 \end{figure}
 
 
-\subsection{VIsual servoing tasks}\label{subsec:visualServoingNellaAction}
-In this section we'll describe with more detail each of the operation executed with visual servoing control. However, this is done mostly for the sake of completeness, because the design and implementation of the automatic control was not directly part of this thesis work, so technical details will be omitted.
+\subsection{Visual servoing tasks}\label{subsec:visualServoingNellaAction}
+In this section we'll describe with more detail each of the operations executed with visual servoing control. However, this is done mostly for the sake of completeness, because the design and implementation of the automatic control was not directly part of this thesis work, so technical details will be omitted.
 
-As mentioned in Section \ref{subsec:visualServoing}, for executing image based visual servoing control, some features must be tracked in order to calculate the cartesian velocities for the end effector. For each case, we'll see which features are used and how. We'll see that some of the operations rely on ArUco markers \parencite{aruco}; they are a type of binary square fiducial markers (see Figure \ref{fig:arucoMarkers}), with some characteristics designed to make them particularly suitable for obtainment of the camera pose for computer vision applications:
+As mentioned in Section \ref{subsec:visualServoing}, for executing image based visual servoing control, some features must be tracked in order to calculate the Cartesian velocities for the end effector. For this reason, all the arm motions controlled with visual servoing are preceded by a motion, executed through \textit{MoveIt!}, that brings the end effector in a position that is frontal to the features that are tracked for the visual servoing control, such that they are present in image plane. 
+For each case, we'll see which features are used and how. We'll see that some of the operations rely on ArUco markers \parencite{aruco}; they are a type of binary square fiducial markers (see Figure \ref{fig:arucoMarkers}), with some characteristics designed to make them particularly suitable for obtainment of the camera pose for computer vision applications:
 \begin{itemize}
 	\item a black wide black border that facilitates its fast detection in the image\
 	\item an inner binary matrix which determines its identifier and allows for the application of error detection and correction techniques
@@ -534,18 +535,46 @@ for the end effector. Since we have at disposal 4 features in this task, the end
 	\label{fig:computedFeatures}
 \end{figure}
 
-	\item[Deployment in nail mode] This task is very similar to a simpler version of the previous one, because:
+	\item[Deployment in nail mode] This task is a simpler version of the previous one, because:
 	\begin{itemize}
 		\item also in this case, the features are given by the corners of an ArUco marker, placed this time at a small fixed offset from the target nail (see Figure \ref{fig:deployChecking3})
 		\item a single marker is used, because the specular reflection effect is much less relevant on a vertical surface 
 		\item the target positions of the features are a fixed value, because there is no such a thing like different dispenser height in grasping phase.
+		\item the initial frontal position is not function of the deployment point passed in the action server goal, but is a fixed value.
 	\end{itemize}
+As highlighted in the last point, this deployment procedure is $100\%$ independent from the input deployment point. Thus, if this deployment mode is selected, scan phase is not required.
 	Note that, also in this phase, we can rely on 4 different features (the marker corners) to be tracked in the control phase, so all 6 linear and angular velocities can be computed.
 	
-\item[deployment in plant mode] This tasks is quite different from the previous ones, because of course we cannot take advantage of markers since our deployment point has been selected through the scan procedure described in Section \ref{sec:scanMotionActionServer}, so a new feature type is tracked. In this application only one feature is used, obtained starting from the deployment point got as an input to the deployment action server. First of all, the camera is brought in a frontal position with respect to the target point, in order to have it in the image plane. 
+\item[deployment in plant mode] This task is quite different from the previous ones, because of course we cannot take advantage of markers since our deployment point has been selected on the vine plant through the scan procedure described in Section \ref{sec:scanMotionActionServer}, so we must use a different type of features.
+The visual feature used for this control task is a single point in the image, corresponding to the center of a circle, which contains points close to the deployment point in image plane, and with similar color. The idea behind it is to select a internal point of the same small branch that the input deployment point belongs to. In figure \ref{fig:featurePlant} you can see some of the image processing steps that leads to the identification of the feature point. The target position of the feature in image frame, instead, is hardcoded to a specific pixel, corresponding to the position of the dispenser center.
+Note that, since we only have one feature at disposal, matrix $L(f)$ in this case is not large enough to provide a solution for all linear and angular velocities (see Equation \ref{eq:velCameraVisServo}). Indeed, in this deployment mode:
+\begin{itemize}
+	\item $\dot{\psi}=\dot{\theta}=\dot{\phi}=0$, \textit{i.e.} the end effector orientation is constant
+	\item $\dot{z}$ is proportional to the distance between the end effector pose and the deployment point
+	\item $\dot{x}$ and $\dot{y}$ are controlled by the visual servoing controller.
+\end{itemize}
 
-	
 \end{description}
+
+\begin{figure}
+	\centering
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/featurePlant01.png}
+		\label{fig:featurePlant01}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/featurePlant02.png}
+		\label{fig:featurePlant02}} \\
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/featurePlant03.png}
+		\label{fig:featurePlant03}}
+	\subfloat[]{%
+		\includegraphics[width=0.4\textwidth]{Images/arm/featurePlant04.png}
+		\label{fig:featurePlant04}}
+	\caption{\textit{Some of the steps computed to identify the feature point tracked for dispenser application on the vine tree: switch from RGB to grayscale (Figure \ref{fig:featurePlant01}), selection of pixels similar to the pixel corresponding to deployment point (Figure \ref{fig:featurePlant02}), identification of branch area close to the deployment point (Figure \ref{fig:featurePlant03}), identification of the circle including the selected points (Figure \ref{fig:featurePlant04}).}}
+	\label{fig:featurePlant}
+\end{figure}
+	
+
 
 
 
