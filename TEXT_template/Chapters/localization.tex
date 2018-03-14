@@ -1,8 +1,17 @@
 % !TEX root = ../ClassicThesis_DEIB.tex
 
-\chapter{Sensor fusion and localization in GRAPE} \label{chap:localization}
+\chapter{Localization and navigation systems in GRAPE} \label{chap:localization}
 
-The studies of \cite{outdoorNavigation}
+The studies of \cite{outdoorNavigation}, that analyze main issues in autonomous mobile robot navigation, identify three main problems linked to outdoor autonomous navigation:
+\begin{itemize}
+	\item the unstructured environment where the actions take place, in opposition to the clear and definite one that is typical in indoor navigation (flat floor, right angles, smooth surfaces)
+	\item requirement for multiple sensors, to be aware enough of the surrounding environment, in order to take decisions
+	\item moving obstacles, like for example pedestrians or cars in a city road
+\end{itemize}
+The system developed in the context of \ac{GRAPE} project suffers critically mostly of the first two point listed above. Indeed, the vineyard environment, even if characterized by a certain degree of regularity due to the presence of parallel rows of trees, presents strongly difficulties regarding lack of structure in the terrain configuration (steep, bumpy, clay-rich, muddy, according to the weather conditions and the intrinsic composition and morphology of the terrain) and in the obstacles (non-straight surfaces, different reflectivity and lighting conditions). Moreover, the problem of the fusion of the data coming from the disparated sensors mounted on board of the robot was already addressed from a theoretically point of view in Section \ref{sec:sensorFusion}, and it's the major component in the localization system of the robot. Note that, being our robot an agricultural \ac{UGV}, the problem of moving obstacles is not particularly relevant, since they are most likely to be humans, aware of the robot presence and functionalities, or at most wild small animals (\textit{e.g.} foxes, hares, cats) in remote cases, that however have a very low probability of approaching the Husky base.
+
+
+
 
 Localization Chapter SKETCH:
 \begin{itemize}
