@@ -8,8 +8,76 @@ The studies of \cite{outdoorNavigation}, that analyze main issues in autonomous 
 	\item requirement for multiple sensors, to be aware enough of the surrounding environment, in order to take decisions
 	\item moving obstacles, like for example pedestrians or cars in a city road
 \end{itemize}
-The system developed in the context of \ac{GRAPE} project suffers critically mostly of the first two point listed above. Indeed, the vineyard environment, even if characterized by a certain degree of regularity due to the presence of parallel rows of trees, presents strongly difficulties regarding lack of structure in the terrain configuration (steep, bumpy, clay-rich, muddy, according to the weather conditions and the intrinsic composition and morphology of the terrain) and in the obstacles (non-straight surfaces, different reflectivity and lighting conditions). Moreover, the problem of the fusion of the data coming from the disparated sensors mounted on board of the robot was already addressed from a theoretically point of view in Section \ref{sec:sensorFusion}, and it's the major component in the localization system of the robot. Note that, being our robot an agricultural \ac{UGV}, the problem of moving obstacles is not particularly relevant, since they are most likely to be humans, aware of the robot presence and functionalities, or at most wild small animals (\textit{e.g.} foxes, hares, cats) in remote cases, that however have a very low probability of approaching the Husky base.
+The system developed in the context of \ac{GRAPE} project suffers critically mostly of the first two point listed above. Indeed, the vineyard environment, even if characterized by a certain degree of regularity due to the presence of parallel rows of trees, presents strongly difficulties regarding lack of structure in the terrain configuration (steep, bumpy, clay-rich, muddy, according to the weather conditions and the intrinsic composition and morphology of the terrain) and in the obstacles (non-straight surfaces, different reflectivity and lighting conditions). Moreover, the problem of the fusion of the data coming from the disparates sensors mounted on board of the robot was already addressed from a theoretically point of view in Section \ref{sec:sensorFusion}, and it's the major component in the localization system of the robot. Note that, being our robot an agricultural \ac{UGV}, the problem of moving obstacles is not particularly relevant, since they are most likely to be humans, aware of the robot presence and functionalities, or at most small wild animals (\textit{e.g.} foxes, hares, cats) in remote cases, that however have a very low probability of approaching the Husky base.
 
+In the next section we are going to analyze with detail the configuration of both the odometry and navigation systems running on the \ac{UGV}. It will be clear that both the problems, even if eventually solved using \textit{off-the-shelf} solutions, were all but simple problems and required a real understanding of the numerous problems that arose.
+
+\section{odometry system}\label{sec:odometrySystem}
+
+The configuration of a robust odometry system for vineyard navigation has been a workpoint since the beginning of the project, because of the strong instability of the wheel odometry. To the reasons mentioned at the beginning of the Chapter, we recall also the intrinsic lack of precision due to skid steering kinematics of the Husky base.
+We can describe the search for a robust odometry system for the \ac{UGV} in three main phases:
+\begin{enumerate}
+	\item As hinted in Section \ref{sec:sensorFusion}, in the early phases of \ac{GRAPE} project, the designated sensor fusion framework was \textbf{ROAMFREE}, that had given proof of good functioning in the past (see Section \ref{sec:sensorFusion} for precise references). ROAMFREE platform provides multi-sensors pose tracking and it is designed to be flexible and to adapt to every kind of mobile robotic platform. The tracking module is based on Gauss-Newton minimization of the error functions associated to sensor readings. In order to improve generality, physical sensors are abstracted with \textit{logical sensors}, which are characterized only by the type of the proprioceptive measurement they produce. An other ROAMFREE module provides instead self-calibration modules, using error models for each sensor category to provide on-line correction of the common sources of distortion, bias and noise (\textit{e.g.} hard and soft magnetic distortion, sensor displacement or misalignment). The usage of ROAMFREE framework was specified in the project proposal, thus it was of course the default choice for the sensor fusion framework in the first \textit{integration week} in Garriguella (ES), before this thesis work beginning. The \ac{ROS} implementation of ROAMFREE is still experimental, but a configuration was identified to fit the requirements. Unfortunately, the same configuration turned out to perform poorly during the second integration week in Casciana Terme (IT). This was caused by concurrence of:
+	\begin{itemize}
+		\item presence of a significant slope in the vineyard, in opposition to the flat (even if bumpy) terrain in Garriguella
+		\item difficulty to handle inaccurate configuration of magnetometer and \ac{IMU}
+		\item overall trickiness in the configuration procedure, being ROAMFREE integration with \ac{ROS} still experimental
+	\end{itemize}
+	The low performances of this framework in our situation were pretty clear, so we opted for a more tested and consolidated solution, \textbf{Robot Localization}.
+	
+	\item The configuration of Robot Localization requires, for each fused sensor, a configuration vector, in which specify which components of the input estimate should be fused into the final pose estimate. Note that the the configuration vector is given in the \textit{frame\_id} of the input message: for example, 
+	, consider a velocity sensor that produces a \textit{geometry\_msgs/TwistWithCovarianceStamped} message with a \textit{frame\_id} of \\ \textit{velocity\_sensor\_frame}. If we assume that the transform would convert $X$ velocity in the \textit{velocity\_sensor\_frame} to $Z$ velocity in the $base\_link\_frame$. To include the $\dot{X}$ data from the sensor into the filter, the configuration vector should set the $\dot{X}$ velocity value to true, and not the $\dot{Z}$ velocity value. In table 
+	
+	\item singolo nodo per ridurre il delay
+\end{enumerate}
+
+\setlength\tabcolsep{3pt}
+\begin{table}[tb]
+\footnotesize
+\centering
+\begin{tabularx}{0.85\textwidth}{lcccccccccccccccc}
+\toprule
+\tableheadline{r}{ }  &
+\tableheadline{r}{$x$}  &
+\tableheadline{r}{$y$}  &
+\tableheadline{r}{$z$}  &
+\tableheadline{r}{$\psi$}  	&
+\tableheadline{r}{$\theta$}  	&
+\tableheadline{r}{$\phi$}	&
+\tableheadline{r}{$\dot{x}$}  	&
+\tableheadline{r}{$\dot{y}$}  		&
+\tableheadline{r}{$\dot{z}$}   	&
+\tableheadline{r}{$\dot{\psi}$}   		&
+\tableheadline{r}{$\dot{\theta}$}	&
+\tableheadline{r}{$\dot{\phi}$}   		&
+\tableheadline{r}{$\dot{\theta}$}   	&
+\tableheadline{r}{$\ddot{x}$}   		&
+\tableheadline{r}{$\ddot{y}$}  		 &
+\tableheadline{r}{$\ddot{z}$}   		\\
+\midrule
+\tablefirstcol{l}{Wheels}
+&  & \ding{51}  &  &  &  &  &  &  &  &  &  &  &  &  &  & \\
+\midrule
+\tablefirstcol{l}{IMU}
+&  &   &  &  &  &  &  &  &  &  &  &  &  &  &  & \\
+\midrule
+\tablefirstcol{l}{Local ekf output}
+&  &   &  &  &  &  &  &  &  &  &  &  &  &  &  & \\
+\midrule
+\tablefirstcol{l}{GPS points}
+&  &   &  &  &  &  &  &  & \ding{51}&  &  &  &  &  &  & \\
+\bottomrule
+\end{tabularx}
+\caption[\ac{LIDAR}s comparison]{Comparison of onboard \ac{LIDAR}s }
+\label{tab:robotLocalizationConfigLocal}
+\end{table}
+\setlength\tabcolsep{6pt}
+
+
+
+\section{navigation system}\label{sec:navigationSystem}
+inizialmente, map: molto ripetitiva, grossi problemi con amcl;  inoltre problema perché sto scemo prova a passare in mezzo ai filari. Quindi virtual fences, inflated in global map, non inflated in local. Allora visti problemi di amcl e mappa, proviamo mapless: mappa bianca in cui mettere solo fences, e poi local costmap dice la sua. In questo modo le virtual fences sono usate per global planning. 
+Dopo lo switch, provato a reintegrare la mappa usando amcl come input al nodo gnss di rob loc. Tuttavia, per motivi da capire non funzia molto bene. Problemi con il local planner dwa (tende a incastrarsi negli angoli), passaggio a elastic band.
 
 
 
