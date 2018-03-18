@@ -3,6 +3,7 @@ OBBLIGATORI
  - grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization
  - foto fatte per bene del robot nella configurazione finale
  - foto fatte per bene della fase di grasping con unghie e torrette, che non le ho
+ - cascade dei 2 robot localization
 
 SECONDARI
  - modulo dell'errore nella posizione dell'end effector (tanti movimenti, misurare errore)

@@ -7,9 +7,27 @@ But before it, we'll see a few deail about the Kinova \ac{API}, and the differen
 
 \section{Kinova ROS API}
 \ac{ROS} drivers of Kinova devices are very complex, and provide via \ac{ROS} topics a large amount of \ac{API} useful for both monitoring the arm state, and controlling it. Besides it, \textit{jaco\_arm\_driver} node also publishes the \textit{tf} subtree that describes the position of all the arm joints.
-In this section we do not want to provide a deep analysis of the drivers software architecture, but we limit ourselves to list the interfaces offered as \ac{ROS} topics, since they are the ones that we used in \ac{GRAPE} project. The subscribed topics are, used to control the arm, are: TODO
-The published topics, used for monitoring of the state, are: TODO
+In this section we do not want to provide a deep analysis of the drivers software architecture, but we limit ourselves to list the interfaces offered as \ac{ROS} topics, since they are the ones that we used in \ac{GRAPE} project. The published topics are, used to output information about the arm state, are: 
+\begin{itemize}
+	\item \textit{/j2n6s300\_driver/out/cartesian\_command}
+	\item \textit{/j2n6s300\_driver/out/finger\_position}
+	\item \textit{/j2n6s300\_driver/out/joint\_angles}
+	\item \textit{/j2n6s300\_driver/out/joint\_command}
+	\item \textit{/j2n6s300\_driver/out/joint\_state}
+	\item \textit{/j2n6s300\_driver/out/joint\_torques}
+	\item \textit{/j2n6s300\_driver/out/tool\_pose}
+	\item \textit{/j2n6s300\_driver/out/tool\_wrench}
+\end{itemize}
+They allow to observe the position of the end effector both in Cartesian and \textit{C-space}, together with position of the arm in \textit{C-space}, the position of the fingers, the angular velocity of the joints, the torque and force applied to the joints.
 
+The subscribed topics, used to control the arm movement, are:
+\begin{itemize}
+	\item \textit{/j2n6s300\_driver/in/cartesian\_force}
+	\item \textit{/j2n6s300\_driver/in/cartesian\_velocity}
+	\item \textit{/j2n6s300\_driver/in/joint\_torque}
+	\item \textit{/j2n6s300\_driver/in/joint\_velocity}
+\end{itemize}
+They allow to control the end effector both in force and velocity, and the joints in both torque and velocity.
 
 
 \section{Motion execution methods for Jaco$^2$ Arm}
