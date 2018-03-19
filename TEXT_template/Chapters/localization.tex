@@ -25,7 +25,7 @@ We can describe the search for a robust odometry system for the \ac{UGV} in thre
 	\end{itemize}
 	The low performances of this framework in our situation were pretty clear, so we opted for a more tested and consolidated solution, \textbf{Robot Localization}.
 	
-	\item The configuration of Robot Localization requires, for each fused sensor, a configuration vector, in which specify which components of the input estimate should be fused into the final pose estimate. Note that the the configuration vector is given in the \textit{frame\_id} of the input message: for example, consider a velocity sensor that produces a \textit{geometry\_msgs/TwistWithCovarianceStamped} message with a \textit{frame\_id} of \\ \textit{velocity\_sensor\_frame}. If we assume that the transform would convert $X$ velocity in the \textit{velocity\_sensor\_frame} to $Z$ velocity in the \textit{base\_link\_frame}. To include the $\dot{X}$ data from the sensor into the filter, the configuration vector should set the $\dot{X}$ velocity value to true, and not the $\dot{Z}$ velocity value. In table \ref{tab:robotLocalizationConfig} you can see the configuration vectors for the sensors taken as input from Robot Localization. Note that, for example, GPS only gives a contribute about $x$ and $y$, since the altitude estimation of GPS is often not precise, and it provides no information about the robot orientation. Our configuration of Robot Localization relied on \textbf{two} different Extended Kalman Filter nodes in cascade:
+	\item The configuration of Robot Localization requires, for each fused sensor, a configuration vector, in which specify which components of the input estimate should be fused into the final pose estimate. Note that the the configuration vector is given in the \textit{frame\_id} of the input message: for example, consider a velocity sensor that produces a \textit{geometry\_msgs/TwistWithCovarianceStamped} message with a \textit{frame\_id} of \\ \textit{velocity\_sensor\_frame}. If we assume that the transform would convert $X$ velocity in the \textit{velocity\_sensor\_frame} to $Z$ velocity in the \textit{base\_link\_frame}. To include the $\dot{X}$ data from the sensor into the filter, the configuration vector should set the $\dot{X}$ velocity value to true, and not the $\dot{Z}$ velocity value. In table \ref{tab:robotLocalizationConfig} you can see the configuration vectors for the sensors taken as input from Robot Localization. Note that, for example, GPS only gives a contribute about $x$ and $y$, since the altitude estimation of GPS is often not precise, and it provides no information about the robot orientation. Our configuration of Robot Localization relied on \textbf{two} different \ac{EKF} nodes in cascade:
 	\begin{itemize}
 		\item a \textit{local} localization node, that fuses continuous data, and estimates the position and orientation of the \textit{base\_link} frame of the robot inside the \textit{odom} frame \textit{i.e.} the frame fixed in the initial position of the robot. In other words, the task of the node is to publish \textit{odom} $\rightarrow$ \textit{base\_link tf} transform (see Section \ref{sec:tf} for recall). 
 		\item a \textit{global} localization node, that also fuses low frequency sensors \textit{i.e.} GPS, and estimate the estimates the position and orientation of \textit{odom} frame inside \textit{map} frame. The \textit{map} $\rightarrow$ \textit{odom} trasfomation "adjusts" the position of frame \textit{odom} in order to contextualize the position of the \ac{UGV} inside the map. Otherwise, the robot pose would be tracked only with respect to its initial position (origin of \textit{odom} frame), but no positioning inside a map would be provided.
@@ -33,11 +33,15 @@ We can describe the search for a robust odometry system for the \ac{UGV} in thre
 In Figure \ref{fig:cascadeRobotLocalization} you can see the computation graph of the aforementioned odometry system: you can observe that:
 	\begin{itemize}
 		\item both nodes write on \textit{tf} topic the respective \textit{tf} transform
-		\item the local node takes \ac{IMU} and wheels data for the fusion task
-		\item the global node takes as input the GPS, and the pose estimate of the local node (textbf{cascade})
+		\item the local node takes \ac{IMU} (\textit{/imu/data} topic) and wheels (\textit{/husky\_velocity\_controller/odom} topic) estimate for the fusion task
+		\item the global node takes as input the pose estimate from GPS (\textit{/odometry\_gps} topic), and the pose estimate from the local node (\textit{/odometry/ekf\_local\_filtered} topic), to implement the cascade.
 	\end{itemize}
 
-	\item singolo nodo per ridurre il delay, e perché map->odom non serve più perchè la mappa è vuota
+	\item Even if the cascade produced a pretty precise odometry estimate, the odometry computation was shrunk in a single \ac{EKF} node for two main reasons:
+	\begin{itemize}
+		\item as we'll describe in Section \ref{sec:navigationSystem}, the navigation system switched to a mapless configuration, so the \textit{tf} transform  \textit{map} $\rightarrow$ \textit{odom} became useless
+		\item the \ac{EKF}s cascade configuration led to a short delay in the odometry computation (\textasciitilde200-300 ms). This caused some problems with the obstacle detection implemented through \ac{LIDAR} data, that are processed with negligible delay, and especially when the robot moved from the end of a row of vines to the beginning of another one. 
+	\end{itemize}
 \end{enumerate}
 
 \setlength\tabcolsep{3pt}
@@ -94,8 +98,54 @@ In Figure \ref{fig:cascadeRobotLocalization} you can see the computation graph o
 
 
 \section{navigation system}\label{sec:navigationSystem}
+
+We already anticipated in Section \ref{sec:navigationStack} that the reference navigation framework is \textbf{Move Base}, that is an \textit{off-the-shelf} \ac{ROS} software stack for autonomous navigation (see Figure \ref{fig:navStack} for a graphical representation of the main software modules of Move Base). Since, as already stated, this framework usually provides very stable autonomous navigation in indoor mapped environment, the first attempt was to shift the same configuration in the vineyard environment. In this Section we'll show the evolution of the navigation system from this initial configuration to the final one.
+
+\subsection{Mapped navigation with amcl}
+Before the robot could be able to navigate the vineyard, this configuration required a preparatory \textit{mapping} phase; in particular, this is a \ac{SLAM} problem, that is the computational problem of constructing or updating a map of an unknown environment, while simultaneously keeping track of an agent's (the \ac{UGV}) location within it. Note that \textit{localization} is a different task with respect to \textit{odometry estimate}, because the first aims to estimate the position of the robot inside a map, while the latter aims to estimate the position of the robot with respect to a reference frame. Even if it is a \textit{chicken-and-egg} problem (localization is easy in a known map, under some assumptions, mapping is easy if the robot position is assumed known), several algorithms exist that solve, even if approximately, the \ac{SLAM} problem. In the early phases of \ac{GRAPE}, previous to this thesis work and described in \cite{grapeAltroPaper}, three different \ac{SLAM} algorithms were tested in our specific environment: \textit{Gmapping}, \textit{Google's Cartographer} and \textit{KartoSLAM}, and \textbf{Gmapping} algorithm was selected because of its performance and reactivity. In Figure \ref{fig:vineyardMaps} you can see some of the maps produced during the first integration week in Garriguella (ES), with these algorithms. The accomplished accuracy of the maps was satisfying, but actually a lot of problems occurred in the main phase, that is the autonomous navigation of the robot in the mapped environment. As you can see in Figure \ref{fig:navStack}, an optional node called \textbf{amcl} exists, that provides a \ac{ROS} implementation of \ac{AMCL} \parencite{amcl}. \ac{AMCL} is a localization algorithm, based on a particle filter to represent the probability distribution over the possible states. A single particle represent a hypothesis about the real pose of the robot in the environment (see Figure \ref{fig:amclAlgoritmo}). Since \ac{AMCL} is a genetic algorithm \parencite{geneticAlgorithm}, each particle is assigned a weight that correspond to the probability that, had it been at the state of the particle, it would perceive what its sensors have actually sensed. Formally:
+
+In particular, \textit{amcl} package is only capable to deal with laser scans as sensor input
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\textwidth]{Images/localization/vineyardMaps.png}
+	\caption{\textit{Mapping process output, executed in Mas Llunes vineyard; using Google's Cartographer (left), Gmapping (center), and KartoSLAM (right).}}
+	\label{fig:vineyardMaps}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\textwidth]{Images/localization/amcl.png}
+	\caption{\textit{Mapping process output, executed in Mas Llunes vineyard; using Google's Cartographer (left), Gmapping (center), and KartoSLAM (right).}}
+	\label{fig:amclAlgoritmo}
+\end{figure}
+
 inizialmente, map: molto ripetitiva, grossi problemi con amcl;  inoltre problema perché sto scemo prova a passare in mezzo ai filari. Quindi virtual fences, inflated in global map, non inflated in local. Allora visti problemi di amcl e mappa, proviamo mapless: mappa bianca in cui mettere solo fences, e poi local costmap dice la sua. In questo modo le virtual fences sono usate per global planning. 
 Dopo lo switch, provato a reintegrare la mappa usando amcl come input al nodo gnss di rob loc. Tuttavia, per motivi da capire non funzia molto bene. Problemi con il local planner dwa (tende a incastrarsi negli angoli), passaggio a elastic band.
+
+
+
+
+\begin{algorithm}
+\caption{Monte Carlo Localization($X_{t-1},u_t,z_t$)}\label{alg:mcl}
+\begin{algorithmic}[1]
+\State $\overline{X}_t=X_t=\emptyset$
+\State for $m=1$ to $M$: 
+\Indent
+	\State $x^{[m]}_t=$ motion\_update($u_t,x^{[m]}_{t-1}$)
+	\State $w^{[m]}_t=$ sensor\_update($z_t,x^{[m]}_{t}$)
+	\State $\overline{X}_t = {X}_t + \big \langle x^{[m]}_t, w^{[m]}_t \big \rangle$
+\EndIndent
+\State endfor
+\State for $m=1$ to $M$: 
+\Indent
+	\State draw $x^{[m]}_t$ from $\overline{X}_t$ with probability $\propto w^{[m]}_t$
+	\State $X_t=X_t+x^{[m]}_t$
+\EndIndent
+\State endfor
+\State return $X_t$
+\end{algorithmic}
+\end{algorithm}
 
 
 
