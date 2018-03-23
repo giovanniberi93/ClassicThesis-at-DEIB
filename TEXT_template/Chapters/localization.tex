@@ -99,50 +99,32 @@ In Figure \ref{fig:cascadeRobotLocalization} you can see the computation graph o
 
 \section{navigation system}\label{sec:navigationSystem}
 
-We already anticipated in Section \ref{sec:navigationStack} that the reference navigation framework is \textbf{Move Base}, that is an \textit{off-the-shelf} \ac{ROS} software stack for autonomous navigation (see Figure \ref{fig:navStack} for a graphical representation of the main software modules of Move Base). Since, as already stated, this framework usually provides very stable autonomous navigation in indoor mapped environment, the first attempt was to shift the same configuration in the vineyard environment. In this Section we'll show the evolution of the navigation system from this initial configuration to the final one.
+We already anticipated in Section \ref{sec:navigationStack} that the reference navigation framework is \textbf{Move Base}, that is an \textit{off-the-shelf} \ac{ROS} software stack for autonomous navigation (see Figure \ref{fig:navStack} for a graphical representation of the main software modules of Move Base). Since, as already stated, this framework usually provides very stable autonomous navigation in indoor mapped environment, the first attempt was to shift the same configuration in the vineyard environment. 
+In this Section we'll explain the steps from this initial naive solution to the final accepted one.
 
-\subsection{Mapped navigation with amcl}
-Before the robot could be able to navigate the vineyard, this configuration required a preparatory \textit{mapping} phase; in particular, this is a \ac{SLAM} problem, that is the computational problem of constructing or updating a map of an unknown environment, while simultaneously keeping track of an agent's (the \ac{UGV}) location within it. Note that \textit{localization} is a different task with respect to \textit{odometry estimate}, because the first aims to estimate the position of the robot inside a map, while the latter aims to estimate the position of the robot with respect to a reference frame. Even if it is a \textit{chicken-and-egg} problem (localization is easy in a known map, under some assumptions,and  mapping is easy if the robot position is assumed known), several algorithms exist that solve, even if approximately, the \ac{SLAM} problem. In the early phases of \ac{GRAPE}, previous to this thesis work and described in \cite{grapeAltroPaper}, three different \ac{SLAM} algorithms were tested in our specific environment: \textit{Gmapping}, \textit{Google's Cartographer} and \textit{KartoSLAM}, and \textbf{Gmapping} algorithm was selected because of its performance and reactivity. In Figure \ref{fig:vineyardMaps} you can see some of the maps produced during the first integration week in Garriguella (ES), with these algorithms. The accomplished accuracy of the maps was satisfying, but actually a lot of problems occurred in the main phase, that is the autonomous navigation of the robot in the mapped environment. As you can see in Figure \ref{fig:navStack}, an optional node called \textbf{amcl} exists, that provides a \ac{ROS} implementation of \ac{AMCL} \parencite{amcl}. \ac{AMCL} is a localization algorithm, based on a particle filter to provide an estimate of the of the \textit{belief} \textit{i.e.} the robot's estimate of its current state through a probability density function distributed over the state space. A single particle represents an hypothesis about the real pose of the robot in the environment (see Figure \ref{fig:amclAlgoritmo}); thus, regions in the state space with many particles correspond to a greater probability that the robot will be there, and regions with few particles are unlikely to be where the robot is.
+\subsection{Navigation in mapped environment with AMCL}
 
-Since \ac{AMCL} is a genetic algorithm \parencite{geneticAlgorithm}, each particle is assigned a weight that correspond to the probability that, had the robot been at the state of the particle, it would perceive what its sensors have actually sensed. For this reason, of course the algorithm requires both a sensor model of the used sensors, and a motion model of the involved robot, in order to update the belief. For example, you can see the 
-in particular, \textit{amcl} \ac{ROS} package is only capable to deal with laser scans as sensor input. Pseudo code of Monte Carlo Localization is provided in Algorithm \ref{alg:mcl}.
+Before the robot could be able to navigate the vineyard, this configuration required a preparatory \textit{mapping} phase; in particular, this is a \ac{SLAM} problem, that is the computational problem of constructing or updating a map of an unknown environment, while simultaneously keeping track of an agent's (the \ac{UGV}) location within it. Note that \textit{localization} is a different task with respect to \textit{odometry estimate}, because the first aims to estimate the position of the robot inside a map, while the latter aims to estimate the position of the robot with respect to a reference frame. Even if it is a \textit{chicken-and-egg} problem (localization is easy in a known map, under some assumptions, and  mapping is easy if the robot position is assumed known), several algorithms exist that solve, even if approximately, the \ac{SLAM} problem. In the early phases of \ac{GRAPE}, previous to this thesis work and described in \cite{grapeAltroPaper}, three different \ac{SLAM} algorithms were tested in our specific environment: \textit{Gmapping}, \textit{Google's Cartographer} and \textit{KartoSLAM}, and \textbf{Gmapping} algorithm was selected because of its performance and reactivity. In Figure \ref{fig:vineyardMap} you can see the map created in Mas Llunes during the last integration week, using Gmapping. The accomplished accuracy of the maps was satisfying, but actually a lot of problems occurred in the main phase, that is the autonomous navigation of the robot in the mapped environment. The main problems that emerged were the following ones. 
 
-\ac{AMCL} provides very good localization in environment that are rich of features, but it has lot of problems in corridor-like environment because of the lack of features detectable by the sensors.
+\begin{description}
+\item[AMCL in the vineyard map] \hfill \\
+As you can see in Figure \ref{fig:navStack}, an optional node called \textbf{amcl} exists, that provides a \ac{ROS} implementation of \ac{AMCL} \parencite{amcl}. \ac{AMCL} is a localization algorithm, based on a particle filter to provide an estimate of the \textit{belief} \textit{i.e.} the robot's estimate of its current state through a probability density function distributed over the state space. A single particle represents an hypothesis about the real pose of the robot in the environment (see Figure \ref{fig:amclAlgoritmo}); thus, regions in the state space with many particles correspond to a greater probability that the robot will be there, and regions with few particles are unlikely to be where the robot is.
 
-
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.7\textwidth]{Images/localization/vineyardMaps.png}
-	\caption{\textit{Mapping process output, executed in Mas Llunes vineyard; using Google's Cartographer (left), Gmapping (center), and KartoSLAM (right).}}
-	\label{fig:vineyardMaps}
-\end{figure}
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.5\textwidth]{Images/localization/amcl.png}
-	\caption{\textit{Mapping process output, executed in Mas Llunes vineyard ; using Google's Cartographer (left), Gmapping (center), and KartoSLAM (right).}}
-	\label{fig:amclAlgoritmo}
-\end{figure}
-
-inizialmente, map: molto ripetitiva, grossi problemi con amcl;  inoltre problema perché sto scemo prova a passare in mezzo ai filari. Quindi virtual fences, inflated in global map, non inflated in local. Allora visti problemi di amcl e mappa, proviamo mapless: mappa bianca in cui mettere solo fences, e poi local costmap dice la sua. In questo modo le virtual fences sono usate per global planning. 
-Dopo lo switch, provato a reintegrare la mappa usando amcl come input al nodo gnss di rob loc. Tuttavia, per motivi da capire non funzia molto bene. Problemi con il local planner dwa (tende a incastrarsi negli angoli), passaggio a elastic band.
-
-
-
+\par In \ac{AMCL} each particle is assigned a weight that correspond to the probability that, had the robot been at the state of the particle, it would perceive what its sensors have actually sensed (in particular, \textit{amcl} \ac{ROS} package is only capable to deal with laser scans as sensor input). For this reason, the algorithm requires both a sensor model of the used sensors, and a motion model of the involved robot, in order to update the belief. In Figure \ref{fig:motionModelExample} you can see several steps of \textit{belief} update, only based on the motion model of the robot. Pseudo code of Monte Carlo Localization is provided in Algorithm \ref{alg:mcl}.
 
 \begin{algorithm}
 \caption{Monte Carlo Localization($X_{t-1},u_t,z_t$)}\label{alg:mcl}
 \begin{algorithmic}[1]
-\State $\overline{X}_t=X_t=\emptyset$
+\State $X_t=\emptyset$ 				\Comment{$X_t$ is belief about the robot state}
+\State $\overline{X}_t=\emptyset$
 \State for $m=1$ to $M$: 
 \Indent
-	\State $x^{[m]}_t=$ motion\_update($u_t,x^{[m]}_{t-1}$)
-	\State $w^{[m]}_t=$ sensor\_update($z_t,x^{[m]}_{t}$)
+	\State $x^{[m]}_t=$ motion\_update($u_t,x^{[m]}_{t-1}$)	 \Comment{$u_z$ is actuation command}
+	\State $w^{[m]}_t=$ sensor\_update($z_t,x^{[m]}_{t}$)	\Comment{$z_t$ are sensed data}
 	\State $\overline{X}_t = {X}_t + \big \langle x^{[m]}_t, w^{[m]}_t \big \rangle$
 \EndIndent
 \State endfor
-\State for $m=1$ to $M$: 
+\State for $m=1$ to $M$: 				\Comment{$M$ is number of particles}
 \Indent
 	\State draw $x^{[m]}_t$ from $\overline{X}_t$ with probability $\propto w^{[m]}_t$
 	\State $X_t=X_t+x^{[m]}_t$
@@ -151,6 +133,91 @@ Dopo lo switch, provato a reintegrare la mappa usando amcl come input al nodo gn
 \State return $X_t$
 \end{algorithmic}
 \end{algorithm}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/localization/motionModel.png}
+	\caption{\textit{Evolution of the belief estimated through \ac{AMCL}, only taking into account the motion model.}}
+	\label{fig:motionModelExample}
+\end{figure}
+
+
+\begin{figure}
+	\begin{minipage}[c]{.5\textwidth}
+		\centering
+		\subfloat[]{%
+		\includegraphics[width=1\textwidth]{Images/localization/map.png}
+		\label{fig:vineyardMapIntera}}
+	\end{minipage}
+	\qquad
+	\begin{minipage}[c]{.5\textwidth}
+		\subfloat[]{%
+		\includegraphics[width=1\textwidth]{Images/localization/map_detail.png}
+		\label{fig:vineyardMapDetail}}
+	\end{minipage}
+	\caption{\textit{Map of the Mas Llunes vineyard in Garriguella (ES), computed during the last integration week using Robot Localization and Gmapping. In \ref{fig:vineyardMapDetail}, a magnified detail.}}
+	\label{fig:vineyardMap}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\textwidth]{Images/localization/amcl.png}
+	\caption{\textit{Belief about the robot estimate using \ac{AMCL}, through a particles cloud where each particle represents a hypothesis about the real pose.}}
+	\label{fig:amclAlgoritmo}
+\end{figure}
+
+\ac{AMCL} with laser scanners provides a very effective localization in feature-rich environments, like in typical indoor environments with very sharp corners and well defined obstacles, as showed in Figure \ref{fig:amclAlgoritmo}.
+However, as hinted at the beginning of this Section, a few tests were sufficient to show the weakness of this localization algorithm in our context, due to the high repetitiveness of the vineyard map. In Figure \ref{fig:vineyardMapDetail} you can see a magnified detail of the map of Mas Llunes vineyard, computed using Robot Localization as a odometry system, and Gmapping for \ac{SLAM}; most of the obstacles detected by the frontal \ac{LIDAR} are the trunks of the trees, together with poles and high weeds.
+ It's intuitive that if the map in which the robot moves presents a lot of repeated patterns, the \textit{survival of the fittest} paradigm that the \textit{sensor update} step of \ac{AMCL} should implement, is not very effective. Moreover, note that the bumpiness of the terrain leads the plan scanned by the \ac{LIDAR} to change significantly its orientation in time, so for example given a position in the map, the sensed obstacles in time in this location could be different portions of the same tree over time so the shape is likely not to be constant.
+
+\item[Row crossing problem] \hfill \\
+The vineyard environment also presented another criticality, due to the average distance between the vines belonging to the same row; indeed, because of the height of the \ac{LIDAR} used for obstacle detection, the trunks of the plants are detected while the horizontal branches of the vines often are not.
+If this situation occurs, the space between the trees is sensed as free of obstacles, even if the horizontal branches of the vines are an actual obstacle to for the \ac{UGV}. The first attempt to solve this problem was to simply provide an higher inflation radius (see Section \ref{sec:motionPlanning}) to the obstacles, in order to fill the gap between a plant and the adjacent ones. However, this naive solution couldn't deal with the following considerations:
+\begin{itemize}
+	\item a too small inflation radius is not able to provide a solution to the problems \textit{i.e.} fill the gap between adjacent trees
+	\item an inflation radius large enough to fill the aforementioned gap, make the navigation almost impossible, because even a small obstacle among two rows completely occludes the path.
+\end{itemize}
+
+\end{description}
+
+\subsection{Insertion of prohibition layer}
+Given the impossibility to solve the problem of row crossing with the standard inflation radius of the obstacle layer, we found a very effective solution that relies on the very simple global structure of the vineyard. Indeed, looking at the map in Figure \ref{fig:vineyardMapIntera}, it's easy to notice that the obstacles that cause the row crossing problem are of course aligned, and parallel to each other, so the idea was to implement a series of "virtual walls" corresponding to the vine rows. The implementation was possible thanks to a feature of \textit{costmap\_2d}, the package of \ac{ROS} responsible of the creation of the occupancy grid maps. Indeed, this package implements a \textbf{layered} costmap: this means that, for example, the global and local costmap (see Section \ref{sec:motionPlanning}) live in two different layers, that are computed independently:
+\begin{itemize}
+	\item the global costmap is computed from the obstacles described in the occupancy grid map, possibly inflated of a chosen radius
+	\item the local costmap is computed around the robot position, from the sensed laser scans. The obstacles possibly are inflated of a chosen radius
+\end{itemize}
+Since an arbitrary number of custom layers can be added by implementing C++ base class \textit{costmap\_2d::Layer} of Move Base package, two additional layers were introduced, in order to include the virtual obstacles of the rows both in global and local costmap:
+\begin{itemize}
+	\item \textbf{Global prohibition layer:} this includes the virtual walls in the global costmap, and it's useful for the global planner to take them into account for the creation of the global navigation plan
+	\item \textbf{Local prohibition layer:} this includes the virtual walls in the local costmap, and it's useful for the local planner to take them into account for the creation of the local navigation plan. This is required because otherwise the local planner might over-optimize the global plan and, if the walls were not included also in the local plan, the local planner could however take advantages of the gap between the plant. This situation is comparable to an indoor planning problem in which a local planner detect an open door that was shut at mapping time: even if the global path doesn't take advantage of the door gap, the local plan might choose to traverse it if it reduces the motion execution.
+\end{itemize}
+
+\subsection{Switch to mapless navigation}
+After several effort in Move Base parameter tuning, the role of  \ac{AMCL} in the poor performance in navigation tasks was clear. Since the map in navigation task is used in terms of:
+\begin{itemize}
+	\item \textbf{global planning}, because it provides a set of obstacles that helps the robot to optimize the global path in planning phase. See for example Figure \ref{fig:mapGlobalPlanner}: if no map was provided, the global plan would have been a straight line between the start and the goal states, and all the obstacle avoidance lies on local planner. This of course can lead to a performance degradation, 
+\end{itemize}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\textwidth]{Images/localization/map_global_planner.png}
+	\caption{\textit{Example of global plan that take into account the map obstacles.}}
+	\label{fig:mapGlobalPlanner}
+\end{figure}
+
+
+\subsection{Switch to teb}
+
+\subsection{amcl in robot localization}
+
+
+inizialmente, map: molto ripetitiva, grossi problemi con amcl;  inoltre problema perché sto scemo prova a passare in mezzo ai filari. Quindi virtual fences, inflated in global map, non inflated in local. Allora visti problemi di amcl e mappa, proviamo mapless: mappa bianca in cui mettere solo fences, e poi local costmap dice la sua. In questo modo le virtual fences sono usate per global planning. 
+Dopo lo switch, provato a reintegrare la mappa usando amcl come input al nodo gnss di rob loc. Tuttavia, per motivi da capire non funzia molto bene. Problemi con il local planner dwa (tende a incastrarsi negli angoli), passaggio a elastic band.
+
+
+
+
+
 
 
 

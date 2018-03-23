@@ -3,9 +3,9 @@ OBBLIGATORI
  - grafico della posizione xy dell'odometry delle ruote vs grafico della posizione stimata con robot localization
  - foto fatte per bene del robot nella configurazione finale
  - foto fatte per bene della fase di grasping con unghie e torrette, che non le ho
- - cascade dei 2 robot localization
 
 SECONDARI
+ - disegnino un po' più bello dell'utilità della mappa con global planning
  - modulo dell'errore nella posizione dell'end effector (tanti movimenti, misurare errore)
  - esempi di match con il convex hull
  - Manipulability index, based on the computation of the robot Jacobian matrix, is the most well-
