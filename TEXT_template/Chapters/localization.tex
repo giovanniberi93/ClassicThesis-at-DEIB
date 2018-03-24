@@ -168,7 +168,7 @@ As you can see in Figure \ref{fig:navStack}, an optional node called \textbf{amc
 
 \ac{AMCL} with laser scanners provides a very effective localization in feature-rich environments, like in typical indoor environments with very sharp corners and well defined obstacles, as showed in Figure \ref{fig:amclAlgoritmo}.
 However, as hinted at the beginning of this Section, a few tests were sufficient to show the weakness of this localization algorithm in our context, due to the high repetitiveness of the vineyard map. In Figure \ref{fig:vineyardMapDetail} you can see a magnified detail of the map of Mas Llunes vineyard, computed using Robot Localization as a odometry system, and Gmapping for \ac{SLAM}; most of the obstacles detected by the frontal \ac{LIDAR} are the trunks of the trees, together with poles and high weeds.
- It's intuitive that if the map in which the robot moves presents a lot of repeated patterns, the \textit{survival of the fittest} paradigm that the \textit{sensor update} step of \ac{AMCL} should implement, is not very effective. Moreover, note that the bumpiness of the terrain leads the plan scanned by the \ac{LIDAR} to change significantly its orientation in time, so for example given a position in the map, the sensed obstacles in time in this location could be different portions of the same tree over time so the shape is likely not to be constant.
+ It's intuitive that if the map in which the robot moves presents a lot of repeated patterns, the \textit{survival of the fittest} paradigm that the \textit{sensor update} step of \ac{AMCL} should implement is not very effective. Moreover, note that the bumpiness of the terrain leads the plan scanned by the \ac{LIDAR} to change significantly its orientation in time, so for example given a position in the map, the sensed obstacles in time in this location could be different portions of the same tree over time so the shape is likely not to be constant.
 
 \item[Row crossing problem] \hfill \\
 The vineyard environment also presented another criticality, due to the average distance between the vines belonging to the same row; indeed, because of the height of the \ac{LIDAR} used for obstacle detection, the trunks of the plants are detected while the horizontal branches of the vines often are not.
@@ -180,33 +180,60 @@ If this situation occurs, the space between the trees is sensed as free of obsta
 
 \end{description}
 
-\subsection{Insertion of prohibition layer}
-Given the impossibility to solve the problem of row crossing with the standard inflation radius of the obstacle layer, we found a very effective solution that relies on the very simple global structure of the vineyard. Indeed, looking at the map in Figure \ref{fig:vineyardMapIntera}, it's easy to notice that the obstacles that cause the row crossing problem are of course aligned, and parallel to each other, so the idea was to implement a series of "virtual walls" corresponding to the vine rows. The implementation was possible thanks to a feature of \textit{costmap\_2d}, the package of \ac{ROS} responsible of the creation of the occupancy grid maps. Indeed, this package implements a \textbf{layered} costmap: this means that, for example, the global and local costmap (see Section \ref{sec:motionPlanning}) live in two different layers, that are computed independently:
+\subsection{Insertion of prohibition layer}\label{subsec:virtualFences}
+Given the impossibility to solve the problem of row crossing with the standard inflation radius of the obstacle layer, we found a very effective solution that relies on the very simple global structure of the vineyard. Indeed, looking at the map in Figure \ref{fig:vineyardMapIntera}, it's easy to notice that the obstacles that cause the row crossing problem are of course aligned, and parallel to each other, so the idea was to implement a series of "virtual fences" corresponding to the vine rows. The implementation was possible thanks to a feature of \textit{costmap\_2d}, the package of \ac{ROS} responsible of the creation of the occupancy grid maps. Indeed, this package implements a \textbf{layered} costmap: this means that, for example, the global and local costmap (see Section \ref{sec:motionPlanning}) live in two different layers, that are computed independently:
 \begin{itemize}
 	\item the global costmap is computed from the obstacles described in the occupancy grid map, possibly inflated of a chosen radius
 	\item the local costmap is computed around the robot position, from the sensed laser scans. The obstacles possibly are inflated of a chosen radius
 \end{itemize}
 Since an arbitrary number of custom layers can be added by implementing C++ base class \textit{costmap\_2d::Layer} of Move Base package, two additional layers were introduced, in order to include the virtual obstacles of the rows both in global and local costmap:
 \begin{itemize}
-	\item \textbf{Global prohibition layer:} this includes the virtual walls in the global costmap, and it's useful for the global planner to take them into account for the creation of the global navigation plan
-	\item \textbf{Local prohibition layer:} this includes the virtual walls in the local costmap, and it's useful for the local planner to take them into account for the creation of the local navigation plan. This is required because otherwise the local planner might over-optimize the global plan and, if the walls were not included also in the local plan, the local planner could however take advantages of the gap between the plant. This situation is comparable to an indoor planning problem in which a local planner detect an open door that was shut at mapping time: even if the global path doesn't take advantage of the door gap, the local plan might choose to traverse it if it reduces the motion execution.
+	\item \textbf{Global prohibition layer:} this includes the virtual fences in the global costmap, and it's useful for the global planner to take them into account for the creation of the global navigation plan
+	\item \textbf{Local prohibition layer:} this includes the virtual fences in the local costmap, and it's useful for the local planner to take them into account for the creation of the local navigation plan. This is required because otherwise the local planner might over-optimize the global plan and, if the walls were not included also in the local plan, the local planner could however take advantages of the gap between the plant. This situation is comparable to an indoor planning problem in which a local planner detect an open door that was shut at mapping time: even if the global path doesn't take advantage of the door gap, the local plan might choose to traverse it if it reduces the motion execution.
 \end{itemize}
 
 \subsection{Switch to mapless navigation}
-After several effort in Move Base parameter tuning, the role of  \ac{AMCL} in the poor performance in navigation tasks was clear. Since the map in navigation task is used in terms of:
+After several effort in Move Base parameter tuning, the role of  \ac{AMCL} in the poor performance in navigation tasks was clear. Since the map in navigation task is useful in terms of:
 \begin{itemize}
-	\item \textbf{global planning}, because it provides a set of obstacles that helps the robot to optimize the global path in planning phase. See for example Figure \ref{fig:mapGlobalPlanner}: if no map was provided, the global plan would have been a straight line between the start and the goal states, and all the obstacle avoidance lies on local planner. This of course can lead to a performance degradation, 
+	\item \textbf{global planning}: it provides a set of obstacles that helps the robot to optimize the global path in planning phase. See for example Figure \ref{fig:mapGlobalPlanner}: if no map was provided, the global plan would have been a straight line between the start and the goal states, and all the obstacle avoidance lies on local planner. This of course can lead to a performance degradation, because the knowledge of some obstacles in advance often brings to much more efficient global plans.
+	\item \textbf{localization}: in order provide an estimate of the robot pose in the environment (for example, through \ac{AMCL})
+	\item \textbf{visualization}: to better contextualize the position of the robot for human users. 
 \end{itemize}
+
+Given the problems caused by \ac{AMCL}, we decided to switch to a \textbf{mapless} navigation configuration, because we were able to compensate all the advantages of the mapped navigation:
+
+\begin{itemize}
+	\item \textbf{global planning}: as we already pointed out in Subsection \ref{subsec:virtualFences}, even if the vineyard environment is strongly unstructured at fine-grained level (for the reasons explained at the beginning of this Section), it has a fixed and very simple global structure given by the parallel vine rows, as you can see in vineyard maps (Figure \ref{fig:vineyardMap}). Thus, the usage of the virtual fences layers only is a simple, but very effective approximation of the vineyard global map.
+	\item \textbf{localization}: in both our field test locations (Casciana Terme (IT) and Garriguella (ES)), we could rely on high-precision RTK GPS \parencite{rtk} as input for the \ac{UGV} odometry system. Even if RTK correction worldwide coverage is not guaranteed, several companies exist that provide this service. For example, see Figure \ref{fig:rtkItaly} for a map of RTK stations provided in Italy by the sole SmartNet Italy\footnote{\url{http://it.smartnet-eu.com/}}
+company. Moreover, since our navigation tasks are executed outdoor, the assumption of an high-precision GPS system is reasonable and we only need to specify the virtual fences positions through the GPS coordinates of their endpoints to navigate the virtual fences costmap layer.
+	\item \textbf{visualization}: in this configuration our \ac{UGV} is always geolocalized; so, we can contextualize the robot position for human users by overlaying to the robot position the corresponding satellite images, using for example the \textit{AerialMapDisplay} plugin for RViZ.
+\end{itemize}
+Since we were able to compensate for all the advantages of the navigation with a map, we decided to switch to a mapless configuration based on high-precision GPS and geolocalized virtual fences.
+
 
 \begin{figure}
 	\centering
 	\includegraphics[width=0.7\textwidth]{Images/localization/map_global_planner.png}
-	\caption{\textit{Example of global plan that take into account the map obstacles.}}
+	\caption{\textit{Example of global plan that takes into account the map obstacles.}}
 	\label{fig:mapGlobalPlanner}
 \end{figure}
 
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/localization/rtkItaly.png}
+	\caption{\textit{VIsualization of RTK stations provided by SmartNet Italy.}}
+	\label{fig:rtkItaly}
+\end{figure}
 
-\subsection{Switch to teb}
+\subsection{Switch to Timed Elastic Band as local planner}
+Also the standard local planner of Move Base, a \ac{ROS} implementation of Dynamic Window Approach \parencite{dwa}, showed some weak points in the vineyard context. In Figure \ref{fig:localCostmap} you can see an example of global costmap, computed during an autonomous navigation tasks in Garriguella: the virtual fences are highlighted in blue, the obstacles detected by the frontal \ac{LIDAR} in pink, and the inflation layer in light blue. Since the detected obstacles are mainly tree trunks, they are detected as small, non continuous obstacles. The inflation of such obstacles leads to a jagged border of the resulting obstacle cells set. If, for example, the detected obstacle was a straight wall, the resulting obstacle layer would have been much more straight and sharp. Dynamic Window Approach had some problems to deal with such a large amount of local minima, and often got stuck 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.8\textwidth]{Images/localization/localCostmap_highlighted.png}
+	\caption{\textit{Example of local costmap, in the final configuration: you can distinguish the virtual fences (blue), the obstacles detected by the \ac{LIDAR} (pink), and the inflation layer (light blue). The green polygon represents the robot footprint.}}
+	\label{fig:localCostmap}
+\end{figure}
 
 \subsection{amcl in robot localization}
 
