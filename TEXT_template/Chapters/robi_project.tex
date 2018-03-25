@@ -14,8 +14,9 @@ A branch of this thesis work involved the customization of the prototype mobile 
 
 
 \section{Robì mobile manipulator}
-Robì (see Figure \ref{fig:robiDefault}) is a prototype small-sized mobile manipulator for agricultural applications, whose aim is to support the development and testing of innovative perception and control algorithms. Both the mechanical structure and the motion control system are designed to be simple, flexible, low-cost and low-weight, to create a system that can act as an open source base for project in agricultural robotics.
-Since the platform is thought as a versatile mobile base to be adapted to several fields (\textit{e.g.} vineyards, herbaceous plants) its chassis is designed to have flexible geometrical characteristics (ground clearance, track, wheelbase) in the ranges explained in Table \ref{tab:robiConfiguration}. 
+Robì (see Figure \ref{fig:robiDefault}) is a prototype small-sized mobile manipulator for agricultural applications, whose aim is to support the development and testing of innovative perception and control algorithms. Both the mechanical structure and the motion control system are designed to be simple, flexible, low-cost and low-weight, to create a system that can act as an open source base for project in agricultural robotics, contrary to the large amount of task-specific platforms in agricultural robotics (\textit{e.g.} for asparagus \parencite{asparagi} or tomato \parencite{pomodori} harvesting).
+
+\par Since the platform is thought as a versatile mobile base to be adapted to several fields (\textit{e.g.} vineyards, herbaceous plants) its chassis is designed to have flexible geometrical characteristics (ground clearance, track, wheelbase).
 
  \begin{table}[tb]
 \footnotesize
@@ -30,13 +31,11 @@ Since the platform is thought as a versatile mobile base to be adapted to severa
 & [0.6, 1] m \\
 \toprule
 \end{tabularx}
-\caption[Process point cloud action specification]{Process point cloud action specification}
+\caption[Ranges of Robì geometrical characteristics]{\textit{Ranges of Robì geometrical characteristics.}}
 \label{tab:robiConfiguration}
 \end{table}
 
-
-In Figure \ref{fig:robiConfigurations}
- More generally, the design of Robì aims to the principles of:
+ More generally, the design principles of Robì are:
  
 \begin{itemize}
 	\item \textbf{low cost}, to make it easier to use it for example applications and, possibly, fleet-based applications
@@ -60,11 +59,35 @@ In Figure \ref{fig:robiConfigurations}
 	\label{fig:robiConfigurations}
 \end{figure}
 
+The aforementioned principles are implemented through the following design choices:
+\begin{description}
+	\item[Chassis] \hfill \\ The chassis is made out of ITEM\textsuperscript{\textregistered} aluminium bars, that presents lightweight but strong section; the slide rails embedded in the ITEM\textsuperscript{\textregistered} bars, together with four rotational joints applied to the bars supporting the wheels, allow for multiple configuration of the robot geometrical characteristics to vary in the ranges listed in Table \ref{tab:robiConfiguration}. In Figure \ref{fig:robiConfigurations} you can see 3D rendering of some of the available Robì configurations. The bars that support the wheel, however, can't rotate during the robot movement, thus Robì has a skid steering kinematic model.
+	
+	\item[In-wheel motors] \hfill \\ Robì is powered by four in-wheel electric DC brushless motors; the model is HUB10GL (see Figure \ref{fig:robiMotori}). In-wheel motors have been chosen mostly because they allow for much simpler mechanical design, with respect to classical electrical powertrain, because:
+	\begin{itemize}
+		\item no transmission is required
+		\item the weight is reduced, and the available space on the chassis increases
+		\item high level of maneuverability, without the need to introduce Ackermann kinematics
+	\end{itemize}
+	The motors are independent, so a suitable control board is required to control each of them; the board used in Robì are the ones described in VESC project\footnote{\url{http://vedder.se/2015/01/vesc-open-source-esc/}},
+an open source brushless motor control project. These boards offers several interfaces to control the motor:  PPM signal, analog, UART, I$^2$C, USB  or CAN-bus.
+\end{description}
 
+\begin{figure}
+	\centering
+	\includegraphics[width=0.4\textwidth]{Images/robi/motore.png}
+	\caption{\textit{HUB10GL, the in-wheel motor model adopted in Robì.}}
+	\label{fig:robiMotori}
+\end{figure}
 
+\section{Robì as GRAPE mobile base}
+The features mentioned in the previous section made RObì a convincing candidate as the mobile platform for the \ac{GRAPE} project, because of its flexibility as a mobile manipulator for agricultural robotics field. Unfortunately, for mere lack of time, in the late phases the project focused on the development of the whole system on a commercial robot, the Husky that was already described as the final \ac{UGV} of the \ac{GRAPE} project.
+\par However, significant steps in the adaptation of Robì as a base for a real agricultural robotic project were made, thus we are explaining them in this section.
+
+\subsection{Hardware configuration}
+Since the idea was to replicate the configuration of the Husky platform for the \ac{GRAPE} project, similar sensors were mounted on it; on the other side, we had to dedicate significant efforts to the creation of an hardware interface between the on-board computer (a commercial HP laptop) to the motors control board.
 
 \begin{itemize}
-	\item obiettivo: realizzare un'altra base mobile alternativa all'husky su cui portare il sistema GRAPE
 	\item architettura hw: sensori che ci sono montati a bordo, spiegazione sistema controllo motori tramite CAN usando la board STM
 	\item architettura sw: compatibile con quella di Grape, a meno dei nodi driver dei sensori e attuatori
 	\item spiegazioni e immagini del vario hardware
