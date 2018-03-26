@@ -2,7 +2,7 @@
 
 \chapter{The Robì project} \label{chap:robìProject}
 
-A branch of this thesis work involved the customization of the prototype mobile manipulator Robì \parencite{robi} to the requirements of the mobile base requested by the \ac{GRAPE} project. 
+A branch of this thesis work involved the customization of the prototype mobile manipulator Robì \parencite{robi} to fit the requirements of the mobile base requested by the \ac{GRAPE} project. 
 
 
 \begin{figure}
@@ -70,7 +70,7 @@ The aforementioned principles are implemented through the following design choic
 		\item high level of maneuverability, without the need to introduce Ackermann kinematics
 	\end{itemize}
 	The motors are independent, so a suitable control board is required to control each of them; the board used in Robì are the ones described in VESC project\footnote{\url{http://vedder.se/2015/01/vesc-open-source-esc/}},
-an open source brushless motor control project. These boards offers several interfaces to control the motor:  PPM signal, analog, UART, I$^2$C, USB  or CAN-bus.
+an open source brushless motor control project. These boards offers several interfaces to control the motors:  PPM signal, analog, UART, I$^2$C, USB  or CAN-bus.
 \end{description}
 
 \begin{figure}
@@ -81,11 +81,11 @@ an open source brushless motor control project. These boards offers several inte
 \end{figure}
 
 \section{Robì as GRAPE robotic base}
-The features mentioned in the previous section made Robì a convincing candidate as the mobile platform for the \ac{GRAPE} project, because of its flexibility as a mobile manipulator for agricultural robotics field. Unfortunately, for mere lack of time, in the late phases the project focused on the development of the whole system on a commercial robot, the Husky that was already described as the final \ac{UGV} of the \ac{GRAPE} project.
+The features mentioned in the previous section made Robì a convincing candidate as the mobile platform for the \ac{GRAPE} project, because of its flexibility as a mobile manipulator for agricultural robotics field. Unfortunately, for mere lack of time, the late phases the project focused on the development of the whole system on a commercial robot, the Husky that was already described as the final \ac{UGV} of the \ac{GRAPE} project.
 \par However, significant steps in the adaptation of Robì as a base for a real agricultural robotic project were made, thus we are explaining them in this section.
 
 \subsection{Hardware configuration}
-Since our goal was to create the system that was later developed on the Husky robot, the sensor mounted on it were similar; on the other side, we had to dedicate significant efforts to the creation of an hardware interface between the on-board computer (a commercial HP laptop) and the motors control boards. Given the flexibility of Robì physical structure, we decided to add a simple structure in the frontal part of Robì as a support for the bulkier sensors (see Figure \ref{fig:robiGrape}), built out of ITEM\textsuperscript{\textregistered} for compatibility. Note that the Jaco$^2$ was still the designated arm in this configuration (see Figure \ref{fig:grapeRobiWithArm}).
+Since our goal was to create the system that was later developed on the Husky robot, the sensors mounted on it were similar; on the other side, we had to dedicate significant efforts to the creation of an hardware interface between the on-board computer (a commercial HP laptop) and the motors control boards. Given the flexibility of Robì physical structure, we decided to add a simple structure in the frontal part of Robì as a support for the bulkier sensors (see Figure \ref{fig:robiGrape}), built out of ITEM\textsuperscript{\textregistered} bars for compatibility. Note that the Jaco$^2$ was still the designated arm in this configuration (see Figure \ref{fig:grapeRobiWithArm}).
 \begin{description}
 
 
@@ -107,7 +107,7 @@ Since our goal was to create the system that was later developed on the Husky ro
 	\item[LIDARS] \hfill \\ In section \ref{sec:robiDescr} we pointed out that Robì, as the Husky robot, comes up with a skid steering kinematic model. Thus, we chose to use two frontal \ac{LIDAR}s for obstacles avoidance during navigation tasks. The \ac{LIDAR} models were:
 	\begin{itemize}
 		\item \textbf{Sick LMS291}: this sensor\footnote{\url{https://www.sick.com/ag/en/detection-and-ranging-solutions/2d-lidar-sensors/lms2xx/lms291-s05/p/p109849}}
-		only has a single measuring plane, maintained parallel to the ground, in order to detect long-range obstacles during navigation tasks
+		only has a single measuring plane, maintained parallel to the ground, in order to detect long-range obstacles during navigation
 		\item \textbf{Sick LD-MRS400001}: this sensor\footnote{\url{https://www.sick.com/de/en/detection-and-ranging-solutions/3d-lidar-sensors/ld-mrs/ld-mrs400001/p/p112355}}
 		is a multi-range laser scanner, with 4 measuring planes with narrow aperture angles. Unlike \textit{LMS291} scanner, its arrangement in the sensors support bar is slightly tilted forward, to be able to scan closer obstacles.
 	\end{itemize}
@@ -154,7 +154,7 @@ Since our goal was to create the system that was later developed on the Husky ro
 		\item \textbf{Rocket M5} station\footnote{\url{https://dl.ubnt.com/datasheets/rocketm/RocketM_DS.pdf}}
 		from Ubiquiti, together with an omni-directional antenna, mounted directly on Robì
 		\item \textbf{NanoStation M5} station\footnote{\url{https://dl.ubnt.com/datasheets/nanostationm/nsm_ds_web.pdf}}
-		from Ubiquiti, to be used from the control device.
+		from Ubiquiti, to be connected to the external device.
 	\end{itemize}
 	This couple of devices were able to durably create a radio link of \textasciitilde340 meters.
 	
@@ -165,7 +165,7 @@ Since our goal was to create the system that was later developed on the Husky ro
 		\item CAN protocol interface, to communicate with the motors control boards
 		\item ST Zio connector, which extends the Arduino Uno V3 connectivity and provides an easy means of expanding the functionality of the Nucleo platform with a wide choice of specialized shields
 	\end{itemize}
-	In particular, the interface with the on-board PC was implemented as a bidirectional UDP connection. This will be cleared out in Section \ref{sec:robiSoftware}.
+	In particular, the interface with the on-board PC was implemented as a bidirectional UDP connection. This will be cleared out in Section \ref{subsec:robiSoftware}.
 	
 \begin{figure}
 	\begin{minipage}[c]{.5\textwidth}
@@ -183,9 +183,9 @@ Since our goal was to create the system that was later developed on the Husky ro
 	\label{fig:nucleoBoard}
 \end{figure}
 
-	\item[IMU] \hfill \\ For the choice of \ac{IMU}, we decided to take advantage of the Zio interface of the Nucleo board, so we inserted in the system the \textbf{x nucleo iks01a1} shield\footnote{\url{http://www.st.com/en/ecosystems/x-nucleo-iks01a1.html}}
+	\item[IMU] \hfill \\ For the choice of \ac{IMU}, we decided to take advantage of the Zio interface of the Nucleo board, so we inserted in the system the \textbf{X-NUCLEO-IKS01A1} shield\footnote{\url{http://www.st.com/en/ecosystems/x-nucleo-iks01a1.html}}
 	(see Figure \ref{fig:imuShield}).
-	This shield includes:
+	This shield includes, among others:
 	\begin{itemize}
 		\item LSM6DS0 MEMS 3D accelerometer and 3D gyroscope
 		\item LIS3MDL MEMS 3D magnetometer
@@ -203,13 +203,118 @@ Since our goal was to create the system that was later developed on the Husky ro
 	\subfloat[]{%
 		\includegraphics[width=0.5\textwidth]{Images/robi/robiGrapeWithArm.jpeg}
 		\label{fig:grapeRobiWithArm}}
-	\caption{\textit{3D rendering of different configuration of Robì base, obtained thanks to the chassis mechanical design.}}
+	\caption{\textit{3The RObì platform, equipped with the sensors required by \ac{GRAPE} project.}}
 	\label{fig:robiGrape}
 \end{figure}
 
-
+\subsection{Software architecture}\label{subsec:robiSoftware}
+We couldn't test any business logic on Robì platform, again because it didn't reach the main phases of \ac{GRAPE} project as the chosen platform. However, a possible platform switch would take great advantage from \ac{ROS} intrinsic modularity. In the \ac{ROS} computational graph, the only components influenced by the underlying hardware are:
 \begin{itemize}
-	\item architettura hw: sensori che ci sono montati a bordo, spiegazione sistema controllo motori tramite CAN usando la board STM
-	\item architettura sw: compatibile con quella di Grape, a meno dei nodi driver dei sensori e attuatori
-	\item spiegazioni e immagini del vario hardware
+	\item the topic where to publish the target linear and angular velocities for the \ac{UGV} (typically, \textit{cmd\_vel} topic)
+	\item the topic where to read the odometry estimated only from the wheel movement (in the Husky, \textit{/husky\_velocity\_controller/odom} topic)
+	\item the topics where to read the disparate sensors measurements
+	\item \textit{tf} topic, where the complete \textit{tf} tree of the \ac{UGV} is published
 \end{itemize}
+For these reason, we are quite confident that, excluding the unavoidable changes at least in Move Base configuration, the platform switch \textit{should} not be too challenging.
+
+\par Anyway, we are going to show the low-level software architecture of the system, by means of a graph where:
+\begin{itemize}
+	\item the nodes are hardware components, that generate or process data
+	\item the (oriented) edges represent the data flow, from the node that generates data (tail) to the node that process them (head); different arrow types represent different communication strategies
+\end{itemize}
+Note that:
+\begin{itemize}
+	\item  actuator nodes both receive and generate data, because they both accept commands and generate feedbacks
+	\item Nucleo board both provides data from \ac{IMU} shield and wheels feedback (outgoing arrow), and accepts velocity commands for the motors (ingoing arrow). Both the communication are implemented via UDP server. 
+\end{itemize}
+
+
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2cm,align=center,
+		decoration={snake, segment length=1.5mm, amplitude=0.3mm},
+		semithick, scale=0.6, every node/.style={scale=0.6},
+		palette1node/.style={shape=ellipse, draw=black,fill=palette1},
+		palette2node/.style={shape=circle, draw=black,fill=palette2},
+		palette3node/.style={shape=circle, draw=black,fill=palette3},
+		palette4node/.style={shape=circle, draw=black,fill=palette4},		  
+		palette5node/.style={shape=circle, draw=black,fill=palette5}, 
+		upLoop/.style={loop above,in=120,out=60,min distance=15mm,looseness=10},
+		downLoop/.style={loop below,in=-120,out=-60, min distance=15mm,looseness=10},
+		rightLoop/.style={loop right,in=-30,out=30,min distance=15mm,looseness=10},
+		leftLoop/.style={loop left,in=210,out=150, min distance=15mm,looseness=10},			]
+	\label{fig:dispenserApplicationFSA}
+	\tikzstyle{every state}=[fill=white,draw=black,text=black]	
+	\tikzset{every edge/.style={draw=black,sloped, anchor=center, above}} 
+
+	\node[state, fill=palette1, minimum width=60pt,text width=60pt]			(A)	{On-board PC};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(B)	[above right = of A] {Nucleo board};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(C)	[above left = of A] {LMS291};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(D)	[left = of A] {LD-MRS};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(E)	[right = of A] {GPS};
+	\node[state, fill=palette4, minimum width=60pt,text width=60pt]			(F)	[below right = of A] {RocketM5};
+	\node[state, fill=palette2, minimum width=60pt,text width=60pt]			(G)	[right = of B] {Motor \\control board};
+	\node[state, fill=palette4, minimum width=60pt,text width=60pt]			(H)	[right = of F] {Nanostation};	
+	\node[state, fill=palette5, minimum width=60pt,text width=60pt]			(I)	[below = of H] {Remote PC};	
+	\node[state, fill=palette2, minimum width=60pt,text width=60pt]			(L)	[below left = of A] {Kinova\\Jaco$^2$};	
+
+\path 
+	(A)	edge[densely dotted,bend right=10]		node{}(B)
+		edge[densely dotted,bend right=10]		node{}(F)
+		edge[bend right=10]		node{}(L)
+	
+	(B)	edge[decorate,bend right=10]		node{}(G)
+		edge[densely dotted,bend right=10]		node{}(A)
+		
+	(C)	edge[]				node{}(A)
+	
+	(D)	edge[densely dotted]				node{}(A)
+
+	(E)	edge[]				node{}(A)
+	
+	(F)	edge[densely dotted,bend right=10]		node{}(A)
+		edge[dashed,bend right=10]		node{}(H)
+
+	(G)	edge[decorate,bend right=10]		node{}(B)
+		
+	(H)	edge[dashed,bend right=10]		node{}(F)
+		edge[densely dotted,bend right=10]		node{}(I)
+
+	(I)	edge[densely dotted,bend right=10]		node{}(H)	
+	
+	(L)	edge[bend right=10]		node{}(A)
+;
+
+
+
+% legend
+\node[palette1node,label=right:Business logic node, scale=2.0] (FD) at (-7,-7.5)   {};
+\node[palette2node,label=right:Actuator node, scale=2.0] (FD) at (-7,-8.5)   {};
+\node[palette3node,label=right:Sensing node, scale=2.0] (FD) at (-7,-9.5)   {};
+\node[palette4node,label=right:Transmission node, scale=2.0] (FD) at (-7,-10.5)   {};
+\node[palette5node,label=right:Node extern to the system, scale=2.0] (FD) at (-7,-11.5)   {};
+
+\node at(1,-7.5)[label=right:{Serial interface}]{};
+\draw[] (-20pt,-7.5) -- (30pt,-7.5);
+
+\node at(1,-8.5)[label=right:{Radio link}]{};
+\draw[dash pattern=on 4pt off 4pt] (-20pt,-8.5) -- (30pt,-8.5);
+
+\node at(1,-9.5)[label=right:{Ethernet interface}]{};
+\draw[dash pattern=on 1pt off 1pt] (-20pt,-9.5) -- (30pt,-9.5);
+
+\node at(1,-10.5)[label=right:{CAN interface}]{};
+\draw[decorate] (-20pt,-10.5) -- (30pt,-10.5);
+%
+%\node at(-2,-5.75)[label=right:{Direct publication of joint velocities}]{};
+%\draw[dash pattern=on 1pt off 1pt] (-110pt,-5.7) -- (-60pt,-5.7);
+%
+%\node at(-2,-6.45)[label=right:{Visual servoing controlled}]{};
+%\draw[decorate] (-110pt,-6.4) -- (-60pt,-6.4);
+
+  \end{tikzpicture}
+
+
+
+
+
+
+
