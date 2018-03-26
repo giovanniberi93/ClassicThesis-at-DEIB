@@ -160,7 +160,7 @@ After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:gr
 &590g  & 250g & 210g\\
 \bottomrule
 \end{tabularx}
-\caption[\ac{LIDAR}s comparison]{Comparison of onboard \ac{LIDAR}s }
+\caption[\ac{LIDAR}s comparison]{Comparison of Husky on-board \ac{LIDAR}s }
 \label{tab:lidarComparison}
 \end{table}
 
@@ -181,7 +181,7 @@ After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:gr
 \end{figure}
 
 \subsection{RGB-D camera}
-The other sensor mounted on top of the arm end effector is an \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images (see Figure TODO screenshot di rgb e profondità), by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera also applies to operation validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identify exceptional cases (no dispenser left). The positive aspect of this camera model comes from its contained size and weight. We spotted only one significant weak point, that is a quite high minimum depth distance (20 cm), due to an intrinsic limit of the embedded depth technology. This problem created a few complications in dispenser application tasks, but they were easily bypassed.
+The other sensor mounted on top of the arm end effector is a \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images (see Figure TODO screenshot di rgb e profondità), by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera also applies to operation validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identify exceptional cases (no dispenser left). The positive aspect of this camera model comes from its contained size and weight. We spotted only one significant weak point, that is a quite high minimum depth distance (20 cm), due to an intrinsic limit of the embedded depth technology. This problem created a few complications in dispenser application tasks, but they were easily bypassed.
 
 \subsection{Tools for dispensers grasping}
 Additional hardware was placed on the \ac{UGV} specifically for the accomplishment of the grasping of the dispenser, for two separate reasons:
