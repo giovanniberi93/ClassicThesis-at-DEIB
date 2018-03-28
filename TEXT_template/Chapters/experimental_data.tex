@@ -25,7 +25,17 @@ On the field sessions were a crucial point in the validation of \ac{GRAPE} syste
 
 \end{enumerate}
 
-\section{Sensor fusion}
+\section{Sensor fusion}\label{sec:resultsOdometry}
+
+Since the final sensor fusion system included data from GPS, we can exploit satellite imagery to better visualize and evaluate the sensor fusion output. For this purpose, we used the \textit{rviz\_satellite} plugin for RViZ. In this section we'll show data recorded during a 13 minutes long autonomous navigation session of the Husky, executed across three different rows in the Mas Llunes vineyard, during the third integration week, in March 2018. In our case, satellite images also provide a very coarse-grained ground truth about the path, because we know the rows that the robot has actually traversed during navigation.
+
+\par As explained in Section \ref{sec:odometrySystem}, we expected a very untrustworthy wheels odometry, and the experimental results actually proved it. In Figure \ref{fig:gpsRawRes} you can see the pose estimated by the raw wheels velocities only. It's easy to notice that there's no way to use it as unique odometry source: the wheels slippage, especially during rotational movements, makes the estimated path completely different from the actual one. The data from GPS, shown in Figure \ref{fig:gpsRawRes}, are instead really accurate, since RTK correction was used. 
+\par Indeed, the final estimated odometry, that you can see in Figure \ref{fig:wheelsOdometryRes}, is very close to the the plotted GPS data in Figure \ref{fig:gpsRawRes}. However, a sensor fusion based on GPS only would not be a real solution, because:
+\begin{itemize}
+	\item the GPS update frequency is low (\textasciitilde1 Hz), so other sensors are required to improve the estimate between two GPS measures
+	\item the GPS does not provide information about the orientation
+	\item GPS availability, especially with RTK correction, is not guaranteed all over the world, so other sensors must be available to compensate if required
+\end{itemize}
 
 \begin{figure}
 	\centering
@@ -33,7 +43,7 @@ On the field sessions were a crucial point in the validation of \ac{GRAPE} syste
 		\includegraphics[width=0.65\textwidth]{Images/experimental_data/wheels_3.png}
 		\label{fig:wheelsOdometryRes}} \\
 	\subfloat[]{%
-		\includegraphics[width=0.65\textwidth]{Images/experimental_data/gpsRaw_dark.png}
+		\includegraphics[width=0.7\textwidth]{Images/experimental_data/gpsRaw_dark.png}
 		\label{fig:gpsRawRes}}
 	\caption{\textit{Pose estimation in time using raw wheels odometry (Figure \ref{fig:wheelsOdometryRes}), and using GPS (Figure \ref{fig:gpsRawRes}).}}
 	\label{fig:sensorFusionInputs}
@@ -48,6 +58,13 @@ On the field sessions were a crucial point in the validation of \ac{GRAPE} syste
 
 \section{Navigation}
 
+In the odometry system, the satellite imagery provided, as already stated, a sort of coarse-grained ground truth. The same reasoning cannot be applied to navigation operations, thus the evaluation of a navigation system by means of a quantitative metric is not easy. \\
+Because of the tight deadlines in the \ac{GRAPE} project, no particular effort was put in this topic, so we limited ourselves to observe high-level qualitative features of the local planner behavior (\textit{e.g} number of times the robot got stuck in obstacles during navigation, smoothness of the movement) to assess both the inadequacy of \textit{Dynamic Window Approach} planner, and the proper functionality \textit{Timed Elastic Band} planner.
+In Figure \ref{fig:result_navigation} you can see a frame of the same autonomous navigation session in Mas Llunes mentioned in Section \ref{sec:resultsOdometry}. The global navigation plan that the robot is following is drawn as a green line, while the shorter red line represents the local plan computed by  \textit{Timed Elastic Band}. The ability of this algorithm to deal with winding paths is clear in this image.
+
+\par In Figure \ref{fig:mappingResults}, you can see the result of mapping process executed with Gmapping as \ac{SLAM} algorithm and Robot Localization as sensor fusion system. In both of them the vineyard structure is clearly visible.
+
+
 \begin{figure}
 	\begin{minipage}[c]{.5\textwidth}
 	\centering
@@ -60,8 +77,8 @@ On the field sessions were a crucial point in the validation of \ac{GRAPE} syste
 		\includegraphics[width=0.65\textwidth]{Images/experimental_data/toscana_map.png}
 		\label{fig:mapResult_toscana}}
 	\end{minipage}
-	\caption{\textit{Output of mapping phase, using Gmapping as \ac{SLAM} algorithm and Robot Localization as sensor fusion framework.}}
-	\label{fig:sensorFusionInputs}
+	\caption{\textit{Output of mapping phase, using Gmapping as \ac{SLAM} algorithm and Robot Localization as sensor fusion framework. The map of Mas Llunes vineyard in Figure \ref{fig:mapResult_masLlunes}, the Casciano Terme one in Figure \ref{fig:mapResult_toscana}.}}
+	\label{fig:mappingResults}
 \end{figure}
 
 
@@ -74,6 +91,16 @@ On the field sessions were a crucial point in the validation of \ac{GRAPE} syste
 
 
 \section{Manipulation}
+
+As expected, the execution of arm movements through \textit{MoveIt!} framework, when correctly embedded in the \ac{UGV} system, gave no surprises in \textit{on-the-field} experiments. In Figure \ref{fig:deplMoveitEndEffect}, you can see the 3D position of the end effector during a grasping and deployment operation, completely executed through \textit{MoveIt!} except, of course, for the core movement of the grasping, the movement 3$\rightarrow$4 in the Figure. The evolution of the $z$ coordinates of the end effector during segment 3$\rightarrow$4 is shown in Figure \ref{fig:graspingZ}.
+
+On the other hand, manipulation sub-operations that relied on computer vision techniques were expected to have problems due to the unpredictable time varying light conditions in outdoor context. A large amount of tests showed two different outcome to \textit{on-the-field} validation:
+\begin{itemize}
+	\item computer vision tasks based on tracking of ArUco markers (dispenser grasping from the feeder, dispenser application on the nail) turned out to be robust even in presence of the aforementioned light conditions. This is mainly due to the robustness of OpenCV library algorithms in the detection of the markers
+	\item computer vision tasks based on the detection of the red wings of the dispensers (check for dispenser availability in the feeder, grasping and deployment validation) were significantly influenced by the light changes, and they were weaker in the hours about noon, when the sun was on the vertical.
+\end{itemize}
+
+In Figure \ref{fig:deploymentNailResult} and \ref{fig:graspingLowResult}, quantitative analysis of visual servo driven movements are provided, through the evolution in time of both the marker corners' coordinates and the module of the overall error of the corners with respect to their desired positions. Figure \ref{fig:deploymentNailResult} data comes from the deployment of a dispenser on a nail, while data of Figure \ref{fig:graspingLowResult} comes from the grasping of a dispenser from the feeder. In the graphs related to the feature tracking, the desired value for each of the feature is represented with an horizontal line; notice that, at the end of the execution, each of the features is almost equal to the its target value.
 
 
 \begin{figure}
@@ -112,7 +139,7 @@ On the field sessions were a crucial point in the validation of \ac{GRAPE} syste
 \begin{figure}
 	\centering
 	\includegraphics[width=0.9\textwidth]{Images/experimental_data/grasping_z.png}
-	\caption{\textit{Evolution of the $z$ coordinate of the end effector, during visual servo driven grasping of the dispenser from the feeder.}}
+	\caption{\textit{Evolution of the $z$ coordinate of the end effector, during grasping operation; visual servo driven movement is the central one in the graph.}}
 	\label{fig:graspingZ}
 \end{figure}
 

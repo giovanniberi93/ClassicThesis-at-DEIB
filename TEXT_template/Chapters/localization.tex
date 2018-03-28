@@ -12,7 +12,7 @@ The system developed in the context of \ac{GRAPE} project suffers critically mos
 
 \par In the next section we are going to analyze with detail the configuration of both the odometry and navigation systems running on the \ac{UGV}. It will be clear that both the problems, even if eventually solved using \textit{off-the-shelf} solutions, were all but simple problems and required a real understanding of the numerous problems that arose.
 
-\section{Odometry system}\label{sec:odometrySystem}
+\section{Sensor Fusion system}\label{sec:odometrySystem}
 
 The configuration of a robust odometry system for vineyard navigation has been a workpoint since the beginning of the project, because of the expected (and actual) strong instability of the wheel odometry. To the reasons mentioned at the beginning of the Chapter, we recall also the intrinsic lack of precision due to skid steering kinematics of the Husky base.
 We can describe the search for a robust odometry system for the \ac{UGV} in three main phases:
@@ -209,7 +209,7 @@ Given the problems caused by \ac{AMCL}, we decided to switch to a \textbf{maples
 	\item \textbf{global planning}: as we already pointed out in Subsection \ref{subsec:virtualFences}, even if the vineyard environment is strongly unstructured at fine-grained level (for the reasons explained at the beginning of this Section), it has a fixed and very simple global structure given by the parallel vine rows, as you can see in vineyard maps (Figure \ref{fig:vineyardMap}). Thus, the inclusion of the virtual fences layers only in the global costmap is a simple, but very effective approximation of the vineyard global map.
 	\item \textbf{localization}: in both our field test locations (Casciana Terme (IT) and Garriguella (ES)), we could rely on high-precision RTK GPS \parencite{rtk} as input for the \ac{UGV} odometry system. Even if RTK correction worldwide coverage is not guaranteed, several companies exist that provide this service. For example, see Figure \ref{fig:rtkItaly} for a map of RTK stations provided in Italy by the sole SmartNet Italy\footnote{\url{http://it.smartnet-eu.com/}}
 company. Moreover, since our navigation tasks are executed outdoor, the assumption of an high-precision GPS system is reasonable and we only need to specify the virtual fences positions through the GPS coordinates of their endpoints to navigate the virtual fences costmap layer.
-	\item \textbf{visualization}: in this configuration our \ac{UGV} is always geolocalized; so, we can contextualize the robot position for human users by overlaying to the robot position the corresponding satellite images, using for example the \textit{AerialMapDisplay} plugin for RViZ.
+	\item \textbf{visualization}: in this configuration our \ac{UGV} is always geolocalized; so, we can contextualize the robot position for human users by overlaying to the robot position the corresponding satellite images, using for example the \textit{rviz\_satellite} plugin for RViZ.
 \end{itemize}
 Since we were able to compensate for all the advantages of the navigation with a map, we decided to switch to a mapless configuration, at the cost of adding the assumption of high-precision GPS and geolocalized virtual fences at disposal. Note that, in this configuration, the \textit{localization} task is not relevant anymore since there is not an actual map to localize into; then the \textit{tf} transform from \textit{map} to \textit{odom} is reduced to the identity transformation.
 
