@@ -5,21 +5,22 @@
 On the field sessions were a crucial point in the validation of \ac{GRAPE} system, for two main reasons:
 \begin{enumerate}
 	
-	\item Robotics is a field that, by definition, requires interaction with the physical world, both the components of the robot itself, and the environment. Thus, simulation could strongly speed up the the development in certain phases, but the creation of a robotic system cannot opt out of experimental sessions. This consideration is especially true in agricultural robotics field, because a simulated environment or a laboratory environment are extremely likely to be too different from the actual robot environment to be significant.
+	\item Robotics is a field that, by definition, requires interaction with the physical world: both the components of the robot itself, and the environment. Thus, simulation could strongly speed up the the development in certain phases, but the creation of a robotic system cannot opt out of experimental sessions. This consideration is especially true in agricultural robotics field, because a simulated environment or a laboratory environment are extremely likely to be too different from the actual robot environment to be significant, \textit{e.g.} in terms of light conditions, terrain structure, sensor noise.
 
 	\item As explained in Section \ref{sec:grapeProjectDescription}, the research team included members from both Politecnico di Milano and Eurecat, that are located in two different countries. Even if this should not have been a big problem, the division of labor created significant inefficiencies because:
 	\begin{itemize}
 		\item even if the sensor fusion and navigation parts were assigned to Politecnico, the Husky \ac{UGV} was property of Eurecat, so it was in Barcellona
 		\item even if the analysis of the vine scan in order to detect the most suitable deployment point was in charge of Eurecat, the arm was property of Politecnico so it was in Milano.
 	\end{itemize}
-	This problem was mitigated by the logging tool of \ac{ROS} (\textit{rosbag} package we mentioned in Section \ref{sec:robotOperatingSystem}), that demonstrated its potential in such a situation: \textit{bags} recorded during (non-autonomous) navigation sessions of the Husky were very useful to test the sensor fusion system, while \textit{bags} of the laser scans sensed during execution of the scan motion in front of the mockup vine (see Figure \ref{fig:mockupPlant}), owned by Politecnico team. However, the usage of \textit{bags} in our context showed two main weaknesses, the first of which is is specific of our context, while the second is intrinsic to the use of recorded data:
+	This problem was mitigated by the logging tool of \ac{ROS} (\textit{rosbag} package we mentioned in Section \ref{sec:robotOperatingSystem}), that demonstrated its potential in such a situation: \textit{bags} recorded during (non-autonomous) navigation sessions of the Husky were very useful to test the sensor fusion system, while \textit{bags} of the laser scans sensed during execution of the scan motion in front of the mockup vine (owned by Politecnico team, see Figure \ref{fig:mockupPlant}), were used by Eurecat team to test the point cloud creation and analysis. 
+\par However, the usage of \textit{bags} in our context showed two main weaknesses, the first of which is specific of our context, while the second is intrinsic to the use of recorded data:
 \begin{itemize}
 	\item autonomous navigation algorithms cannot be tested by means of recorded data \textit{bags} because, during an autonomous navigation session, the data that are sensed while using a specific navigation algorithm depend on the choices of the algorithm itself; the same reasoning does not apply to neither sensor fusion nor point cloud analysis tasks.
 	For this reason, the only way to test a navigation algorithm except for \textit{on-the-field} experiments is via simulation by means of a physical simulator. Some effort were spent in this direction before the beginning of this thesis work (see Section \ref{sec:thesisInGrape}), but very few \textit{on-the-field} tests have been enough to show that the simulated environment was way too different from the real one for the test to be significant.
-	\item validation of algorithms by means of recorded data significantly increases the risk of overfitting \textit{i.e.} adapting the model only to perform well with the data in the (few) \textit{bags} at disposal, and not new new data coming, for example, from an \textit{on-the-field} experiment. The best ways to decrease the probability of overfitting are:
+	\item validation of algorithms by means of recorded data significantly increases the risk of overfitting \textit{i.e.} adapting the model to perform properly only on the data in the (few) \textit{bags} at disposal, and not on new data coming, for example, from an \textit{on-the-field} experiment. The best ways to decrease the probability of overfitting are:
 	\begin{itemize}
-		\item use as many bags as possible in testing and validation phase
-		\item test in the real environment as often as you can. Remember, however, that sometimes overfitting can occur also in real environment, in less obvious way. For example, the ROAMFREE configuration executed in Mas Llunes during the first integration week was absolutely ineffective when applied in Casciano Terme vineyard, because it fitted too tightly the features of Mas Llunes vineyard thus it didn't represent a general solution.
+		\item use as many bags as possible to test the algorithms during development
+		\item test the system in the real environment as often as you can. Remember, however, that sometimes overfitting can occur also in real environment, in less obvious way. For example, the ROAMFREE configuration executed in Mas Llunes during the first integration week was absolutely ineffective when applied in Casciano Terme vineyard, because it fitted too tightly the features of Mas Llunes vineyard thus it didn't represent a general solution.
 	\end{itemize}
 \end{itemize}
 
@@ -29,8 +30,8 @@ On the field sessions were a crucial point in the validation of \ac{GRAPE} syste
 
 Since the final sensor fusion system included data from GPS, we can exploit satellite imagery to better visualize and evaluate the sensor fusion output. For this purpose, we used the \textit{rviz\_satellite} plugin for RViZ. In this section we'll show data recorded during a 13 minutes long autonomous navigation session of the Husky, executed across three different rows in the Mas Llunes vineyard, during the third integration week, in March 2018. In our case, satellite images also provide a very coarse-grained ground truth about the path, because we know the rows that the robot has actually traversed during navigation.
 
-\par As explained in Section \ref{sec:odometrySystem}, we expected a very untrustworthy wheels odometry, and the experimental results actually proved it. In Figure \ref{fig:gpsRawRes} you can see the pose estimated by the raw wheels velocities only. It's easy to notice that there's no way to use it as unique odometry source: the wheels slippage, especially during rotational movements, makes the estimated path completely different from the actual one. The data from GPS, shown in Figure \ref{fig:gpsRawRes}, are instead really accurate, since RTK correction was used. 
-\par Indeed, the final estimated odometry, that you can see in Figure \ref{fig:wheelsOdometryRes}, is very close to the the plotted GPS data in Figure \ref{fig:gpsRawRes}. However, a sensor fusion based on GPS only would not be a real solution, because:
+\par As explained in Section \ref{sec:odometrySystem}, we expected a very untrustworthy wheels odometry, and the experimental results actually proved it. In Figure \ref{fig:wheelsOdometryRes} you can see the pose estimated by the raw wheels velocities only. It's easy to notice that there's no way to use it as unique odometry source: the wheels slippage, especially during rotational movements, makes the estimated path completely different from the actual one. The data from GPS, shown in Figure \ref{fig:gpsRawRes}, are instead really accurate, since RTK correction was used. 
+\par Indeed, the final estimated odometry, that you can see in Figure \ref{fig:robLocResult}, is very close to the the plotted GPS data in Figure \ref{fig:gpsRawRes}. However, a sensor fusion based on GPS only would not be a real solution, because:
 \begin{itemize}
 	\item the GPS update frequency is low (\textasciitilde1 Hz), so other sensors are required to improve the estimate between two GPS measures
 	\item the GPS does not provide information about the orientation
@@ -53,7 +54,7 @@ Since the final sensor fusion system included data from GPS, we can exploit sate
 	\centering
 	\includegraphics[width=0.75\textwidth]{Images/experimental_data/rob_loc_result.png}
 	\caption{\textit{The odometry estimated by Robot Localization sensor fusion framework, fusing (among others) the pose estimated by the wheels (see Figure \ref{fig:wheelsOdometryRes}) and by the GPS (see Figure \ref{fig:gpsRawRes})}}
-	\label{fig:wheelsOdometryRes}
+	\label{fig:robLocResult}
 \end{figure}
 
 \section{Navigation}
@@ -100,7 +101,7 @@ On the other hand, manipulation sub-operations that relied on computer vision te
 	\item computer vision tasks based on the detection of the red wings of the dispensers (check for dispenser availability in the feeder, grasping and deployment validation) were significantly influenced by the light changes, and they were weaker in the hours about noon, when the sun was on the vertical.
 \end{itemize}
 
-In Figure \ref{fig:deploymentNailResult} and \ref{fig:graspingLowResult}, quantitative analysis of visual servo driven movements are provided, through the evolution in time of both the marker corners' coordinates and the module of the overall error of the corners with respect to their desired positions. Figure \ref{fig:deploymentNailResult} data comes from the deployment of a dispenser on a nail, while data of Figure \ref{fig:graspingLowResult} comes from the grasping of a dispenser from the feeder. In the graphs related to the feature tracking, the desired value for each of the feature is represented with an horizontal line; notice that, at the end of the execution, each of the features is almost equal to the its target value.
+In Figure \ref{fig:deploymentNailResult} and \ref{fig:graspingLowResult}, quantitative analysis of visual servo driven movements are provided, through the evolution in time of both the 8 tracked features ($(x,y)$ coordinates for each of the marker corners) and the module of the overall error of the corners with respect to their desired positions. Figure \ref{fig:deploymentNailResult} data comes from the deployment of a dispenser on a nail, while data of Figure \ref{fig:graspingLowResult} comes from the grasping of a dispenser from the feeder. In the graphs related to the feature tracking, the desired value for each of the feature is represented with an horizontal line; notice that, at the end of the execution, each of the features is almost equal to the its target value.
 
 
 \begin{figure}
@@ -138,7 +139,7 @@ In Figure \ref{fig:deploymentNailResult} and \ref{fig:graspingLowResult}, quanti
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.9\textwidth]{Images/experimental_data/grasping_z.png}
+	\includegraphics[width=0.8\textwidth]{Images/experimental_data/grasping_z.png}
 	\caption{\textit{Evolution of the $z$ coordinate of the end effector, during grasping operation; visual servo driven movement is the central one in the graph.}}
 	\label{fig:graspingZ}
 \end{figure}
