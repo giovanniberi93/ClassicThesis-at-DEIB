@@ -1,14 +1,13 @@
 % !TEX root = ../ClassicThesis_DEIB.tex
 
-\chapter{The Robì project} \label{chap:robìProject}
+\chapter{The Robì project}\label{chap:robìProject}
 
-A branch of this thesis work involved the customization of the prototype mobile manipulator Robì \parencite{robi} to fit the requirements of the mobile base requested by the \ac{GRAPE} project. 
-
+A branch of this thesis work involved the customization of the prototype mobile manipulator Robì \parencite{robi} to fit the requirements of the mobile base requested by the \ac{GRAPE} project. The configuration of Robì platform, unfortunately, didn't get to the end because the tight deadlines of \ac{GRAPE} project left no room for working on it, thus the only complete and tested platform was the one with the commercial \ac{UGV}, Husky from Clearpath Robotics. However, since significant steps were made into the configuration of Robì prototype for an actual agricultural robotics task, it's worth describing the developed platform in this Chapter.
 
 \begin{figure}
 	\centering
 	\includegraphics[width=0.6\textwidth]{Images/robi/robi_inizio.png}
-	\caption{\textit{The Robì mobile manipulator chassis, in one of its}}
+	\caption{\textit{The Robì mobile manipulator chassis.}}
 	\label{fig:robiDefault}
 \end{figure}
 
@@ -81,11 +80,10 @@ an open source brushless motor control project. These boards offers several inte
 \end{figure}
 
 \section{Robì as GRAPE robotic base}
-The features mentioned in the previous section made Robì a convincing candidate as the mobile platform for the \ac{GRAPE} project, because of its flexibility as a mobile manipulator for agricultural robotics field. Unfortunately, for mere lack of time, the late phases the project focused on the development of the whole system on a commercial robot, the Husky that was already described as the final \ac{UGV} of the \ac{GRAPE} project.
-\par However, significant steps in the adaptation of Robì as a base for a real agricultural robotic project were made, thus we are explaining them in this section.
+The features mentioned in the previous section made Robì a convincing candidate as the mobile platform for the \ac{GRAPE} project, because of its flexibility as a mobile manipulator for agricultural robotics field. Unfortunately, as stated at the beginning of this Chapter, for mere lack of time the Robì platform didn't get mature enough to be actually employed in the context of \ac{GRAPE}. In this Section, we'll describe the steps taken towards the use of Robì as a mobile manipulator in vineyard environment.
 
 \subsection{Hardware configuration}
-Since our goal was to create the system that was later developed on the Husky robot, the sensors mounted on it were similar; on the other side, we had to dedicate significant efforts to the creation of an hardware interface between the on-board computer (a commercial HP laptop) and the motors control boards. Given the flexibility of Robì physical structure, we decided to add a simple structure in the frontal part of Robì as a support for the bulkier sensors (see Figure \ref{fig:robiGrape}), built out of ITEM\textsuperscript{\textregistered} bars for compatibility. Note that the Jaco$^2$ was still the designated arm in this configuration (see Figure \ref{fig:grapeRobiWithArm}).
+Since our goal was to create the system that was later developed on the Husky robot, similarity occurs in the sensors choice; on the other side, differently from Husky configuration, we had to dedicate significant efforts in the creation of an hardware interface between the on-board computer (a commercial HP laptop) and the motors control boards. Given the flexibility of Robì physical structure, we decided to add a simple structure in the frontal part of Robì as a support for the bulkier sensors (see Figure \ref{fig:robiGrape}), built out of ITEM\textsuperscript{\textregistered} bars for compatibility. Note that the Jaco$^2$ was still the designated arm in this configuration (see Figure \ref{fig:grapeRobiWithArm}).
 \begin{description}
 
 
