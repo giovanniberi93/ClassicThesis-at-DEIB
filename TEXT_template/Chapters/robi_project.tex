@@ -225,13 +225,13 @@ For these reason, we are quite confident that, excluding the unavoidable changes
 Note that:
 \begin{itemize}
 	\item  actuator nodes both receive and generate data, because they both accept commands and generate feedbacks
-	\item Nucleo board both provides data from \ac{IMU} shield and wheels feedback (outgoing arrow), and accepts velocity commands for the motors (ingoing arrow). Both the communication are implemented via UDP server. 
+	\item Nucleo board both provides data from \ac{IMU} shield and wheels feedback (outgoing arrow), and accepts velocity commands for the motors (ingoing arrow). Both communications are implemented via UDP sockets. 
 \end{itemize}
 
 
-\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2cm,align=center,
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.7cm,align=center,
 		decoration={snake, segment length=1.5mm, amplitude=0.3mm},
-		semithick, scale=0.6, every node/.style={scale=0.6},
+		semithick, scale=0.5, every node/.style={scale=0.5},
 		palette1node/.style={shape=ellipse, draw=black,fill=palette1},
 		palette2node/.style={shape=circle, draw=black,fill=palette2},
 		palette3node/.style={shape=circle, draw=black,fill=palette3},
@@ -245,16 +245,16 @@ Note that:
 	\tikzstyle{every state}=[fill=white,draw=black,text=black]	
 	\tikzset{every edge/.style={draw=black,sloped, anchor=center, above}} 
 
-	\node[state, fill=palette1, minimum width=60pt,text width=60pt]			(A)	{On-board PC};
-	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(B)	[above right = of A] {Nucleo board};
-	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(C)	[above left = of A] {LMS291};
-	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(D)	[left = of A] {LD-MRS};
-	\node[state, fill=palette3, minimum width=60pt,text width=60pt]			(E)	[right = of A] {GPS};
-	\node[state, fill=palette4, minimum width=60pt,text width=60pt]			(F)	[below right = of A] {RocketM5};
-	\node[state, fill=palette2, minimum width=60pt,text width=60pt]			(G)	[right = of B] {Motor \\control board};
-	\node[state, fill=palette4, minimum width=60pt,text width=60pt]			(H)	[right = of F] {Nanostation};	
-	\node[state, fill=palette5, minimum width=60pt,text width=60pt]			(I)	[below = of H] {Remote PC};	
-	\node[state, fill=palette2, minimum width=60pt,text width=60pt]			(L)	[below left = of A] {Kinova\\Jaco$^2$};	
+	\node[state, fill=palette1, minimum width=60pt,text width=60pt,scale=0.8]			(A)	{On-board PC};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt,scale=0.8]			(B)	[above right = of A] {Nucleo board};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt,scale=0.8]			(C)	[above left = of A] {LMS291};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt,scale=0.8]			(D)	[left = of A] {LD-MRS};
+	\node[state, fill=palette3, minimum width=60pt,text width=60pt,scale=0.8]			(E)	[right = of A] {GPS};
+	\node[state, fill=palette4, minimum width=60pt,text width=60pt,scale=0.8]			(F)	[below right = of A] {RocketM5};
+	\node[state, fill=palette2, minimum width=60pt,text width=60pt,scale=0.8]			(G)	[right = of B] {Motor \\control board};
+	\node[state, fill=palette4, minimum width=60pt,text width=60pt,scale=0.8]			(H)	[right = of F] {Nanostation};	
+	\node[state, fill=palette5, minimum width=60pt,text width=60pt,scale=0.8]			(I)	[below = of H] {Remote PC};	
+	\node[state, fill=palette2, minimum width=60pt,text width=60pt,scale=0.8]			(L)	[below left = of A] {Kinova\\Jaco$^2$};	
 
 \path 
 	(A)	edge[densely dotted,bend right=10]		node{}(B)
