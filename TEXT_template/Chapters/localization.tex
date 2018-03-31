@@ -1,6 +1,6 @@
 % !TEX root = ../ClassicThesis_DEIB.tex
 
-\chapter{Localization and navigation systems in GRAPE} \label{chap:localization}
+\chapter{Odometry and navigation systems in GRAPE} \label{chap:localization}
 
 The studies of \cite{outdoorNavigation}, that analyze main issues in autonomous mobile robot navigation, identify three main problems related to outdoor autonomous navigation:
 \begin{itemize}
@@ -245,7 +245,7 @@ Also the standard local planner of Move Base, a \ac{ROS} implementation of Dynam
 	\label{fig:dwaStuck}
 \end{figure}
 
-\subsection{AMCL as input to sensor fusion}
+\subsection{AMCL as input to sensor fusion}\label{subsec:AMCLinSensorFusion}
 In the late phases of the \ac{GRAPE} project, some efforts were made to, however, take advantage in some way of \ac{AMCL} algorithm potential. In particular, the alignment with the sensed laser scans could lead to the following benefits:
 \begin{itemize}
 	\item better estimate of the robot orientation 
