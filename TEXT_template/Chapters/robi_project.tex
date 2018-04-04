@@ -2,7 +2,7 @@
 
 \chapter{The Robì project}\label{chap:robìProject}
 
-A branch of this thesis work involved the customization of the prototype mobile manipulator Robì \parencite{robi} to fit the requirements of the mobile base requested by the \ac{GRAPE} project. The configuration of Robì platform, unfortunately, didn't get to the end because the tight deadlines of \ac{GRAPE} project left no room for working on it, thus the only complete and tested platform was the one with the commercial \ac{UGV}, Husky from Clearpath Robotics. However, since significant steps were made into the configuration of Robì prototype for an actual agricultural robotics task, it's worth describing the developed platform in this Chapter.
+A branch of this thesis work involved the customization of the prototype mobile manipulator Robì \parencite{robi} to fit the requirements of the mobile base requested by the \ac{GRAPE} project. The configuration of Robì platform, unfortunately, didn't get to the end because the tight deadlines of \ac{GRAPE} project left no room for working on it, thus the only complete and tested platform was the one with the commercial unmanned ground vehicle, Husky from Clearpath Robotics. However, since significant steps were made into the configuration of Robì prototype for an actual agricultural robotics task, it's worth describing the developed platform in this Chapter.
 
 \begin{figure}
 	\centering
@@ -13,9 +13,9 @@ A branch of this thesis work involved the customization of the prototype mobile 
 
 
 \section{Robì mobile manipulator}\label{sec:robiDescr}
-Robì (see Figure \ref{fig:robiDefault}) is a prototype small-sized mobile manipulator for agricultural applications, whose aim is to support the development and testing of innovative perception and control algorithms. Both the mechanical structure and the motion control system are designed to be simple, flexible, low-cost and low-weight, to create a system that can act as an open source base for project in agricultural robotics, contrary to the large amount of task-specific platforms in agricultural robotics (\textit{e.g.} for asparagus \parencite{asparagi} or tomato \parencite{pomodori} harvesting).
+Robì (see Figure \ref{fig:robiDefault}) is a prototype small-sized mobile manipulator for agricultural applications, whose aim is to support the development and testing of innovative perception and control algorithms. Both the mechanical structure and the motion control system are designed to be simple, flexible, low-cost and low-weight, to create a system that can act as an open source base for project in agricultural robotics, contrary to the large amount of task-specific platforms in agricultural robotics (\textit{e.g.}, for asparagus \parencite{asparagi} or tomato \parencite{pomodori} harvesting).
 
-\par Since the platform is thought as a versatile mobile base to be adapted to several fields (\textit{e.g.} vineyards, herbaceous plants) its chassis is designed to have flexible geometrical characteristics (ground clearance, track, wheelbase).
+\par Since the platform is thought as a versatile mobile base to be adapted to several fields (\textit{e.g.}, vineyards, herbaceous plants) its chassis is designed to have flexible geometrical characteristics (ground clearance, track, wheelbase).
 
  \begin{table}[tb]
 \footnotesize
@@ -37,9 +37,9 @@ Robì (see Figure \ref{fig:robiDefault}) is a prototype small-sized mobile manip
  More generally, the design principles of Robì are:
  
 \begin{itemize}
-	\item \textbf{low cost}, to make it easier to use it for example applications and, possibly, fleet-based applications
-	\item \textbf{low weight}, to increase the battery life and, consequently, allow for more long and versatile missions
-	\item \textbf{simple mechanical design}, to make it easy to build it out of a mounting kit
+	\item \textbf{low cost}, to make it easier to use it for example applications and, possibly, fleet-based applications.
+	\item \textbf{low weight}, to increase the battery life and, consequently, allow for more long and versatile missions,
+	\item \textbf{simple mechanical design}, to make it easy to build it out of a mounting kit.
 \end{itemize}
 
 \begin{figure}
@@ -64,9 +64,9 @@ The aforementioned principles are implemented through the following design choic
 	
 	\item[In-wheel motors] \hfill \\ Robì is powered by four in-wheel electric DC brushless motors; the model is HUB10GL (see Figure \ref{fig:robiMotori}). In-wheel motors have been chosen mostly because they allow for much simpler mechanical design, with respect to classical electrical powertrain, because:
 	\begin{itemize}
-		\item no transmission is required
-		\item the weight is reduced, and the available space on the chassis increases
-		\item high level of maneuverability, without the need to introduce Ackermann kinematics
+		\item no transmission is required.
+		\item the weight is reduced, and the available space on the chassis increases.
+		\item high level of maneuverability, without the need to introduce Ackermann kinematics.
 	\end{itemize}
 	The motors are independent, so a suitable control board is required to control each of them; the board used in Robì are the ones described in VESC project\footnote{\url{http://vedder.se/2015/01/vesc-open-source-esc/}},
 an open source brushless motor control project. These boards offers several interfaces to control the motors:  PPM signal, analog, UART, I$^2$C, USB  or CAN-bus.
@@ -80,7 +80,7 @@ an open source brushless motor control project. These boards offers several inte
 \end{figure}
 
 \section{Robì as GRAPE robotic base}
-The features mentioned in the previous section made Robì a convincing candidate as the mobile platform for the \ac{GRAPE} project, because of its flexibility as a mobile manipulator for agricultural robotics field. Unfortunately, as stated at the beginning of this Chapter, for mere lack of time the Robì platform didn't get mature enough to be actually employed in the context of \ac{GRAPE}. In this Section, we'll describe the steps taken towards the use of Robì as a mobile manipulator in vineyard environment.
+The features mentioned in the previous section made Robì a convincing candidate as the mobile platform for the \ac{GRAPE} project, because of its flexibility as a mobile manipulator for agricultural robotics field. Unfortunately, as stated at the beginning of this Chapter, for mere lack of time the Robì platform didn't get mature enough to be actually employed in the context of \ac{GRAPE}. In this section, we describe the steps taken towards the use of Robì as a mobile manipulator in vineyard environment.
 
 \subsection{Hardware configuration}
 Since our goal was to create the system that was later developed on the Husky robot, similarity occurs in the sensors choice; on the other side, differently from Husky configuration, we had to dedicate significant efforts in the creation of an hardware interface between the on-board computer (a commercial HP laptop) and the motors control boards. Given the flexibility of Robì physical structure, we decided to add a simple structure in the frontal part of Robì as a support for the bulkier sensors (see Figure \ref{fig:robiGrape}), built out of ITEM\textsuperscript{\textregistered} bars for compatibility. Note that the Jaco$^2$ was still the designated arm in this configuration (see Figure \ref{fig:grapeRobiWithArm}).
@@ -105,7 +105,7 @@ Since our goal was to create the system that was later developed on the Husky ro
 	\item[LIDARS] \hfill \\ In section \ref{sec:robiDescr} we pointed out that Robì, as the Husky robot, comes up with a skid steering kinematic model. Thus, we chose to use two frontal \ac{LIDAR}s for obstacles avoidance during navigation tasks. The \ac{LIDAR} models were:
 	\begin{itemize}
 		\item \textbf{Sick LMS291}: this sensor\footnote{\url{https://www.sick.com/ag/en/detection-and-ranging-solutions/2d-lidar-sensors/lms2xx/lms291-s05/p/p109849}}
-		only has a single measuring plane, maintained parallel to the ground, in order to detect long-range obstacles during navigation
+		only has a single measuring plane, maintained parallel to the ground, in order to detect long-range obstacles during navigation.
 		\item \textbf{Sick LD-MRS400001}: this sensor\footnote{\url{https://www.sick.com/de/en/detection-and-ranging-solutions/3d-lidar-sensors/ld-mrs/ld-mrs400001/p/p112355}}
 		is a multi-range laser scanner, with 4 measuring planes with narrow aperture angles. Unlike \textit{LMS291} scanner, its arrangement in the sensors support bar is slightly tilted forward, to be able to scan closer obstacles.
 	\end{itemize}
@@ -147,10 +147,10 @@ Since our goal was to create the system that was later developed on the Husky ro
 	
 	\item[GPS] \hfill \\ We opted for a very reliable solution, the \textbf{Trimbe 5700} GPS receiver (see Figure \ref{fig:trimble5700}) from Trimble, together with its dedicated antenna. 
 	
-	\item[RADIO] \hfill \\ In order to easily control and monitor the activity of the \ac{UGV} especially during outdoor tasks, we also installed on Robì the required hardware to create a \textit{point-to-point} radio bridge with another base station (\textit{e.g.} another laptop in a more comfortable place). Two base stations were chosen, which performance were measured in urban environment (because, as already stated, the development of Robì as \ac{GRAPE} robotic base was aborted before \textit{on-the-field} validation):
+	\item[RADIO] \hfill \\ In order to easily control and monitor the activity of the unmanned ground vehicle especially during outdoor tasks, we also installed on Robì the required hardware to create a \textit{point-to-point} radio bridge with another base station (\textit{e.g.}, another laptop in a more comfortable place). Two base stations were chosen, which performance were measured in urban environment (because, as already stated, the development of Robì as \ac{GRAPE} robotic base was aborted before \textit{on-the-field} validation):
 	\begin{itemize}
 		\item \textbf{Rocket M5} station\footnote{\url{https://dl.ubnt.com/datasheets/rocketm/RocketM_DS.pdf}}
-		from Ubiquiti, together with an omni-directional antenna, mounted directly on Robì
+		from Ubiquiti, together with an omni-directional antenna, mounted directly on Robì.
 		\item \textbf{NanoStation M5} station\footnote{\url{https://dl.ubnt.com/datasheets/nanostationm/nsm_ds_web.pdf}}
 		from Ubiquiti, to be connected to the external device.
 	\end{itemize}
@@ -159,9 +159,9 @@ Since our goal was to create the system that was later developed on the Husky ro
 	\item[Motors interface] \hfill \\ In order to communicate with the motors control boards, we had to introduce a single hardware interface among them and the on-board PC. We decided to use \textbf{NUCLEO-F746ZG} development board\footnote{\url{http://www.st.com/en/evaluation-tools/nucleo-f746zg.html}}
 	from ST (see Figure \ref{fig:nucleoBoardAlone}). It provides:
 	\begin{itemize}
-		\item RJ-45 Ethernet interface, very useful to communicate with the on-board PC
-		\item CAN protocol interface, to communicate with the motors control boards
-		\item ST Zio connector, which extends the Arduino Uno V3 connectivity and provides an easy means of expanding the functionality of the Nucleo platform with a wide choice of specialized shields
+		\item RJ-45 Ethernet interface, very useful to communicate with the on-board PC.
+		\item CAN protocol interface, to communicate with the motors control boards.
+		\item ST Zio connector, which extends the Arduino Uno V3 connectivity and provides an easy means of expanding the functionality of the Nucleo platform with a wide choice of specialized shields.
 	\end{itemize}
 	In particular, the interface with the on-board PC was implemented as a bidirectional UDP connection. This will be cleared out in Section \ref{subsec:robiSoftware}.
 	
@@ -208,22 +208,23 @@ Since our goal was to create the system that was later developed on the Husky ro
 \subsection{Software architecture}\label{subsec:robiSoftware}
 We couldn't test any business logic on Robì platform, again because it didn't reach the main phases of \ac{GRAPE} project as the chosen platform. However, a possible platform switch would take great advantage from \ac{ROS} intrinsic modularity. In the \ac{ROS} computational graph, the only components influenced by the underlying hardware are:
 \begin{itemize}
-	\item the topic where to publish the target linear and angular velocities for the \ac{UGV} (typically, \textit{cmd\_vel} topic)
-	\item the topic where to read the odometry estimated only from the wheel movement (in the Husky, \textit{/husky\_velocity\_controller/odom} topic)
-	\item the topics where to read the disparate sensors measurements
-	\item \textit{tf} topic, where the complete \textit{tf} tree of the \ac{UGV} is published
+	\item the topic where to publish the target linear and angular velocities for the unmanned ground vehicle (typically, \textit{cmd\_vel} topic).
+	\item the topic where to read the odometry estimated only from the wheel movement (in the Husky, \textit{/husky\_velocity\_controller/odom} topic).
+	\item the topics where to read the disparate sensors measurements.
+	\item \textit{tf} topic, where the complete \textit{tf} tree of the unmanned ground vehicle is published.
 \end{itemize}
 For these reason, we are quite confident that, excluding the unavoidable changes at least in Move Base configuration, the platform switch \textit{should} not be too challenging.
 
 \par Anyway, we are going to show the low-level software architecture of the system, by means of a graph where:
 \begin{itemize}
-	\item the nodes are hardware components, that generate or process data
-	\item the (oriented) edges represent the data flow, from the node that generates data (tail) to the node that process them (head); different arrow types represent different communication strategies
+	\item the nodes are hardware components, that generate or process data.
+	\item the (oriented) edges represent the data flow, from the node that generates data (tail) to the node that process them (head); different arrow types represent different communication strategies.
 \end{itemize}
 Note that:
 \begin{itemize}
-	\item  actuator nodes both receive and generate data, because they both accept commands and generate feedbacks
+	\item  actuator nodes both receive and generate data, because they both accept commands and generate feedbacks.
 	\item Nucleo board both provides data from \ac{IMU} shield and wheels feedback (outgoing arrow), and accepts velocity commands for the motors (ingoing arrow). Both communications are implemented via UDP sockets. 
+	\par 
 \end{itemize}
 
 

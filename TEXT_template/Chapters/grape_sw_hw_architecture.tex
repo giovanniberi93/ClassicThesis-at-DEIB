@@ -2,24 +2,24 @@
 
 \chapter{Grape hardware and software Architecure} \label{chap:grapeSoftwareArchitecture}
 
-In this chapter we are going to describe in a detailed way the architecture of the robotic platform we used to implement the system to fulfill the requirements described in Section \ref{sec:grapeProjectDescription}. First, in Section \ref{sec:grapeHwArch}, we are giving an overview of the hardware components, from the robot base to all the actuators/sensors present on board. In Section \ref{sec:grapeSwArch}, we'll start to analyze the software architecture of the system, explaining what the main modules are, and the relationships between them.
+In this chapter we are going to describe in a detailed way the architecture of the robotic platform we used to implement the system to fulfill the requirements described in Section \ref{sec:grapeProjectDescription}. First, in Section \ref{sec:grapeHwArch}, we give an overview of the hardware components, from the robot base to all the actuators/sensors present on board. In Section \ref{sec:grapeSwArch}, we analyze the software architecture of the system, explaining what the main modules are, and the relationships between them.
 
 \section{GRAPE hardware architecture}\label{sec:grapeHwArch}
 
 \subsection{Robotic Base}
 The choice of the robotic base is, of course, a crucial point in the development of our system, for two reasons:
 \begin{itemize}
-	\item without a well-functioning robotic base, no other objective can be achieved
-	\item the vineyard environment is particularly challenging in nature (this particular aspect will be well-justified in Chapter \ref{chap:localization}), thus a non-prudent choice could be very dangerous.
+	\item without a well-functioning robotic base, no other objective can be achieved.
+	\item the vineyard environment is particularly challenging in nature (this particular aspect is going to be well-justified in Chapter \ref{chap:localization}), thus a non-prudent choice could be very dangerous.
 \end{itemize}
-As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Husky} \ac{UGV} from Clearpath Robotics\footnote{\url{https://www.clearpathrobotics.com/husky-unmanned-ground-vehicle-robot/}},
+As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Husky} unmanned ground vehicle from Clearpath Robotics\footnote{\url{https://www.clearpathrobotics.com/husky-unmanned-ground-vehicle-robot/}},
 (see Figure \ref{fig:husky}). There are several reasons for the adoption of this specific model:
 \begin{itemize}
-	\item it's a widely used platform (\textit{e.g.}: \cite{husky1}; \cite{husky2}; \cite{husky3})
+	\item it's a widely used platform (\textit{e.g.},: \cite{husky1}; \cite{husky2}; \cite{husky3}).
 	\item it has a \textit{skid steering} kinematics that, as already seen in Section \ref{sec:odometry}, can be essentially reduced to a \textit{differential drive} kinematics, that is very simple.
 	\item it's specifically designed for outdoor use, so robustness and ability to deal with unstructured terrain are problems addressed by its rugged construction and high-torque drivetrain.
-	\item it offers a large payload capacity, to host the multitude of sensors, actuators and computational units we need
-	\item it's fully supported in \ac{ROS}, with open source drivers, configuration files and examples
+	\item it offers a large payload capacity, to host the multitude of sensors, actuators and computational units we need.
+	\item it's fully supported in \ac{ROS}, with open source drivers, configuration files and examples.
 \end{itemize}
 
 \begin{figure}
@@ -29,7 +29,7 @@ As anticipated in Section \ref{sec:odometry}, the choice fell on the \textbf{Hus
 	\label{fig:ruoteFangose}
 \end{figure}
 
-This choice turned out to be substantially good, since the \ac{ROS} drivers and configuration files were actually pretty easy to use and modify. The only major weakness identified in the Husky is related to its behavior on muddy ground, and is due to the wheels shape. After a few minutes of navigation in the mud, the \ac{UGV} tends to collect a significant amount of earth and stones in the wheels groves (see Figure \ref{fig:ruoteFangose}) and, consequentely, lose grip on the ground. This problem could be attenuated or solved by use of tracks instead of wheels.
+This choice turned out to be substantially good, since the \ac{ROS} drivers and configuration files were actually pretty easy to use and modify. The only major weakness identified in the Husky is related to its behavior on muddy ground, and is due to the wheels shape. After a few minutes of navigation in the mud, the unmanned ground vehicle tends to collect a significant amount of earth and stones in the wheels groves (see Figure \ref{fig:ruoteFangose}) and, consequentely, lose grip on the ground. This problem could be attenuated or solved by use of tracks instead of wheels.
 
 
 \subsection{Robotic Arm}\label{subsec:kinovaArm}
@@ -37,10 +37,10 @@ By observing how pherormone dispensers must be deployed on the vine plant in Fig
 (see Figure \ref{fig:kinovaArm}, Table \ref{tab:kinovaArmSpecs} for product specifications), for these reasons:
 \begin{itemize}
 	\item 6 DOF provide the required flexibility
-	\item 3 fingers can be used for the dispensers deployment
-	\item while programmatic control is necessary for \ac{GRAPE} purpose, the joystick control make it easy to perform quick tests and analyze the robot capabilities
-	\item unlimited joints rotations
-	\item provided mechanical support for sensors mounting on top of the arm 
+	\item 3 fingers can be used for the dispensers deployment.
+	\item while programmatic control is necessary for \ac{GRAPE} purpose, the joystick control makes it easy to perform quick tests and analyze the robot capabilities
+	\item unlimited joints rotations.
+	\item provided mechanical support for sensors mounting on top of the arm
 	\item reduced weight and power consumption
 	\item small overall dimensions
 	\item \ac{ROS} open source drivers already provided by Kinova Robotics
@@ -101,13 +101,13 @@ By observing how pherormone dispensers must be deployed on the vine plant in Fig
 	\caption{\textit{Robotic arm Jaco$^2$ with 3 fingers, from Kinova Robotics (\ref{fig:kinovaArm}) and the same arm mounted on a wheelchair \ref{fig:kinovaCarrozzina}}}
 \end{figure}
 
- Some of the nice features of this device (weight, dimensions) actually derive from the original purpose of the arm, that is in the context of assistive devices for disabled people, to improve quality of life and independence of people on  power wheelchairs (see Figure \ref{fig:kinovaCarrozzina}). But this fact also brought some unexpected weaknesses, that introduced a series quite serious problems that slowed down the development process. The identified weaknesses are:
+ Some of the nice features of this device (weight, dimensions) actually derive from the original purpose of the arm, that is in the context of assistive devices for disabled people, to improve quality of life and independence of people on  electric powered wheelchairs (see Figure \ref{fig:kinovaCarrozzina}). But this fact also brought some unexpected weaknesses, that introduced a series of quite serious problems. The identified weaknesses are:
  \begin{itemize}
- 	\item a very large imprecision in the movements piloted via programmatic control: this is probably due to joystick control seen as a "main control mode" since, as previously stated, the arm is born as an assistive device. This problem was partially solved modifying the open source drivers of the arm, but entire control strategies were introduced to compensate this weakness. The magnitude of the error, measured as distance between the desired cartesian position of the end effector and the actual one, is $0\div5$ cm after the changes to the \ac{ROS} driver of the arm
- 	\item buggy implementation of joints constraints, probably due to the same cause of the previous point. This created a major problem mostly because of the wiring used for the sensors (described in next Sections) mounted on the arm, that kept rolling up because of the unlimited joints rotation capability.
+ 	\item a very large imprecision in the movements piloted via programmatic control: this is probably due to joystick control seen as a "main control mode" since, as previously stated, the arm is born as an assistive device. This weakness was compensated partially modifying the open source drivers of the arm, and partially by the introduction of different control strategies. The magnitude of the error, measured as distance between the desired cartesian position of the end effector and the actual one, is $0\div3$ cm after the changes to the \ac{ROS} driver of the arm, and it was $0\div15$ before it.
+ 	\item buggy implementation of joints constraints, probably due to the same cause of the previous point. This created a major problem mostly because of the wiring used for the sensors (described in next sections) mounted on the arm, that kept entangling because of the unlimited joints rotation capability.
  \end{itemize}
  
-After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:grapeProjectDescription}), it was decided to use the arm as a support for other sensors, as well as manipulation tool, for the dispenser deployment task: a \ac{LIDAR} and an RGB-D camera (see Image \ref{fig:sensoriEndEffector}).
+After the analysis of the macro goals of \ac{GRAPE} project, it was decided to use the arm also as a support for other sensors for the dispenser deployment task: a \ac{LIDAR} and an RGB-D camera (see Figure \ref{fig:sensoriEndEffector}).
   
  \begin{figure}
 	\centering
@@ -118,7 +118,7 @@ After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:gr
 
  \subsection{LIDARs}
  
- The final robotic system mounts three different \ac{LIDAR}s: two in front of the Husky for visualization and navigation purposes, and the other one mounted on a metal support on top of the arm end effector. The purpose of this last \ac{LIDAR} will be cleared in Chapter \ref{chap:kinovaArmChapter}; for now, all you need to know is that it's used in the procedure of identification of the most suitable point for dispenser deployment. The \ac{LIDAR}s come from different producers, but they are quite similar being designed for outdoor use. The two used for navigation are \textbf{Velodyne VLP-16}\footnote{\url{http://velodynelidar.com/vlp-16-lite.html}}
+ The final robotic system mounts three different \ac{LIDAR}s: two in front of the Husky for visualization and navigation purposes, and the other one mounted on a metal support on top of the arm end effector. The purpose of this last \ac{LIDAR} is explained in Chapter \ref{chap:kinovaArmChapter}; for now, all you need to know is that it's used in the procedure for the identification of the most suitable point for dispenser deployment. The \ac{LIDAR}s come from different producers, but they are quite similar being designed for outdoor use. The two used for navigation are \textbf{Velodyne VLP-16}\footnote{\url{http://velodynelidar.com/vlp-16-lite.html}}
  and \textbf{Hokuyo UTM-30LX-EW}\footnote{\url{https://www.hokuyo-aut.jp/search/single.php?serial=170}},
  the one on top of the arm is \textbf{SICK Tim561}\footnote{\url{https://www.sick.com/de/en/detection-and-ranging-solutions/2d-lidar-sensors/tim5xx/tim561-2050101/p/p369446}}.
  Main differences and similarities between these models are highlighted in Table \ref{tab:lidarComparison}
@@ -177,32 +177,28 @@ After the analysis of the macro goals of \ac{GRAPE} project (Section \ref{sec:gr
 	\subfloat[]{%
 		\includegraphics[width=0.25\textwidth]{Images/grape_sw_hw_architecture/hokuyo.png}
 		\label{fig:hokuyo}}
-	\caption{\textit{Three \ac{LIDAR}s mounted on our \ac{UGV}: Tim561 (\ref{fig:sickTim561}) from SICK, Puck Lite (\ref{fig:velodynePuckLite}) from Velodyne, UTM-30LX-EW (\ref{fig:hokuyo}) from Hokuyo.}}
+	\caption{\textit{Three \ac{LIDAR}s mounted on our unmanned ground vehicle: Tim561 (\ref{fig:sickTim561}) from SICK, Puck Lite (\ref{fig:velodynePuckLite}) from Velodyne, UTM-30LX-EW (\ref{fig:hokuyo}) from Hokuyo.}}
 \end{figure}
 
 \subsection{RGB-D camera}
-The other sensor mounted on top of the arm end effector is a \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images, by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera also applies to operation validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identify exceptional cases (no dispenser left). The positive aspect of this camera model comes from its contained size and weight. We spotted only one significant weak point, that is a quite high minimum depth distance (20 cm), due to an intrinsic limit of the embedded depth technology. This problem created a few complications in dispenser application tasks, but they were easily bypassed.
+The other sensor mounted on top of the arm end effector is a \textbf{RealSense} RGB-D camera from Intel. This camera is able to sense the depth of the acquired images, by means of an active infrared stereo technology. The main usage of the camera is to provide images used for the feedback loop of the visual servo control of the Jaco$^2$ arm. Visual servoing is a technique which uses feedback information extracted from a vision sensor to control the motion of a robot \parencite{visualServo}, and it's used in this project to compensate the lack of precision in the arm motion operations (see Section \ref{subsec:kinovaArm}). This camera was also used in validation operations (validation of dispenser grasping, validation of dispenser deployment on the plant) and identification of exceptional cases (no dispensers left). 
+\par The positive aspect of this camera model comes from its contained size and weight. We spotted only one significant weak point, that is a quite high minimum depth distance (20 cm), due to an intrinsic limit of the embedded depth technology. This problem created a few issues in dispenser application tasks, but they were easily bypassed.
 
 \subsection{Tools for dispensers grasping}
-Additional hardware was placed on the \ac{UGV} specifically for the accomplishment of the grasping of the dispenser, for two separate reasons:
+Additional hardware was placed on the unmanned ground vehicle specifically for the accomplishment of the grasping of the dispenser, for two separate reasons:
 
 \begin{itemize}
-	\item the shape of the dispenser (see Figure \ref{fig:dispenserNostroDettaglio}) was not directly compatible with the grasping capability of the end effector of Jaco$^2$ arm (see the Jaco$^2$ fingers in Figure \ref{fig:kinovaArm})
-	\item the dispensers have to be stored on the Husky platform, in such a way to make them graspable
+	\item the shape of the dispensers (see Figure \ref{fig:dispenserNostroDettaglio}) was not directly compatible with the grasping capability of the end effector of Jaco$^2$ arm (see the Jaco$^2$ fingers in Figure \ref{fig:kinovaArm}).
+	\item the dispensers have to be stored on the Husky platform, in such a way to make them graspable.
 \end{itemize}
-We required very custom hardware to accomplish these objectives so, given the prototype nature of the project, 3D stamped hardware was used.
+We required custom hardware to accomplish these objectives so, given the prototype nature of the project, 3D stamped hardware was used.
 For what concern the storage of the pheromone dispensers, the final version of the dispenser feeder was built out of two 3D-printed small towers (see Figure \ref{fig:dispenserFeeder}), with a sequence of very smooth aligned grooves, parallel to the horizontal plane, where the dispensers are slotted in. The smoothness of the grooves is the critical part of the design, indeed the previous versions of the towers, with sharper grooves, highlighted a difficulty of the grasping phase if the dispensers got caught on the feeder's corners.
 
 \begin{figure}
 	\centering
-	\subfloat[]{%
-		\includegraphics[width=0.5\textwidth]{Images/grape_sw_hw_architecture/dispenserFeeder.png}
-		\label{fig:dispenserFeeder}}
-		\qquad
-	\subfloat[]{%
-		\includegraphics[width=0.25\textwidth]{Images/grape_sw_hw_architecture/feedereVecchio.png}
-		\label{fig:oldDispenserFeeder}}
-	\caption{\textit{The final version of the 3D-printed dispenser feeder (\ref{fig:dispenserFeeder}), and a 	perspective drawing of one of the earlier versions of it (\ref{fig:oldDispenserFeeder}), with sharper edges.}}
+	\includegraphics[width=0.6\textwidth]{Images/grape_sw_hw_architecture/feederConDispenser.jpg}
+	\caption{\textit{The final version of the feeder, holding three dispensers.}}
+	\label{fig:dispenserFeeder}
 \end{figure}
 
 
@@ -222,10 +218,10 @@ The fingers of the robot are not all the same, because one of them act as a sort
 
 
 \subsection{Other sensors}
-The \ac{UGV} holds onboard a collection of other sensors, useful for the accomplishment of the established tasks. In this section we'll give a short overview of the few remaining ones:
+The unmanned ground vehicle holds onboard a collection of other sensors, useful for the accomplishment of the established tasks. In this section we give a short overview of the few remaining ones:
 \begin{description}
-	\item[{IMU} sensor] Device including a magnetometer, accelerometer, gyroscope. These sensors were used in the odometry estimation system through sensor fusion algorithms (see Chapter \ref{chap:localization})
-	\item[GPS] Also this sensor data stream was included in the odometry estimation system
+	\item[{IMU} sensor] Device including a magnetometer, accelerometer, gyroscope. These sensors were used in the odometry estimation system through sensor fusion algorithms (see Chapter \ref{chap:localization}).
+	\item[GPS] Also this sensor data stream was included in the odometry estimation system.
 	\item [Cameras] Additional camera mounted in a slightly lifted position with respect to the robot base; they are useful in case of teleoperation of the Husky or the robotic arm, and for visualization and monitoring purposes.
 \end{description}
 
@@ -239,51 +235,50 @@ You can see the final sensor/actuators arrangement in Figure \ref{fig:disposizio
  
 \section{GRAPE software architecture}\label{sec:grapeSwArch}
 
-Now that the hardware configuration is clear, we'll focus on the \textit{behavior} of the \ac{UGV}. We'll start by a description of the subproblems that we identified starting from the macro goals we talked about in Section \ref{sec:grapeProjectDescription}, and then move to the software architecture. \\
+Now that the hardware configuration is clear, we focus on the \textit{behavior} of the unmanned ground vehicle. We start by a description of the subproblems that we identified starting from the macro goals we talked about in Section \ref{sec:grapeProjectDescription}, and then move to the software architecture. \\
 
 \subsection{Evaluation of vineyard navigation}
-The problem of autonomous navigation of \ac{UGV}s is a very well-known problem, studied at least from the nineties \parencite{storiaUGV}, because of course it's the first problem to deal with in almost all systems involving mobile robots. For this reason, and being our robotic system a prototype, for us the problem of vineyard navigation reduced to the following subproblems:
+The problem of autonomous navigation of unmanned ground vehicles is a very well-known problem, studied at least from the nineties \parencite{storiaUGV}, because it's the first problem to deal with in almost all systems involving mobile robots. For this reason, and being our robotic system a prototype, the problem of vineyard navigation reduced to the following subproblems:
 \begin{itemize}
-	\item identification of a sensor fusion framework in \ac{ROS}, to provide an odometry estimate, and configuration of such a framework, with particular attention to which sensors fuse together
-	\item identification of a navigation framework in \ac{ROS}, to provide motion planning and speed control of the mobile base, and configuration of such a framework to fit our problem
+	\item identification of a sensor fusion framework in \ac{ROS}, to provide an odometry estimate, and configuration of such a framework, with particular attention to which sensors fuse together.
+	\item identification of a navigation framework in \ac{ROS}, to provide motion planning and speed control of the mobile base, and configuration of such a framework to fit our problem.
 \end{itemize}
-Even if these tasks seem trivial, two major problems arose:
+Even if these tasks could seem trivial, two major problems arose:
 \begin{itemize}
-	\item complex framework like these ones have tenths of parameter to tune, and the documentation is not always very precise
+	\item complex framework like these ones have tenths of parameter to tune, and the documentation is not always very precise.
 	\item the \textit{off-the-shelf} navigation systems are usually born for indoor environments, that differ a lot from the very unstructured nature of the vineyards.
 \end{itemize}
 
-As hinted in Section \ref{sec:navigationStack} and \ref{subsec:robotLocalization}, our choices fell on \textbf{Move Base} package for the navigation, and \textbf{Robot Localization} as odometry system. We'll present more detail of the subproblems mentioned above in Chapter \ref{chap:localization}. Move Base offers an \textit{action} (see Section \ref{sec:robotOperatingSystem}) as interface with the \ac{ROS} ecosystem.
+As hinted in Section \ref{sec:navigationStack} and \ref{subsec:robotLocalization}, our choices fell on \textbf{Move Base} package for the navigation, and \textbf{Robot Localization} as odometry system. More detail of the subproblems mentioned above are provided in Chapter \ref{chap:localization}.
 
 \subsection{Evaluation of vineyard monitoring task}
-For the vineyard monitoring task, as foreseen by the project proposal, we opted for a semi-autonomous monitoring: we provided the \ac{UGV} with a camera with video stream capability, that allows human users with competences in the domain of plants health to observe in person the live data streamed by the robot for assessment of crop condition. Human operators are also provided teleoperation interface for navigation and manipulation, for supervisioning and emergency handling function.
-
-This choice came from both the absence in the project proposal of precise objectives on this topic, and the complexity of feature extraction and evaluation in this context.
+For the vineyard monitoring task, as foreseen by the project proposal, we opted for a semi-autonomous monitoring: we provided the unmanned ground vehicle with a camera with video stream capability, that allows human users with competences in the domain of plants health to observe in person the live data streamed by the robot for assessment of crop condition. Human operators are also provided teleoperation interface for navigation and manipulation, for supervisioning and emergency handling function. This choice came from both the absence in the project proposal of precise objectives on this topic, and the complexity of feature extraction and evaluation in this context.
 
 \subsection{Evaluation of dispenser application task}
- While navigation task is a very common problem and \textit{off-the-shelf} solutions are easy to find, dispenser application is a completely non-standard task, so we could only rely on libraries and package for low level subtasks but we had to design and implement the whole procedure from scratch. We divided the procedure in 3 subproblems:
+ While the navigation task is a very common problem and \textit{off-the-shelf} solutions are easy to find, the dispenser application is a completely non-standard task, so we could only rely on libraries and packages for low-level subtasks and we had to design and implement the whole procedure from scratch. We divided the procedure in 3 subproblems:
  \begin{enumerate}
  	\item \textbf{Creation of a point cloud of the tree:} the robot is sitting still, with a vine on the same side of the Jaco$^2$ arm. When the procedure is triggered, the arm moves in order to produce a point cloud of the trees close to it, using the \ac{LIDAR} mounted onto it. 
  	\item \textbf{Deployment points identification:} once the point cloud has been produced, an algorithm based on \ac{PCL} trims the point cloud from the points that don't belong to the tree, process it, and outputs a sequence of 3D points $(x,y,z)$ corresponding to points on the tree suitable for the deployment of the dispenser, typically a protuberance of the tree, ordered from the best one to the worst one according to a suitable metric.
  	\item \textbf{Deployment of the dispenser:} the arm starts the dispenser deployment procedure, taking as input the sequence of points got in the previous step:
  	\begin{enumerate}
- 		\item it grasps the dispenser (if any) from the dedicated support
- 		\item it applies the dispenser on the best feasible point from the input sequence
- 		\item it goes back to a retired position, to achieve better stability during the movement of \ac{UGV}.
+ 		\item it grasps the dispenser (if any) from the dedicated support.
+ 		\item it applies the dispenser on the best feasible point from the input sequence.
+ 		\item it goes back to a retired position, to achieve better stability during the movement of unmanned ground vehicle.
  	\end{enumerate}
- 	In figure \ref{fig:deploymentOnMockup}, you can see an example of successful dispenser application, using the mockup plant. \textbf{NOTE:} the integration weeks were not all held in the same place (two of them in Garriguella (ES), and one in Casciana Terme (IT)), so we could observe that the vine trees shape is very different in the different locations (for example, the trees in Garriguella tend to have small almost vertical branches on the top of the pruned tree, while the Italian ones had smaller protuberances with variable orientation). This factor makes our system much harder to validate, because it's even more difficult to identify useful features in the unstructured vineyard environment. Thus, we introduced a further deployment mode, to be used in case our deployment procedure on the plants turned out not versatile enough to be efficient on a new tree type. Since we wanted to bypass the problems due to different tree structures, in this mode we assume to have some appropriately shaped nails, expressly arranged for dispenser applications. As we'll see in Chapter \ref{chap:kinovaArmChapter}, this deployment mode also requires the application of \textit{binary square fiducial markers} (see Figure \ref{fig:arucoMarkers}), so in this way our application pushes a bit more towards a vineyard that modifies in order to be more suitable to robotic applications.\\
- 	The steps of this deployment mode are slightly different from the previous ones:
+ 	In Figure \ref{fig:deploymentOnMockup}, you can see an example of successful dispenser application, using the mockup plant. \textbf{NOTE:} the integration weeks were not all held in the same place (two of them in Garriguella (ES), and one in Casciana Terme (IT)), so we could observe that the vine trees shape is very different in the different locations (for example, the trees in Garriguella tend to have small almost vertical branches on the top of the pruned tree, while the Italian ones had smaller protuberances with variable orientation). 
+ 	\par This factor makes our system much harder to validate, because it's even more difficult to identify useful features in the unstructured vineyard environment. Thus, we introduced a further deployment mode, to be used in case our deployment procedure on the plants turned out not versatile enough to be efficient on a new tree type. Since we wanted to bypass the problems due to different tree structures, in this mode we assume to have some appropriately shaped nails, expressly arranged around the vineyard for dispenser applications. As described in Chapter \ref{chap:kinovaArmChapter}, this deployment mode also requires the application of \textit{binary square fiducial markers} (see Figure \ref{fig:arucoMarkers}), so in this way our application pushes a bit more towards a vineyard that modifies in order to be more suitable to robotic applications.
+ 	\par The steps of this deployment mode are slightly different from the previous ones:
  	\begin{enumerate}
- 		\item it grasps the dispenser (if any) from the dedicated support
- 		\item it applies the dispenser on the nail, regardless of the input sequence (which become useless)
- 		\item it goes back to a retired position, to achieve better stability during the movement of \ac{UGV}.
+ 		\item it grasps the dispenser (if any) from the dedicated support.
+ 		\item it applies the dispenser on the nail, regardless of the input sequence (which become useless).
+ 		\item it goes back to a retired position, to achieve better stability during the movement of unmanned ground vehicle.
  	\end{enumerate}
  \end{enumerate}
 
 \begin{figure}
 	\centering
 	\includegraphics[width=0.4\textwidth]{Images/grape_sw_hw_architecture/arucoMarkers.png}
-	\caption{\textit{Examples of visual markers (more specifically, ArUco markers) as the ones we used in visual servoing applications.}}
+	\caption{\textit{Examples of visual binary fiducial markers (more specifically, ArUco markers) as the ones we used in visual servoing applications.}}
 	\label{fig:arucoMarkers}
 \end{figure}
 
@@ -335,7 +330,7 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 	\item \textbf{Goal Message}: \textit{n.a.}
 	\item  \textbf{Result Message}: 
 		\begin{itemize}
-			\item \textit{deployment\_pose}: contain an array ($x,y,z$) of possible deployment poses, identified from the plant point cloud; it will be used as input to the dispenser deployment action server (see Table \ref{tab:processPointCloudAction})
+			\item \textit{deployment\_pose}: contain an array ($x,y,z$) of possible deployment poses, identified from the plant point cloud; it's used as input to the dispenser deployment action server (see Table \ref{tab:processPointCloudAction})
 		\end{itemize}
 	\item  \textbf{Feedback Message}: \textit{n.a.}
 \end{itemize}
@@ -345,11 +340,11 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 	\item \textbf{Goal Message}: 
 		\begin{itemize}
 			\item \textit{deployment\_poses}:  sequence of feasible deployment points, ordered from the best one to the worst one. These are the points output by \textit{Point cloud processing action}
-			\item \textit{deploy\_mode}: an integer, used to select the technique to be used for the dispenser deployment; in fact, three different mode has been developed, in order to fit the different condition that the \ac{UGV} could face. In short, the modes available for selection are:
+			\item \textit{deploy\_mode}: an integer, used to select the technique to be used for the dispenser deployment; in fact, three different mode has been developed, in order to fit the different condition that the unmanned ground vehicle could face. In short, the modes available for selection are:
 			\begin{itemize}
-				\item Closed loop control, deployment target is an expressely placed nail, hammered into a pole
-				\item Closed loop control, deployment target is a protuberance of the vine tree
-				\item Open loop control, deployment target is a protuberance of the vine tree
+				\item Closed loop control, deployment target is an expressly placed nail, hammered into a pole.
+				\item Closed loop control, deployment target is a protuberance of the vine tree.
+				\item Open loop control, deployment target is a protuberance of the vine tree.
 			\end{itemize}
 			Details about the deployment mode are given in Chapter \ref{chap:kinovaArmChapter}.
 		\end{itemize}
@@ -357,7 +352,7 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 	\item  \textbf{Result Message}: \textit{n.a.}
 	\item  \textbf{Feedback Message}: 
 		\begin{itemize}
-			\item \textit{ManipulationStatus status}: a message of proprietary type, that contains structures used to communicate the action caller the current execution state  (\textit{e.g.} dispenser fallen, arm moving in front of the target point).
+			\item \textit{ManipulationStatus status}: a message of proprietary type, which contains structures used to communicate the action caller the current execution state  (\textit{e.g.}, dispenser fallen, arm moving in front of the target point).
 		\end{itemize}
 \end{itemize}
 
@@ -445,7 +440,7 @@ Note that even an empty \ac{ROS} action like this makes sense, because of the le
 \end{table}
 
 \subsection{The supervisor}
-Since all main operations in the project structure are implemented through action servers, of course a list of action clients must exists. For our implementation, we opted for a single software module that acts as an action client for all the actions mentioned above. We call this module \textit{Supervisor}, and its implementation uses behavior trees \parencite{behaviorTrees} as an overall model. The objective of the supervisor is to implement the global \ac{FSA} of the system, where basically \textbf{nodes} are action servers or action clients. \\
+Since all main operations in the project structure are implemented through action servers, a list of action clients must exists. For our implementation, we opted for a single software module that acts as an action client for all the actions mentioned above. We call this module \textit{Supervisor}, and its implementation uses behavior trees \parencite{behaviorTrees} as an overall model. The objective of the supervisor is to implement the global finite state automata of the system, where basically \textbf{nodes} are action servers or action clients. \\
 
 \begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.1cm,
                     semithick, scale=0.6, every node/.style={scale=0.6},
@@ -497,15 +492,15 @@ Since all main operations in the project structure are implemented through actio
 As pointed out by Figure \ref{fig:supervisorFSA}, all action clients belong to the supervisor software module, and major tasks are implemented through action servers. In that graph we also specify the division of labor between the different teams:
 
 \begin{itemize}
-	\item Software modules entrusted to \textbf{PoliMi}
+	\item Software modules assigned to \textbf{PoliMi}
 		\begin{itemize}
 			\item $AS_2$: Scan motion action server
 			\item $AS_4$:	 Dispenser deployment action server
 		\end{itemize}
-	\item Software modules entrusted to \textbf{Eurecat}
+	\item Software modules assigned to \textbf{Eurecat}
 		\begin{itemize}
 			\item $AS_2$: Point cloud processing action server
-			\item $S_i$:	 Supervisor (\textit{i.e.} all action clients and \ac{FSA} implementation)
+			\item $S_i$:	 Supervisor (\textit{i.e.}, all action clients and finite state automata implementation)
 		\end{itemize}		
 \end{itemize}
 
@@ -513,7 +508,7 @@ As pointed out by Figure \ref{fig:supervisorFSA}, all action clients belong to t
 
 After this global overview of the hardware and software components of the \ac{GRAPE} project as a whole, we can finally specify which of the aforementioned topics has been directly treated in this thesis work. They are:
 \begin{itemize}
-	\item \ac{UGV} navigation system (see Chapter \ref{chap:localization})
+	\item unmanned ground vehicle navigation system (see Chapter \ref{chap:localization})
 	\item development of Scan motion action server (see Chapter \ref{chap:kinovaArmChapter})
-	\item development of part of Dispenser deployment actions server (see Chapter \ref{chap:kinovaArmChapter}).
+	\item development of part of Dispenser deployment actions server (see Chapter \ref{chap:kinovaArmChapter})
 \end{itemize}
